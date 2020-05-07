@@ -1,0 +1,9 @@
+﻿################################################################################
+# This .gitignore file was automatically created by Microsoft(R) Visual Studio.
+################################################################################
+
+*.d
+*.o
+/.vs
+/myiot.X/dist
+/myiot.X/nbproject/private
