@@ -263,14 +263,14 @@ void receivedFromCloud_twin(uint8_t* topic, uint8_t* payload)
 		return;
 	}
 
-	while (token.kind == AZ_JSON_TOKEN_OBJECT_START && result == AZ_OK)
+	while (token.kind == AZ_JSON_TOKEN_BEGIN_OBJECT && result == AZ_OK)
 	{
 		az_json_token_member token_member;
 		result = az_json_parser_parse_token_member(&json_parser, &token_member);
 		if (az_succeeded(result))
 		{
 			az_span desired = AZ_SPAN_LITERAL_FROM_STR("desired");
-			if (token_member.token.kind == AZ_JSON_TOKEN_OBJECT_START)
+			if (token_member.token.kind == AZ_JSON_TOKEN_BEGIN_OBJECT)
 			{
 				if (az_span_is_content_equal_ignoring_case(token_member.name, desired))
 				{
@@ -330,7 +330,7 @@ void receivedFromCloud_patch(uint8_t* topic, uint8_t* payload)
 		return;
 	}
 
-	while (token.kind == AZ_JSON_TOKEN_OBJECT_START && result == AZ_OK)
+	while (token.kind == AZ_JSON_TOKEN_BEGIN_OBJECT && result == AZ_OK)
 	{
 		az_json_token_member token_member;
 		result = az_json_parser_parse_token_member(&json_parser, &token_member);
@@ -360,7 +360,7 @@ void sendToCloud(void)
 
 
 /*
-    Main application
+	Main application
  */
 
 int main(void)
@@ -368,11 +368,11 @@ int main(void)
 	// initialize the device
 	SYSTEM_Initialize();
 	application_init();
-    
+
 #ifdef CFG_MQTT_PROVISIONING_HOST
-    application_cloud_mqqt_connect(CFG_MQTT_PROVISIONING_HOST, &pf_mqqt_iotprovisioning_client);
+	application_cloud_mqqt_connect(CFG_MQTT_PROVISIONING_HOST, &pf_mqqt_iotprovisioning_client);
 #else
-    application_cloud_mqqt_connect(CFG_MQTT_HUB_HOST, &pf_mqqt_iothub_client);
+	application_cloud_mqqt_connect(CFG_MQTT_HUB_HOST, &pf_mqqt_iothub_client);
 #endif //CFG_MQTT_PROVISIONING_HOST     
 
 
