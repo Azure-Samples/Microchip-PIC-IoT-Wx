@@ -182,14 +182,6 @@ uint32_t MAIN_dataTask(void* payload)
 	{
 		LED_BLUE_SetHigh();
 	}
-	if (shared_networking_params.haveERROR)
-	{
-		LED_RED_SetLow();
-	}
-	else if (!LED_isBlinkingRed())
-	{
-		LED_RED_SetHigh();
-	}
 
 	if (LED_isBlinkingGreen() == false)
 	{
