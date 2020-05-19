@@ -34,11 +34,10 @@
 #include "../../config/IoT_Sensor_Node_config.h"
 
 void MQTT_CLIENT_iothub_publish(uint8_t *data, uint16_t len);
-void MQTT_CLIENT_iothub_receive(uint8_t *data, uint8_t len);
+void MQTT_CLIENT_iothub_receive(uint8_t *data, uint16_t len);
 void MQTT_CLIENT_iothub_connect(char* deviceID);
 bool MQTT_CLIENT_iothub_subscribe();
 void MQTT_CLIENT_iothub_connected();
 
-static const char* const hub_device_key = HUB_DEVICE_KEY;
 
 #endif /* MQTT_IOTHUB_PACKET_POPULATE_H */

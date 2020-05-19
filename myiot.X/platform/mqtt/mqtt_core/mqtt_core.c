@@ -976,7 +976,7 @@ static mqttCurrentState mqttProcessPublish(mqttContext* mqttConnectionPtr) {
 	// Fixed header
 	MQTT_ExchangeBufferRead(&mqttConnectionPtr->mqttDataExchangeBuffers.rxbuff, &rxPublishPacket.publishHeaderFlags.All, sizeof(rxPublishPacket.publishHeaderFlags.All));
 	MQTT_ExchangeBufferRead(&mqttConnectionPtr->mqttDataExchangeBuffers.rxbuff, &rxPublishPacket.remainingLength[0], sizeof(rxPublishPacket.remainingLength[0]));
-
+    
 	for (i = 1; (rxPublishPacket.remainingLength[i - 1] & 0x80) && (i < sizeof(rxPublishPacket.remainingLength)); i++) {
 		MQTT_ExchangeBufferRead(&mqttConnectionPtr->mqttDataExchangeBuffers.rxbuff, &rxPublishPacket.remainingLength[i], 1);
 	}

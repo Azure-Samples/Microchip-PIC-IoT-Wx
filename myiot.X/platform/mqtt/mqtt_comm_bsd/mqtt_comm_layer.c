@@ -88,7 +88,7 @@ bool MQTT_Close(mqttContext *connectionPtr)
 	return ret;
 }
 
-void MQTT_GetReceivedData(uint8_t *pData, uint8_t len)
+void MQTT_GetReceivedData(uint8_t *pData, uint16_t len)
 {
 	MQTT_ExchangeBufferInit(&mqttConn.mqttDataExchangeBuffers.rxbuff);
 	MQTT_ExchangeBufferWrite(&mqttConn.mqttDataExchangeBuffers.rxbuff, pData, len);

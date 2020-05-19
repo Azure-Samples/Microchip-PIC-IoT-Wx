@@ -220,7 +220,7 @@ struct pollfd {
  * and user application to transfer the information received over a socket to   
  * the application.
  **/
-typedef void (*bsdRecvFuncPtr)(uint8_t *data, uint8_t length); 
+typedef void (*bsdRecvFuncPtr)(uint8_t *data, uint16_t length); 
 
 // The call back table prototype for sending the packet received over a socket
 // to the correct reception handler function defined in the user application.

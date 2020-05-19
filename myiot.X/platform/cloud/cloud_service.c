@@ -116,6 +116,7 @@ void CLOUD_init(char* attDeviceID)
 void CLOUD_init_host(char* host, char* attDeviceID, pf_MQTT_CLIENT* pf_table)
 {
     mqtt_host = host;
+    mqttHostIP = 0;
     pf_mqtt_client = pf_table;
 	CLOUD_init(attDeviceID);
 }

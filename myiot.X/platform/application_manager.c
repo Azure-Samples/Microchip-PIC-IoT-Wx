@@ -38,6 +38,8 @@ ATCA_STATUS retValCryptoClientSerialNumber;
 
 uint32_t MAIN_dataTask(void* payload);
 timerStruct_t MAIN_dataTasksTimer = { MAIN_dataTask };
+typedef void (*cloud_cb_t)(void);
+cloud_cb_t fpSendToCloudCallback;
 
 void  wifiConnectionStateChanged(uint8_t status);
 
@@ -120,13 +122,13 @@ void application_init() {
 void application_post_provisioning(void)
 {
 	CLOUD_init(attDeviceID);
-	timeout_create(&MAIN_dataTasksTimer, MAIN_DATATASK_INTERVAL);
 }
 
-void application_cloud_mqqt_connect(char* host, pf_MQTT_CLIENT* pf_table)
+void application_cloud_mqqt_connect(char* host, pf_MQTT_CLIENT* pf_table, cloud_cb_t fpSendToCloud)
 {
 	CLOUD_init_host(host, attDeviceID, pf_table);
-	timeout_create(&MAIN_dataTasksTimer, MAIN_DATATASK_INTERVAL);    
+    fpSendToCloudCallback = fpSendToCloud;
+    timeout_create(&MAIN_dataTasksTimer, MAIN_DATATASK_INTERVAL);    
 }
 
 // React to the WIFI state change here. Status of 1 means connected, Status of 0 means disconnected
@@ -161,7 +163,7 @@ uint32_t MAIN_dataTask(void* payload)
 	time_t timeNow = time(NULL);
 
 	// Example of how to send data when MQTT is connected every 1 second based on the system clock
-	if (CLOUD_isConnected())
+	if (fpSendToCloudCallback && CLOUD_isConnected())
 	{
 		// How many seconds since the last time this loop ran?
 		int32_t delta = difftime(timeNow, previousTransmissionTime);
@@ -170,7 +172,7 @@ uint32_t MAIN_dataTask(void* payload)
 			previousTransmissionTime = timeNow;
 
 			// Call the data task in main.c
-			sendToCloud();
+			fpSendToCloudCallback();
 		}
 	}
 

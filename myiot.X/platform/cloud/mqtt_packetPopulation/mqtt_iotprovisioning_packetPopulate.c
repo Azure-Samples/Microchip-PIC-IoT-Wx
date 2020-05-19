@@ -25,7 +25,6 @@
 	SOFTWARE.
 */
 
-// ToDo This file needs to be renamed as app_mqttClient.c
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
@@ -53,17 +52,18 @@ pf_MQTT_CLIENT pf_mqqt_iotprovisioning_client = {
   MQTT_CLIENT_iotprovisioning_connect,
   MQTT_CLIENT_iotprovisioning_subscribe,
   MQTT_CLIENT_iotprovisioning_connected,  
+  NULL
 };
 
-extern char username_buf[200];
-extern char sas_token_buf[512];
 extern uint8_t device_id_buf[100];
 extern az_span device_id;
+char hub_device_key_buf[64];
+char hub_hostname_buf[128];
 
 az_iot_provisioning_client provisioning_client;
 az_iot_provisioning_client_register_response dps_register_response;
 char mqtt_dsp_topic_buf[200];
-char register_payload_buf[128];
+char register_payload_buf[512];
 char register_topic_buf[64];
 
 static uint16_t dps_retryTimer;
@@ -75,10 +75,12 @@ static timerStruct_t dps_assigning_timer = { dps_assigning_task };
 void dps_client_register(uint8_t* topic, uint8_t* payload)
 {
     int rc;
-    int topic_len = strlen((char*)topic);
-    int payload_len = strlen((char*)payload);
-    strcpy(register_topic_buf, (char*)topic);
-    strcpy(register_payload_buf, (char*)payload);
+    strncpy(register_topic_buf, (char*)topic, sizeof(register_topic_buf));
+    strncpy(register_payload_buf, (char*)payload, sizeof(register_payload_buf));
+    register_topic_buf[sizeof(register_topic_buf)-1] = '\0';
+    register_payload_buf[sizeof(register_payload_buf)-1] = '\0';
+    int topic_len = strlen(register_topic_buf);
+    int payload_len = strlen(register_payload_buf);
     
     if (az_failed(
             rc = az_iot_provisioning_client_parse_received_topic_and_payload(
@@ -107,7 +109,10 @@ void dps_client_register(uint8_t* topic, uint8_t* payload)
 
         case AZ_IOT_PROVISIONING_STATUS_ASSIGNED:
             LED_holdRedOn(LED_OFF);
-            timeout_delete(&dps_retry_timer);       
+            timeout_delete(&dps_retry_timer); 
+            az_span_to_str(hub_hostname_buf, sizeof(hub_hostname_buf), dps_register_response.registration_result.assigned_hub_hostname);
+            hub_hostname = hub_hostname_buf;
+            pf_mqqt_iotprovisioning_client.MQTT_CLIENT_task_completed();
             break;
             
         case AZ_IOT_PROVISIONING_STATUS_FAILED:
@@ -172,12 +177,11 @@ extern publishReceptionHandler_t imqtt_publishReceiveCallBackTable[MAX_NUM_TOPIC
 
 void MQTT_CLIENT_iotprovisioning_publish(uint8_t* data, uint16_t len)
 {
-    //todo: application timer calls this
 }
 
-void MQTT_CLIENT_iotprovisioning_receive(uint8_t* data, uint8_t len)
+void MQTT_CLIENT_iotprovisioning_receive(uint8_t* data, uint16_t len)
 {
-	MQTT_GetReceivedData(data, len);
+	MQTT_GetReceivedData(data, len);    
 }
 
 void MQTT_CLIENT_iotprovisioning_connect(char* deviceID)
@@ -192,7 +196,12 @@ void MQTT_CLIENT_iotprovisioning_connect(char* deviceID)
     atcab_base64decode_(provisioning_enrollment_key, strlen(provisioning_enrollment_key), enrollments_group_key, &enrollments_group_key_size, az_iot_b64rules);
     
     uint8_t device_key[32];
-    hmac_sha256(device_key, device_id_buf, strlen(device_id_buf), enrollments_group_key, enrollments_group_key_size);
+    hmac_sha256(device_key, device_id_buf, strlen((char*)device_id_buf), enrollments_group_key, enrollments_group_key_size);
+
+    memset(hub_device_key_buf, 0, sizeof(hub_device_key_buf));
+	size_t hub_device_key_buf_len = sizeof(hub_device_key_buf);
+	atcab_base64encode_(device_key, sizeof(device_key), (char*)hub_device_key_buf, &hub_device_key_buf_len, az_iot_b64rules);
+    hub_device_key = hub_device_key_buf;
     
     const az_span global_device_endpoint = AZ_SPAN_LITERAL_FROM_STR(CFG_MQTT_PROVISIONING_HOST);
     const az_span id_scope = AZ_SPAN_LITERAL_FROM_STR(PROVISIONING_ID_SCOPE);
@@ -203,8 +212,8 @@ void MQTT_CLIENT_iotprovisioning_connect(char* deviceID)
 		return;
 	}
         
-    size_t username_buf_len;
-    result = az_iot_provisioning_client_get_user_name(&provisioning_client, username_buf, sizeof(username_buf), &username_buf_len);
+    size_t mqtt_username_buf_len;
+    result = az_iot_provisioning_client_get_user_name(&provisioning_client, mqtt_username_buf, sizeof(mqtt_username_buf), &mqtt_username_buf_len);
 	if (az_failed(result))
 	{
 		debug_printError("az_iot_provisioning_client_get_user_name failed");
@@ -237,9 +246,9 @@ void MQTT_CLIENT_iotprovisioning_connect(char* deviceID)
 	char signature_hash_encoded_buf[256];
 	url_encode_rfc3986(signature_hash_buf, signature_hash_encoded_buf, _az_COUNTOF(signature_hash_encoded_buf));
 
-	size_t sas_token_buf_len;
+	size_t mqtt_password_buf_len;
 	az_span signature_hash_encoded = az_span_from_str(signature_hash_encoded_buf);
-	result = az_iot_provisioning_client_sas_get_password(&provisioning_client, signature_hash_encoded, expire_time, az_span_from_str("registration"), sas_token_buf, sizeof(sas_token_buf), &sas_token_buf_len);
+	result = az_iot_provisioning_client_sas_get_password(&provisioning_client, signature_hash_encoded, expire_time, az_span_from_str("registration"), mqtt_password_buf, sizeof(mqtt_password_buf), &mqtt_password_buf_len);
 	if (az_failed(result))
 	{
 		debug_printError("az_iot_provisioning_client_sas_get_password failed");
@@ -252,10 +261,10 @@ void MQTT_CLIENT_iotprovisioning_connect(char* deviceID)
 	cloudConnectPacket.connectVariableHeader.connectFlagsByte.cleanSession = 1; 
 	cloudConnectPacket.connectVariableHeader.keepAliveTimer = AZ_IOT_DEFAULT_MQTT_CONNECT_KEEPALIVE_SECONDS;    
     cloudConnectPacket.clientID = (uint8_t*) az_span_ptr(device_id);
-	cloudConnectPacket.password = (uint8_t*) sas_token_buf;
-	cloudConnectPacket.passwordLength = sas_token_buf_len;
-	cloudConnectPacket.username = (uint8_t*) username_buf;
-	cloudConnectPacket.usernameLength = (uint16_t) username_buf_len2;
+	cloudConnectPacket.password = (uint8_t*) mqtt_password_buf;
+	cloudConnectPacket.passwordLength = mqtt_password_buf_len;
+	cloudConnectPacket.username = (uint8_t*) mqtt_username_buf;
+	cloudConnectPacket.usernameLength = (uint16_t) mqtt_username_buf_len;
 
 	MQTT_CreateConnectPacket(&cloudConnectPacket);
 }
