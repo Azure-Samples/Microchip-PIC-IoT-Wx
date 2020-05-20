@@ -41,8 +41,9 @@ IN NO EVENT WILL MICROCHIP BE LIABLE FOR ANY INDIRECT, SPECIAL, PUNITIVE,
 #include "../mqtt_packetTransfer_interface.h"
 #include "../../config/mqtt_config.h"
 #include "../../debug_print.h"
+#include "../../cloud/mqtt_packetPopulation/mqtt_packetPopulate.h"
 
-extern void MQTT_CLIENT_iothub_connected();
+extern pf_MQTT_CLIENT* pf_mqtt_client;
 
 /********************Timeout Driver for MQTT definitions***********************/
 //#define timerstruct_t                   timer_struct_t
@@ -621,7 +622,7 @@ bool MQTT_CreateSubscribePacket(mqttSubscribePacket* newSubscribePacket) {
 		txSubscribePacket.packetIdentifierMSB = newSubscribePacket->packetIdentifierMSB;
 
 		// Payload
-		for (topicCount = 0; topicCount < MAX_NUM_TOPICS_SUBSCRIBE; topicCount++) {
+		for (topicCount = 0; topicCount < MAX_NUM_TOPICS_SUBSCRIBE && newSubscribePacket->subscribePayload[topicCount].topicLength > 0; topicCount++) {
 			txSubscribePacket.subscribePayload[topicCount].topicLength = htons(newSubscribePacket->subscribePayload[topicCount].topicLength);
 			txSubscribePacket.subscribePayload[topicCount].topic = newSubscribePacket->subscribePayload[topicCount].topic;
 			txSubscribePacket.subscribePayload[topicCount].requestedQoS = newSubscribePacket->subscribePayload[topicCount].requestedQoS;
@@ -862,7 +863,7 @@ static mqttCurrentState mqttProcessSuback(mqttContext* mqttConnectionPtr) {
 
 	if (ret == CONNECTED)
 	{
-		MQTT_CLIENT_iothub_connected();
+        pf_mqtt_client->MQTT_CLIENT_connected();
 	}
 
 	return ret;
@@ -975,7 +976,7 @@ static mqttCurrentState mqttProcessPublish(mqttContext* mqttConnectionPtr) {
 	// Fixed header
 	MQTT_ExchangeBufferRead(&mqttConnectionPtr->mqttDataExchangeBuffers.rxbuff, &rxPublishPacket.publishHeaderFlags.All, sizeof(rxPublishPacket.publishHeaderFlags.All));
 	MQTT_ExchangeBufferRead(&mqttConnectionPtr->mqttDataExchangeBuffers.rxbuff, &rxPublishPacket.remainingLength[0], sizeof(rxPublishPacket.remainingLength[0]));
-
+    
 	for (i = 1; (rxPublishPacket.remainingLength[i - 1] & 0x80) && (i < sizeof(rxPublishPacket.remainingLength)); i++) {
 		MQTT_ExchangeBufferRead(&mqttConnectionPtr->mqttDataExchangeBuffers.rxbuff, &rxPublishPacket.remainingLength[i], 1);
 	}
@@ -1229,7 +1230,7 @@ static bool mqttSendSubscribe(mqttContext* mqttConnectionPtr) {
 	MQTT_ExchangeBufferWrite(&mqttConnectionPtr->mqttDataExchangeBuffers.txbuff, &txSubscribePacket.packetIdentifierMSB, sizeof(txSubscribePacket.packetIdentifierMSB));
 	MQTT_ExchangeBufferWrite(&mqttConnectionPtr->mqttDataExchangeBuffers.txbuff, &txSubscribePacket.packetIdentifierLSB, sizeof(txSubscribePacket.packetIdentifierLSB));
 
-	for (topicCount = 0; topicCount < MAX_NUM_TOPICS_SUBSCRIBE; topicCount++) {
+	for (topicCount = 0; topicCount < MAX_NUM_TOPICS_SUBSCRIBE && txSubscribePacket.subscribePayload[topicCount].topicLength > 0; topicCount++) {
 		MQTT_ExchangeBufferWrite(&mqttConnectionPtr->mqttDataExchangeBuffers.txbuff, (uint8_t*)&txSubscribePacket.subscribePayload[topicCount].topicLength, sizeof(txSubscribePacket.subscribePayload[topicCount].topicLength));
 		MQTT_ExchangeBufferWrite(&mqttConnectionPtr->mqttDataExchangeBuffers.txbuff, txSubscribePacket.subscribePayload[topicCount].topic, ntohs(txSubscribePacket.subscribePayload[topicCount].topicLength));
 		MQTT_ExchangeBufferWrite(&mqttConnectionPtr->mqttDataExchangeBuffers.txbuff, &txSubscribePacket.subscribePayload[topicCount].requestedQoS, sizeof(txSubscribePacket.subscribePayload[topicCount].requestedQoS));

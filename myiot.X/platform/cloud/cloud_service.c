@@ -116,6 +116,7 @@ void CLOUD_init(char* attDeviceID)
 void CLOUD_init_host(char* host, char* attDeviceID, pf_MQTT_CLIENT* pf_table)
 {
     mqtt_host = host;
+    mqttHostIP = 0;
     pf_mqtt_client = pf_table;
 	CLOUD_init(attDeviceID);
 }
@@ -189,6 +190,7 @@ static int8_t connectMQTTSocket(void)
 			if (ret != BSD_SUCCESS) {
 				debug_printError("CLOUD connect received %d", ret);
 				shared_networking_params.haveERROR = 1;
+                LED_holdGreenOn(LED_OFF);
 				BSD_close(*context->tcpClientSocket);
 			}
 		}
@@ -229,7 +231,8 @@ uint32_t CLOUD_task(void* param)
 	if (shared_networking_params.haveAPConnection == false)
 	{
 		//Cleared on Access Point Connection
-		shared_networking_params.haveERROR = true;
+		shared_networking_params.haveERROR = 1;
+        LED_holdGreenOn(LED_OFF);
 		if (MQTT_GetConnectionState() == CONNECTED)
 		{
 			MQTT_initialiseState();
@@ -299,6 +302,7 @@ uint32_t CLOUD_task(void* param)
                 if (MQTT_GetConnectionState() == CONNECTED)
 				{
 					shared_networking_params.haveERROR = 0;
+                    LED_holdGreenOn(LED_ON);
 					timeout_delete(&mqttTimeoutTaskTimer);
 					timeout_delete(&cloudResetTaskTimer);
 					isResetting = false;
@@ -325,6 +329,7 @@ uint32_t CLOUD_task(void* param)
 
 		default:
 			shared_networking_params.haveERROR = 1;
+            LED_holdGreenOn(LED_OFF);
 			break;
 		}
 	}

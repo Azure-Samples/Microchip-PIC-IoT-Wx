@@ -48,6 +48,7 @@
                          projectFiles="true">
             <itemPath>platform/cloud/crypto_client/crypto_client.h</itemPath>
             <itemPath>platform/cloud/crypto_client/cryptoauthlib_main.h</itemPath>
+            <itemPath>platform/cloud/crypto_client/hmac-sha256.h</itemPath>
           </logicalFolder>
           <logicalFolder name="mqtt_packetPopulation"
                          displayName="mqtt_packetPopulation"
@@ -267,12 +268,14 @@
                          projectFiles="true">
             <itemPath>platform/cloud/crypto_client/crypto_client.c</itemPath>
             <itemPath>platform/cloud/crypto_client/cryptoauthlib_main.c</itemPath>
+            <itemPath>platform/cloud/crypto_client/hmac-sha256.c</itemPath>
           </logicalFolder>
           <logicalFolder name="mqtt_packetPopulation"
                          displayName="mqtt_packetPopulation"
                          projectFiles="true">
             <itemPath>platform/cloud/mqtt_packetPopulation/mqtt_iothub_packetPopulate.c</itemPath>
             <itemPath>platform/cloud/mqtt_packetPopulation/mqtt_iotprovisioning_packetPopulate.c</itemPath>
+            <itemPath>platform/cloud/mqtt_packetPopulation/mqtt_packetPopulate.c</itemPath>
           </logicalFolder>
           <itemPath>platform/cloud/cloud_service.c</itemPath>
           <itemPath>platform/cloud/wifi_service.c</itemPath>
@@ -533,7 +536,7 @@
         <property key="oXC16gcc-sfr-warn" value="false"/>
         <property key="oXC16gcc-smar-io-lvl" value="1"/>
         <property key="oXC16gcc-smart-io-fmt" value=""/>
-        <property key="optimization-level" value="0"/>
+        <property key="optimization-level" value="1"/>
         <property key="post-instruction-scheduling" value="default"/>
         <property key="pre-instruction-scheduling" value="default"/>
         <property key="preprocessor-macros" value=""/>
@@ -685,8 +688,6 @@
         <property key="memories.programmemory" value="true"/>
         <property key="memories.programmemory.ranges" value="0-15eff"/>
         <property key="poweroptions.powerenable" value="false"/>
-        <property key="programmerToGoFilePath"
-                  value="C:/Users/ericwol/MPLABXProjects/myiot.X5/myiot.X/myiot.X/debug/default/myiot_ptg"/>
         <property key="programoptions.eraseb4program" value="true"/>
         <property key="programoptions.preservedataflash" value="false"/>
         <property key="programoptions.preservedataflash.ranges"

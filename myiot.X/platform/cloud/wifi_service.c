@@ -22,6 +22,7 @@
 #include "../credentials_storage/credentials_storage.h"
 #include "../tmr2.h"
 #include "../led.h"
+#include "../winc/driver/include/m2m_ssl.h"
 
 #define CLOUD_WIFI_TASK_INTERVAL        timeout_mSecToTicks(50L)
 #define CLOUD_NTP_TASK_INTERVAL         timeout_mSecToTicks(500L)
@@ -56,11 +57,7 @@ int8_t hif_deinit(void* arg);
 
 void wifi_reinit()
 {
-	tstrWifiInitParam param;
-
-	/* Initialize Wi-Fi parameters structure. */
-	memset((uint8_t*)&param, 0, sizeof(tstrWifiInitParam));
-
+	tstrWifiInitParam param = { 0 };
 	param.pfAppWifiCb = wifiCallback;
 	socketDeinit();
 	hif_deinit(NULL);
@@ -70,6 +67,16 @@ void wifi_reinit()
 
 	nm_bsp_init();
     m2m_wifi_init(&param);
+
+	// clear out client/device tls cert
+
+    uint8 sector_buffer[256] = { 0 };
+    sint8 status = m2m_ssl_send_certs_to_winc(sector_buffer, sizeof(sector_buffer));
+    if (status != M2M_SUCCESS)
+    {
+        debug_printInfo("m2m_ssl_send_certs_to_winc() failed with ret=%d", status);
+    }
+
 	socketInit();    
 }
 
@@ -125,6 +132,7 @@ bool wifi_connectToAp(uint8_t passed_wifi_creds)
 	{
 		debug_printError("WIFI: wifi error = %d", e);
 		shared_networking_params.haveERROR = 1;
+        LED_holdGreenOn(LED_OFF);
 		return false;
 	}
 
@@ -178,6 +186,7 @@ uint32_t checkBackTask(void* param)
 	shared_networking_params.haveAPConnection = 0;
 	shared_networking_params.haveERROR = 1;
 	shared_networking_params.amDisconnecting = 0;
+    LED_holdGreenOn(LED_OFF);
 	return 0;
 }
 

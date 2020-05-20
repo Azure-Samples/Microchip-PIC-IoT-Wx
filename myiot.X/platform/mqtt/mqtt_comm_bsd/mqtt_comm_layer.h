@@ -53,5 +53,5 @@ mqttContext* MQTT_GetClientConnectionInfo();
 
 bool MQTT_Send(mqttContext *connectionPtr);
 bool MQTT_Close(mqttContext *connectionPtr);
-void MQTT_GetReceivedData(uint8_t *pData, uint8_t len);
+void MQTT_GetReceivedData(uint8_t *pData, uint16_t len);
 #endif /* MQTT_COMM_LAYER_H */

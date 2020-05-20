@@ -357,6 +357,12 @@ void sendToCloud(void)
 	}
 }
 
+#ifdef CFG_MQTT_PROVISIONING_HOST
+void iot_provisioning_completed(void)
+{
+    application_cloud_mqqt_connect(hub_hostname, &pf_mqqt_iothub_client, sendToCloud);
+}
+#endif //CFG_MQTT_PROVISIONING_HOST 
 
 
 /*
@@ -370,12 +376,11 @@ int main(void)
 	application_init();
 
 #ifdef CFG_MQTT_PROVISIONING_HOST
-	application_cloud_mqqt_connect(CFG_MQTT_PROVISIONING_HOST, &pf_mqqt_iotprovisioning_client);
+    pf_mqqt_iotprovisioning_client.MQTT_CLIENT_task_completed = iot_provisioning_completed;
+	application_cloud_mqqt_connect(CFG_MQTT_PROVISIONING_HOST, &pf_mqqt_iotprovisioning_client, NULL);
 #else
-	application_cloud_mqqt_connect(CFG_MQTT_HUB_HOST, &pf_mqqt_iothub_client);
-#endif //CFG_MQTT_PROVISIONING_HOST     
-
-
+	application_cloud_mqqt_connect(hub_hostname, &pf_mqqt_iothub_client, sendToCloud);
+#endif //CFG_MQTT_PROVISIONING_HOST 
 
 	while (true)
 	{
