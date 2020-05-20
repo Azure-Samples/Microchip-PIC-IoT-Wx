@@ -1,6 +1,6 @@
-# PIC 16 - Azure IoT Embedded C SDK Sample Code
+# Microchip PIC MCU16 - Azure IoT Embedded C SDK Sample Code
 
-This page shows the steps needed to get started with the [Microchip PIC 16](https://www.microchip.com/developmenttools/ProductDetails/AC164164) board and get it to work with the [Azure IoT Embedded C SDK](https://github.com/Azure/azure-sdk-for-c/tree/master/sdk/iot).
+This page shows the steps needed to get started with the [Microchip PIC MCU16](https://www.microchip.com/developmenttools/ProductDetails/AC164164) board and get it to work with the [Azure IoT Embedded C SDK](https://github.com/Azure/azure-sdk-for-c/tree/master/sdk/iot).
 
 
 ## Prerequisites
@@ -21,7 +21,7 @@ Before proceeding, you should have the following ready:
 
 ## Get the files
 
-1. Get the sample files from GitHub: [Link to Eric's GitHub repo](https://garage-06.visualstudio.com/MicrochipIoT%202027%2088114/_git/PIC_IoT?version=GBmaster)
+1. Get the sample files from GitHub: [GitHub repo](https://github.com/ericwol-msft/Microchip-PIC-MCU16-AzureIoT)
 
 2. Open the project in MPLAB X: File > Open Project > [select the folder in which you just downloaded the files]. The MPLAB X project name is "myiot"
 
@@ -29,11 +29,11 @@ Before proceeding, you should have the following ready:
 
 ## Get the Device ID 
 
-The device_ID on both IoT hub and the devie itself must match, so before creating a new device in Iot Hub, you must retrieve your device_ID. (If you're using DPS - device Provisioning Service, you don't need to worry with this step.)
+The device ID on both IoT hub and the device itself must match, so before creating a new device in your Iot Hub, you must retrieve your device ID. (If you're using Azure Device Provisioning Service, you don't need to worry with this step, as the device ID is automatically assigned)
 
-- 	You can find the device_id on the IoT_Sensor_Node_config.h file. 
+- 	You can find the device id on the IoT_Sensor_Node_config.h file. 
 -	To find it, on the left hand panel, look for Header files > platform > config > IoT_Sensor_Node_config.h
-- Line 39 shows the #define DEVICE_ID "your_device_number"
+- Line 39 shows the #define HUB_DEVICE_ID "your_device_number"
 
 ![sensor node](docs/Images/sensor_node.png)
 
@@ -55,7 +55,7 @@ Create a new device on your IoT Hub using this device as your device name.
 2. Update the device_key and MQTT_Host  
 	
 - On the left hand panel, look for Header files > platform > config > IoT_Sensor_Node_config.h
-- Line 44 shows the DEVICE_KEY: replace it by the Primary Key you find at your device page on Azure Portal.
+- Line 44 shows the HUB_DEVICE_KEY: replace it by the Primary Key you find at your device page on the Azure Hub Portal.
 - Still on this file, look at line 23 and update the CFG_MQTT_HOST information. 
 - You'll need your device's primary connection string for that. 
 	
@@ -69,13 +69,13 @@ HostName=**ps-demo-hub.azure-devices.net**;DeviceId=Pic_test_2;SharedAccessKey=P
 
 ![debug_button](docs/Images/debug_button.png)
 
-2. If everything went well, you should see the onboard LEDs turning on. The blue and the green LEDs will be on all the time and the yellow one blinks every 5 seconds to confirm the telemetry has been sent to Azure.
+2. If everything went well, you should see the onboard LEDs turning on. A blue LED means that the WIFI is connected. The green LED will be on when the device is connected to the hub and the yellow LED blinks every 5 seconds to confirm the telemetry has been sent to Azure. If the red LED is on, then there is an authentication error with Azure.
 
 ## Calling a direct method on the device
 
 1. On your device window on Azure, click Direct Method
 2. On the direct method window, type blink on the Method Name, type {"duration":3}  on the payload, and click "Invoke method". 
-3. You should see the red LED turning on for 3 seconds and then turning back off again.
+3. You should see the red LED turning on for 3 seconds and then turned back off again.
 
 ![direct_method](docs/Images/direct_method.png)
 
