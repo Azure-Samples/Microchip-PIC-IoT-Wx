@@ -23,7 +23,7 @@ Before proceeding, you should have the following ready:
 
 1. Get the sample files from GitHub: [GitHub repo](https://github.com/ericwol-msft/Microchip-PIC-MCU16-AzureIoT)
 
-2. Open the project in MPLAB X: File > Open Project > [select the folder in which you just downloaded the files]. The MPLAB X project name is "myiot"
+2. Open the project in MPLAB X: File > Open Project > [select the folder in which you just downloaded the files]. The MPLAB X project name is "myiot" 
 
 ![project](docs/Images/project.png)
 
@@ -57,12 +57,10 @@ Create a new device on your IoT Hub using this device as your device name.
 - On the left hand panel, look for Header files > platform > config > IoT_Sensor_Node_config.h
 - Line 44 shows the HUB_DEVICE_KEY: replace it by the Primary Key you find at your device page on the Azure Hub Portal.
 - Still on this file, look at line 23 and update the CFG_MQTT_HOST information. 
-- You'll need your device's primary connection string for that. 
+- You'll need your Azure IoT Hub FQDN: 
+    - On your Azure IoT Hub page, click on "Overview". 
+	- Copy and save the "Hostname" value (in this example, something like: "myiothub.azure-devices.net"). 
 	
-	Note: you don't need the whole connection string, you only need the host name. In the example connection string below, the highlighted is the part you need to update on line 23. 
-	
-HostName=**ps-demo-hub.azure-devices.net**;DeviceId=Pic_test_2;SharedAccessKey=PaPq+m4gtXvYs=
-
 ## Upload the Sample to the Device
 
 1. Once you have all the credentials set, you can upload the code to your device, by clicking on debug project.
