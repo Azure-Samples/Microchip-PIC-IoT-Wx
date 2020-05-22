@@ -232,12 +232,15 @@ void receivedFromCloud_twin(uint8_t* topic, uint8_t* payload)
 		return;
 	}
 
-	if (az_span_size(twin_response.request_id) != 0 && IOT_DEBUG_PRINT)
-	{
-		char request_id_buf[50];
-		az_span_to_str(request_id_buf, sizeof(request_id_buf), twin_response.request_id);
-		debug_printInfo("Twin request, request_id:%s, status: %d", request_id_buf, twin_response.status);
-	}
+    if (IOT_DEBUG_PRINT)
+    {
+        if (az_span_size(twin_response.request_id) != 0)
+        {
+            char request_id_buf[50];
+            az_span_to_str(request_id_buf, sizeof(request_id_buf), twin_response.request_id);
+            debug_printInfo("Twin request, request_id:%s, status: %d", request_id_buf, twin_response.status);
+        }
+    }
 
 	if (payload == NULL)
 	{
@@ -300,13 +303,16 @@ void receivedFromCloud_patch(uint8_t* topic, uint8_t* payload)
 		debug_printError("az_iot_hub_client_twin_parse_received_topic failed");
 		return;
 	}
-
-	if (az_span_size(twin_response.version) != 0 && IOT_DEBUG_PRINT)
-	{
-		char version_buf[50];
-		az_span_to_str(version_buf, sizeof(version_buf), twin_response.version);
-		debug_printInfo("Twin update, version:%s, status: %d", version_buf, twin_response.status);
-	}
+    
+    if (IOT_DEBUG_PRINT)
+    {
+        if (az_span_size(twin_response.version) != 0)
+        {
+            char version_buf[50];
+            az_span_to_str(version_buf, sizeof(version_buf), twin_response.version);
+            debug_printInfo("Twin update, version:%s, status: %d", version_buf, twin_response.status);
+        }
+    }
 
 	if (topic == NULL || payload == NULL)
 	{

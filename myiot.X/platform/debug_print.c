@@ -52,7 +52,7 @@ static char debug_message_prefix[20] = "<PREFIX>";
 void debug_init(const char *prefix)
 { 
    debug_setPrefix(prefix);
-   debug_setSeverity(SEVERITY_DEBUG);
+   debug_setSeverity(SEVERITY_NOTICE);
 //   debug_printer(SEVERITY_NONE, LEVEL_NORMAL, CSI_CLS CSI_HOME BANNER CSI_RESET "\r\n\r\n" __DATE__ " " __TIME__ "\r\n");
 }
 
