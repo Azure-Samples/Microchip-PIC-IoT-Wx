@@ -70,7 +70,7 @@ void wifi_reinit()
 
 	// clear out client/device tls cert
 
-    uint8 sector_buffer[256] = { 0 };
+    uint8 sector_buffer[512] = { 0 };
     sint8 status = m2m_ssl_send_certs_to_winc(sector_buffer, sizeof(sector_buffer));
     if (status != M2M_SUCCESS)
     {
