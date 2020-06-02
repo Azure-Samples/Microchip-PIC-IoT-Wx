@@ -1,6 +1,6 @@
-# Microchip PIC MCU16 - Azure IoT Embedded C SDK Sample Code
+# Microchip PIC24 MCU16 - Azure IoT Embedded C SDK Sample Code
 
-This page shows the steps needed to get started with the [Microchip PIC MCU16](https://www.microchip.com/developmenttools/ProductDetails/AC164164) board and get it to work with the [Azure IoT Embedded C SDK](https://github.com/Azure/azure-sdk-for-c/tree/master/sdk/iot).
+This page shows the steps needed to get started with the [Microchip PIC24 MCU16](https://www.microchip.com/developmenttools/ProductDetails/AC164164) board and get it to work with the [Azure IoT Embedded C SDK](https://github.com/Azure/azure-sdk-for-c/tree/master/sdk/iot).
 
 
 ## Prerequisites
