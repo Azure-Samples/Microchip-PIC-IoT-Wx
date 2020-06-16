@@ -16,8 +16,8 @@
 #include "../../../platform/cryptoauthlib/lib/basic/atca_basic.h"
 #include "../../../platform/drivers/timeout.h"
 #include "../../../platform/led.h"
-#include "az_iot_provisioning_client.h"
-#include "az_iot_hub_client.h"
+#include "azure/iot/az_iot_provisioning_client.h"
+#include "azure/iot/az_iot_hub_client.h"
 
 #ifdef CFG_MQTT_PROVISIONING_HOST
 #define HALF_SECOND 1000L
@@ -196,6 +196,9 @@ void MQTT_CLIENT_iotprovisioning_connect(char* deviceID)
 		return;
 	}
 
+    char mqtt_username_encoded_buf[256];
+	url_encode_rfc3986(mqtt_username_buf, mqtt_username_encoded_buf, _az_COUNTOF(mqtt_username_encoded_buf));
+    
 	time_t expire_time = time(NULL) + 60 * 60; // token expires in 1 hour  
 	uint8_t signature_buf[128];
 	az_span signature = AZ_SPAN_FROM_BUFFER(signature_buf);
@@ -219,18 +222,14 @@ void MQTT_CLIENT_iotprovisioning_connect(char* deviceID)
 	size_t key_size = _az_COUNTOF(signature_hash_buf);
 	atcab_base64encode_(sas_hash, sizeof(sas_hash), signature_hash_buf, &key_size, az_iot_b64rules);
 
-	char signature_hash_encoded_buf[256];
-	url_encode_rfc3986(signature_hash_buf, signature_hash_encoded_buf, _az_COUNTOF(signature_hash_encoded_buf));
-
 	size_t mqtt_password_buf_len;
-	az_span signature_hash_encoded = az_span_from_str(signature_hash_encoded_buf);
-	result = az_iot_provisioning_client_sas_get_password(&provisioning_client, signature_hash_encoded, expire_time, az_span_from_str("registration"), mqtt_password_buf, sizeof(mqtt_password_buf), &mqtt_password_buf_len);
+	az_span signature_hash = az_span_from_str(signature_hash_buf);
+	result = az_iot_provisioning_client_sas_get_password(&provisioning_client, signature_hash, expire_time, az_span_from_str("registration"), mqtt_password_buf, sizeof(mqtt_password_buf), &mqtt_password_buf_len);
 	if (az_failed(result))
 	{
 		debug_printError("az_iot_provisioning_client_sas_get_password failed");
 		return;
 	}
-    
     
 	mqttConnectPacket cloudConnectPacket;
 	memset(&cloudConnectPacket, 0, sizeof(mqttConnectPacket));

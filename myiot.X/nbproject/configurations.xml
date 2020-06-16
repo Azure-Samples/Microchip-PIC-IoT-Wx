@@ -2,33 +2,32 @@
 <configurationDescriptor version="65">
   <logicalFolder name="root" displayName="root" projectFiles="true">
     <logicalFolder name="f1" displayName="Azure-C-SDK" projectFiles="true">
-      <itemPath>azure-c-sdk/sdk/core/core/src/az_span.c</itemPath>
-      <itemPath>azure-c-sdk/sdk/platform/noplatform/src/az_noplatform.c</itemPath>
-      <itemPath>azure-c-sdk/sdk/core/core/inc/az_precondition.h</itemPath>
-      <itemPath>azure-c-sdk/sdk/core/core/src/az_precondition.c</itemPath>
-      <itemPath>azure-c-sdk/sdk/core/core/inc/az_span.h</itemPath>
-      <itemPath>azure-c-sdk/sdk/iot/hub/inc/az_iot_hub_client.h</itemPath>
-      <itemPath>azure-c-sdk/sdk/iot/hub/src/az_iot_hub_client.c</itemPath>
-      <itemPath>azure-c-sdk/sdk/iot/hub/src/az_iot_hub_client_c2d.c</itemPath>
-      <itemPath>azure-c-sdk/sdk/iot/hub/src/az_iot_hub_client_sas.c</itemPath>
-      <itemPath>azure-c-sdk/sdk/iot/hub/src/az_iot_hub_client_telemetry.c</itemPath>
-      <itemPath>azure-c-sdk/sdk/core/core/inc/az_config.h</itemPath>
-      <itemPath>azure-c-sdk/sdk/core/core/inc/az_context.h</itemPath>
-      <itemPath>azure-c-sdk/sdk/core/core/inc/az_result.h</itemPath>
-      <itemPath>azure-c-sdk/sdk/iot/hub/src/az_iot_hub_client_methods.c</itemPath>
-      <itemPath>azure-c-sdk/sdk/core/core/src/az_json_parser.c</itemPath>
-      <itemPath>azure-c-sdk/sdk/core/core/src/az_json_pointer.c</itemPath>
-      <itemPath>azure-c-sdk/sdk/core/core/src/az_json_string.c</itemPath>
-      <itemPath>azure-c-sdk/sdk/core/core/src/az_json_string_private.h</itemPath>
-      <itemPath>azure-c-sdk/sdk/core/core/src/az_json_token.c</itemPath>
-      <itemPath>azure-c-sdk/sdk/core/core/inc/az_json.h</itemPath>
-      <itemPath>azure-c-sdk/sdk/iot/hub/src/az_iot_hub_client_twin.c</itemPath>
-      <itemPath>azure-c-sdk/sdk/iot/provisioning/inc/az_iot_provisioning_client.h</itemPath>
-      <itemPath>azure-c-sdk/sdk/iot/provisioning/src/az_iot_provisioning_client.c</itemPath>
-      <itemPath>azure-c-sdk/sdk/iot/provisioning/src/az_iot_provisioning_client_sas.c</itemPath>
-      <itemPath>azure-c-sdk/sdk/iot/common/src/az_iot_common.c</itemPath>
-      <itemPath>azure-c-sdk/sdk/iot/common/inc/az_iot_common.h</itemPath>
-      <itemPath>azure-c-sdk/sdk/core/core/src/az_log.c</itemPath>
+      <itemPath>azure-c-sdk/sdk/inc/azure/core/az_config.h</itemPath>
+      <itemPath>azure-c-sdk/sdk/inc/azure/core/az_context.h</itemPath>
+      <itemPath>azure-c-sdk/sdk/inc/azure/core/az_json.h</itemPath>
+      <itemPath>azure-c-sdk/sdk/inc/azure/core/az_precondition.h</itemPath>
+      <itemPath>azure-c-sdk/sdk/inc/azure/core/az_result.h</itemPath>
+      <itemPath>azure-c-sdk/sdk/inc/azure/core/az_span.h</itemPath>
+      <itemPath>azure-c-sdk/sdk/inc/azure/iot/az_iot_common.h</itemPath>
+      <itemPath>azure-c-sdk/sdk/inc/azure/iot/az_iot_hub_client.h</itemPath>
+      <itemPath>azure-c-sdk/sdk/inc/azure/iot/az_iot_provisioning_client.h</itemPath>
+      <itemPath>azure-c-sdk/sdk/src/azure/iot/az_iot_common.c</itemPath>
+      <itemPath>azure-c-sdk/sdk/src/azure/iot/az_iot_hub_client.c</itemPath>
+      <itemPath>azure-c-sdk/sdk/src/azure/iot/az_iot_hub_client_c2d.c</itemPath>
+      <itemPath>azure-c-sdk/sdk/src/azure/iot/az_iot_hub_client_methods.c</itemPath>
+      <itemPath>azure-c-sdk/sdk/src/azure/iot/az_iot_hub_client_sas.c</itemPath>
+      <itemPath>azure-c-sdk/sdk/src/azure/iot/az_iot_hub_client_telemetry.c</itemPath>
+      <itemPath>azure-c-sdk/sdk/src/azure/iot/az_iot_hub_client_twin.c</itemPath>
+      <itemPath>azure-c-sdk/sdk/src/azure/iot/az_iot_provisioning_client.c</itemPath>
+      <itemPath>azure-c-sdk/sdk/src/azure/iot/az_iot_provisioning_client_sas.c</itemPath>
+      <itemPath>azure-c-sdk/sdk/src/azure/core/az_json_parser.c</itemPath>
+      <itemPath>azure-c-sdk/sdk/src/azure/core/az_json_pointer.c</itemPath>
+      <itemPath>azure-c-sdk/sdk/src/azure/core/az_json_string.c</itemPath>
+      <itemPath>azure-c-sdk/sdk/src/azure/core/az_log.c</itemPath>
+      <itemPath>azure-c-sdk/sdk/src/azure/core/az_precondition.c</itemPath>
+      <itemPath>azure-c-sdk/sdk/src/azure/core/az_span.c</itemPath>
+      <itemPath>azure-c-sdk/sdk/src/azure/platform/az_noplatform.c</itemPath>
+      <itemPath>azure-c-sdk/sdk/src/azure/core/az_json_token.c</itemPath>
     </logicalFolder>
     <logicalFolder name="HeaderFiles"
                    displayName="Header Files"
@@ -462,6 +461,11 @@
     <Elem>azure-c-sdk/sdk/iot/provisioning/src</Elem>
     <Elem>azure-c-sdk/sdk/iot/common/src</Elem>
     <Elem>azure-c-sdk/sdk/iot/common/inc</Elem>
+    <Elem>azure-c-sdk/sdk/inc/azure/core</Elem>
+    <Elem>azure-c-sdk/sdk/inc/azure/iot</Elem>
+    <Elem>azure-c-sdk/sdk/src/azure/iot</Elem>
+    <Elem>azure-c-sdk/sdk/src/azure/core</Elem>
+    <Elem>azure-c-sdk/sdk/src/azure/platform</Elem>
   </sourceRootList>
   <projectmakefile>Makefile</projectmakefile>
   <confs>
@@ -518,8 +522,7 @@
         <property key="enable-short-double" value="false"/>
         <property key="enable-symbols" value="true"/>
         <property key="enable-unroll-loops" value="false"/>
-        <property key="extra-include-directories"
-                  value="azure-c-sdk\sdk\core\core\inc;azure-c-sdk\sdk\core\core\internal;azure-c-sdk\sdk\platform\noplatform\inc;azure-c-sdk\sdk\iot\common\inc;azure-c-sdk\sdk\iot\hub\inc;azure-c-sdk\sdk\iot\provisioning\inc"/>
+        <property key="extra-include-directories" value="azure-c-sdk\sdk\inc"/>
         <property key="isolate-each-function" value="true"/>
         <property key="keep-inline" value="false"/>
         <property key="oXC16gcc-align-arr" value="false"/>
@@ -539,7 +542,7 @@
         <property key="optimization-level" value="1"/>
         <property key="post-instruction-scheduling" value="default"/>
         <property key="pre-instruction-scheduling" value="default"/>
-        <property key="preprocessor-macros" value=""/>
+        <property key="preprocessor-macros" value="uintptr_t=void*"/>
         <property key="scalar-model" value="default"/>
         <property key="use-cci" value="false"/>
         <property key="use-iar" value="false"/>
@@ -688,6 +691,8 @@
         <property key="memories.programmemory" value="true"/>
         <property key="memories.programmemory.ranges" value="0-15eff"/>
         <property key="poweroptions.powerenable" value="false"/>
+        <property key="programmerToGoFilePath"
+                  value="C:/Users/ericwol/MPLABXProjects/GitHub/PIC_IoT/myiot.X/debug/default/myiot_ptg"/>
         <property key="programoptions.eraseb4program" value="true"/>
         <property key="programoptions.preservedataflash" value="false"/>
         <property key="programoptions.preservedataflash.ranges"

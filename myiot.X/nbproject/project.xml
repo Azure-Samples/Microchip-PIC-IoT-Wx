@@ -25,6 +25,11 @@
                 <sourceRootElem>azure-c-sdk/sdk/iot/provisioning/src</sourceRootElem>
                 <sourceRootElem>azure-c-sdk/sdk/iot/common/src</sourceRootElem>
                 <sourceRootElem>azure-c-sdk/sdk/iot/common/inc</sourceRootElem>
+                <sourceRootElem>azure-c-sdk/sdk/inc/azure/core</sourceRootElem>
+                <sourceRootElem>azure-c-sdk/sdk/inc/azure/iot</sourceRootElem>
+                <sourceRootElem>azure-c-sdk/sdk/src/azure/iot</sourceRootElem>
+                <sourceRootElem>azure-c-sdk/sdk/src/azure/core</sourceRootElem>
+                <sourceRootElem>azure-c-sdk/sdk/src/azure/platform</sourceRootElem>
             </sourceRootList>
             <confList>
                 <confElem>

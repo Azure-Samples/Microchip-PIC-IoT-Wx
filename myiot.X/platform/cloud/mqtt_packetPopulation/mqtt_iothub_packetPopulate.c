@@ -13,7 +13,7 @@
 #include "../../config/IoT_Sensor_Node_config.h"
 #include "../../debug_print.h"
 #include "../../../platform/cryptoauthlib/lib/basic/atca_basic.h"
-#include "az_iot_hub_client.h"
+#include "azure/iot/az_iot_hub_client.h"
 
 pf_MQTT_CLIENT pf_mqqt_iothub_client = {
   MQTT_CLIENT_iothub_publish,
@@ -150,12 +150,9 @@ void MQTT_CLIENT_iothub_connect(char* deviceID)
 	key_size = sizeof(signature_hash_buf);
 	atcab_base64encode_(hash, sizeof(hash), signature_hash_buf, &key_size, az_iot_b64rules);
 
-	char signature_hash_encoded_buf[512];
-	url_encode_rfc3986(signature_hash_buf, signature_hash_encoded_buf, sizeof(signature_hash_encoded_buf));
-
 	size_t mqtt_password_buf_len;
-	az_span signature_hash_encoded = az_span_from_str(signature_hash_encoded_buf);
-	result = az_iot_hub_client_sas_get_password(&hub_client, signature_hash_encoded, expire_time, AZ_SPAN_NULL, mqtt_password_buf, sizeof(mqtt_password_buf), &mqtt_password_buf_len);
+	az_span signature_hash = az_span_from_str(signature_hash_buf);
+	result = az_iot_hub_client_sas_get_password(&hub_client, signature_hash, expire_time, AZ_SPAN_NULL, mqtt_password_buf, sizeof(mqtt_password_buf), &mqtt_password_buf_len);
 	if (az_failed(result))
 	{
 		debug_printError("az_iot_hub_client_sas_get_password failed");

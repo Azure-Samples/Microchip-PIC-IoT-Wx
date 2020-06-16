@@ -56,9 +56,9 @@
 #include "platform/debug_print.h"
 #include "platform/mqtt/mqtt_core/mqtt_core.h"
 #include "platform/mqtt/mqtt_packetTransfer_interface.h"
-#include "az_span.h"
-#include "az_json.h"
-#include "az_iot_hub_client.h"
+#include "azure/core/az_span.h"
+#include "azure/core/az_json.h"
+#include "azure/iot/az_iot_hub_client.h"
 
 extern az_iot_hub_client hub_client;
 extern pf_MQTT_CLIENT pf_mqqt_iotprovisioning_client;

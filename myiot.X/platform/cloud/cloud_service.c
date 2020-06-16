@@ -46,7 +46,7 @@
 #include "../application_manager.h"
 #include "../credentials_storage/credentials_storage.h"
 #include "../mqtt/mqtt_packetTransfer_interface.h"
-#include "az_iot_hub_client.h"
+#include "azure/iot/az_iot_hub_client.h"
 
 static bool cloudInitialized = false;
 static bool waitingForMQTT = false;
