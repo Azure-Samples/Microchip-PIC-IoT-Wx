@@ -57,7 +57,13 @@ int8_t hif_deinit(void* arg);
 
 void wifi_reinit()
 {
-	tstrWifiInitParam param = { 0 };
+
+//    tstrWifiInitParam param = { 0 };
+
+    tstrWifiInitParam param;
+	/* Initialize Wi-Fi parameters structure. */
+	memset((uint8_t*)&param, 0, sizeof(tstrWifiInitParam));
+
 	param.pfAppWifiCb = wifiCallback;
 	socketDeinit();
 	hif_deinit(NULL);
@@ -67,15 +73,6 @@ void wifi_reinit()
 
 	nm_bsp_init();
     m2m_wifi_init(&param);
-
-	// clear out client/device tls cert
-
-    uint8 sector_buffer[512] = { 0 };
-    sint8 status = m2m_ssl_send_certs_to_winc(sector_buffer, sizeof(sector_buffer));
-    if (status != M2M_SUCCESS)
-    {
-        debug_printInfo("m2m_ssl_send_certs_to_winc() failed with ret=%d", status);
-    }
 
 	socketInit();    
 }

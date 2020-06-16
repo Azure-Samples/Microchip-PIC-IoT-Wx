@@ -124,6 +124,7 @@ void MQTT_CLIENT_iothub_connect(char* deviceID)
 		return;
 	}
 
+#ifdef SAS
 	time_t expire_time = time(NULL) + 60 * 60; // token expires in 1 hour
 	uint8_t signature_buf[256];
 	az_span signature = AZ_SPAN_FROM_BUFFER(signature_buf);
@@ -157,7 +158,8 @@ void MQTT_CLIENT_iothub_connect(char* deviceID)
 	{
 		debug_printError("az_iot_hub_client_sas_get_password failed");
 		return;
-	}
+	}   
+#endif
 
 	mqttConnectPacket cloudConnectPacket;
 	memset(&cloudConnectPacket, 0, sizeof(mqttConnectPacket));
@@ -165,8 +167,15 @@ void MQTT_CLIENT_iothub_connect(char* deviceID)
 	cloudConnectPacket.connectVariableHeader.keepAliveTimer = AZ_IOT_DEFAULT_MQTT_CONNECT_KEEPALIVE_SECONDS;
 
 	cloudConnectPacket.clientID = az_span_ptr(device_id);
+    
+#ifdef SAS
 	cloudConnectPacket.password = (uint8_t*)mqtt_password_buf;
 	cloudConnectPacket.passwordLength = mqtt_password_buf_len;
+#else
+    cloudConnectPacket.password = NULL;
+	cloudConnectPacket.passwordLength = 0;
+#endif
+    
 	cloudConnectPacket.username = (uint8_t*)mqtt_username_buf;
 	cloudConnectPacket.usernameLength = (uint16_t)mqtt_username_buf_len;
 

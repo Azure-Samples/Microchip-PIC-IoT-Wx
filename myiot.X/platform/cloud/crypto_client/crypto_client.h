@@ -33,13 +33,19 @@
 
 #include <stdint.h>
 #include "../../cryptoauthlib/lib/atca_iface.h"
+#include "../../cryptoauthlib/lib/cryptoauthlib.h"
+#include "../../winc/driver/include/ecc_types.h"
 
-extern ATCAIfaceCfg cfg_ateccx08a_i2c_custom;
 extern uint8_t cryptoDeviceInitialized;
+extern ATCAIfaceCfg cfg_ateccx08a_i2c_custom;
 
-uint8_t CRYPTO_CLIENT_createJWT(char* buf, size_t buflen, uint32_t ts, const char* projectId);
 uint8_t CRYPTO_CLIENT_printPublicKey(char *s);
 uint8_t CRYPTO_CLIENT_printSerialNumber(char *s);
-
+void CRYPTO_CLIENT_processEccRequest(tstrEccReqInfo *ecc_request);
+int8_t ecdsa_process_sign_verify_request(uint32_t number_of_signatures);
+int8_t ecdh_derive_key_pair(tstrECPoint *server_public_key);
+int8_t ecdh_derive_client_shared_secret(tstrECPoint *server_public_key, uint8_t *ecdh_shared_secret, tstrECPoint *client_public_key);
+int8_t ecdsa_process_sign_gen_request(tstrEcdsaSignReqInfo *sign_request, uint8_t *signature, uint16_t *signature_size);
+int8_t ecdh_derive_server_shared_secret(uint16_t private_key_id, tstrECPoint *client_public_key, uint8_t *ecdh_shared_secret);
 
 #endif /* CRYPTO_CLIENT_H */

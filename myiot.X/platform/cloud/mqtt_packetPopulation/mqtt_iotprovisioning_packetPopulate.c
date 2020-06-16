@@ -162,6 +162,7 @@ void MQTT_CLIENT_iotprovisioning_receive(uint8_t* data, uint16_t len)
 
 void MQTT_CLIENT_iotprovisioning_connect(char* deviceID)
 {
+    //TODO: revised logic for x509 flow.  currently just get it to compile
 	const az_span deviceID_parm = az_span_from_str(deviceID);
 	az_span device_id = AZ_SPAN_FROM_BUFFER(device_id_buf);
 	az_span_copy(device_id, deviceID_parm);
@@ -171,13 +172,13 @@ void MQTT_CLIENT_iotprovisioning_connect(char* deviceID)
 	size_t enrollments_group_key_size = sizeof(enrollments_group_key);
     atcab_base64decode_(provisioning_enrollment_key, strlen(provisioning_enrollment_key), enrollments_group_key, &enrollments_group_key_size, az_iot_b64rules);
     
-    uint8_t device_key[32];
-    hmac_sha256(device_key, device_id_buf, strlen((char*)device_id_buf), enrollments_group_key, enrollments_group_key_size);
+//    uint8_t device_key[32];
+//    hmac_sha256(device_key, device_id_buf, strlen((char*)device_id_buf), enrollments_group_key, enrollments_group_key_size);
 
-    memset(hub_device_key_buf, 0, sizeof(hub_device_key_buf));
-	size_t hub_device_key_buf_len = sizeof(hub_device_key_buf);
-	atcab_base64encode_(device_key, sizeof(device_key), (char*)hub_device_key_buf, &hub_device_key_buf_len, az_iot_b64rules);
-    hub_device_key = hub_device_key_buf;
+//    memset(hub_device_key_buf, 0, sizeof(hub_device_key_buf));
+//	size_t hub_device_key_buf_len = sizeof(hub_device_key_buf);
+//	atcab_base64encode_(device_key, sizeof(device_key), (char*)hub_device_key_buf, &hub_device_key_buf_len, az_iot_b64rules);
+//    hub_device_key = hub_device_key_buf;
     
     const az_span global_device_endpoint = AZ_SPAN_LITERAL_FROM_STR(CFG_MQTT_PROVISIONING_HOST);
     const az_span id_scope = AZ_SPAN_LITERAL_FROM_STR(PROVISIONING_ID_SCOPE);
@@ -209,27 +210,30 @@ void MQTT_CLIENT_iotprovisioning_connect(char* deviceID)
 		return;
 	}
 
-    uint8_t sas_hash[32];
-	atcab_nonce(device_key);
-	ATCA_STATUS atca_status = atcab_sha_hmac(signature_buf, az_span_size(signature), ATCA_TEMPKEY_KEYID, sas_hash, SHA_MODE_TARGET_OUT_ONLY);
-	if (atca_status != ATCA_SUCCESS)
-	{
-		debug_printError("atcab_sha_hmac failed");
-		return;
-	}
+//    uint8_t sas_hash[32];
+//	atcab_nonce(device_key);
+//	ATCA_STATUS atca_status = atcab_sha_hmac(signature_buf, az_span_size(signature), ATCA_TEMPKEY_KEYID, sas_hash, SHA_MODE_TARGET_OUT_ONLY);
+//	if (atca_status != ATCA_SUCCESS)
+//	{
+//		debug_printError("atcab_sha_hmac failed");
+//		return;
+//	}
     
-	char signature_hash_buf[64];
-	size_t key_size = _az_COUNTOF(signature_hash_buf);
-	atcab_base64encode_(sas_hash, sizeof(sas_hash), signature_hash_buf, &key_size, az_iot_b64rules);
+//	char signature_hash_buf[64];
+//	size_t key_size = _az_COUNTOF(signature_hash_buf);
+//	atcab_base64encode_(sas_hash, sizeof(sas_hash), signature_hash_buf, &key_size, az_iot_b64rules);
+
+//	char signature_hash_encoded_buf[256];
+//	url_encode_rfc3986(signature_hash_buf, signature_hash_encoded_buf, _az_COUNTOF(signature_hash_encoded_buf));
 
 	size_t mqtt_password_buf_len;
-	az_span signature_hash = az_span_from_str(signature_hash_buf);
-	result = az_iot_provisioning_client_sas_get_password(&provisioning_client, signature_hash, expire_time, az_span_from_str("registration"), mqtt_password_buf, sizeof(mqtt_password_buf), &mqtt_password_buf_len);
-	if (az_failed(result))
-	{
-		debug_printError("az_iot_provisioning_client_sas_get_password failed");
-		return;
-	}
+//	az_span signature_hash_encoded = az_span_from_str(signature_hash_encoded_buf);
+//	result = az_iot_provisioning_client_sas_get_password(&provisioning_client, signature_hash_encoded, expire_time, az_span_from_str("registration"), mqtt_password_buf, sizeof(mqtt_password_buf), &mqtt_password_buf_len);
+//	if (az_failed(result))
+//	{
+//		debug_printError("az_iot_provisioning_client_sas_get_password failed");
+//		return;
+//	}
     
 	mqttConnectPacket cloudConnectPacket;
 	memset(&cloudConnectPacket, 0, sizeof(mqttConnectPacket));

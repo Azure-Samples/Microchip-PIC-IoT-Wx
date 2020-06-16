@@ -86,6 +86,31 @@ uint32_t dnsRetryDelay = 0;
 
 packetReceptionHandler_t cloud_packetReceiveCallBackTable[CLOUD_PACKET_RECV_TABLE_SIZE];
 
+void NETWORK_wifiSslCallback(uint8_t u8MsgType, void *pvMsg)
+{
+    switch (u8MsgType)
+    {
+        case M2M_SSL_REQ_ECC:
+        {
+            tstrEccReqInfo *ecc_request = (tstrEccReqInfo*)pvMsg;
+            CRYPTO_CLIENT_processEccRequest(ecc_request);
+            
+            break;
+        }
+        
+        case M2M_SSL_RESP_SET_CS_LIST:
+        {
+            tstrSslSetActiveCsList *pstrCsList = (tstrSslSetActiveCsList *)pvMsg;
+            debug_printInfo("ActiveCS bitmap:%04x", pstrCsList->u32CsBMP);
+            
+            break;
+        }
+        
+        default:
+            break;
+    }
+}
+
 void CLOUD_reset(void)
 {
 	debug_printError("CLOUD: Cloud Reset");
@@ -156,6 +181,21 @@ packetReceptionHandler_t* getSocketInfo(uint8_t sock);
 static int8_t connectMQTTSocket(void)
 {
 	int8_t ret = false;
+    
+    // Abstract the SSL section into a separate function
+    int8_t sslInit;
+    
+    sslInit = m2m_ssl_init(NETWORK_wifiSslCallback);
+    if(sslInit != M2M_SUCCESS)
+    {
+        debug_printInfo("WiFi SSL Initialization failed");
+    }
+    
+    sslInit = m2m_ssl_set_active_ciphersuites((uint32_t)SSL_ECC_ONLY_CIPHERS);
+    if(sslInit != SOCK_ERR_NO_ERROR)
+    {
+        debug_printInfo("Set active cipher suites failed");
+    }
     
 	if (mqttHostIP > 0)
 	{
