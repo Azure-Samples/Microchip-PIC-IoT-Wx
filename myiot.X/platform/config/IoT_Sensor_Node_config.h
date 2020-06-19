@@ -46,7 +46,7 @@
 // <s> mqtt provisioning host
 // <i> mqtt provisioning host address
 // <id> provisioning host
-//#define CFG_MQTT_PROVISIONING_HOST "global.azure-devices-provisioning.net"
+#define CFG_MQTT_PROVISIONING_HOST "global.azure-devices-provisioning.net"
 
 // <s> provisioning id scope
 // <i> provisioning id scope of the DPS service
