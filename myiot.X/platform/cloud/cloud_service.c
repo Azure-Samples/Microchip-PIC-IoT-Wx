@@ -133,6 +133,7 @@ uint32_t cloudResetTask(void* payload) {
 
 void CLOUD_init(char* attDeviceID)
 {
+    debug_print("CLOUD_init %s", attDeviceID);
 	// Create timers for the application scheduler
 	timeout_create(&CLOUD_taskTimer, CLOUD_TASK_INTERVAL);
     deviceId = attDeviceID;
@@ -190,13 +191,7 @@ static int8_t connectMQTTSocket(void)
     {
         debug_printInfo("WiFi SSL Initialization failed");
     }
-    
-    sslInit = m2m_ssl_set_active_ciphersuites((uint32_t)SSL_ECC_ONLY_CIPHERS);
-    if(sslInit != SOCK_ERR_NO_ERROR)
-    {
-        debug_printInfo("Set active cipher suites failed");
-    }
-    
+      
 	if (mqttHostIP > 0)
 	{
 		struct bsd_sockaddr_in addr;

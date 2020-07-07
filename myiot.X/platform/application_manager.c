@@ -29,10 +29,12 @@
 #define MAIN_DATATASK_INTERVAL timeout_mSecToTicks(100L)
 #define SW0_Value   (PORTAbits.RA7 /* get SW0 value */)
 #define SW1_Value   (PORTAbits.RA10 /* get SW1 value */)
+#define SN_STRING "sn"
 
  // This will contain the device ID, before we have it this dummy value is the init value which is non-0
 char* attDeviceID;
 char attDeviceID_buf[20] = "BAAAAADD1DBAAADD1D";
+char buf[25];
 shared_networking_params_t shared_networking_params;
 ATCA_STATUS retValCryptoClientSerialNumber;
 
@@ -81,7 +83,13 @@ void application_init() {
 	}
     else
     {
-        attDeviceID = attDeviceID_buf;
+        // To use Azure provisioning service, attDeviceID should match with the device cert CN,
+        // which is the serial number of ECC608 prefixed with "sn" if you are using the 
+        // the microchip provisioning tool for PIC24.
+        strcat(buf, SN_STRING);
+        strcat(buf, attDeviceID_buf);
+        attDeviceID = buf;
+        debug_print("CRYPTO_CLIENT_printSerialNumber %s", attDeviceID);
     }
 #endif    
     
