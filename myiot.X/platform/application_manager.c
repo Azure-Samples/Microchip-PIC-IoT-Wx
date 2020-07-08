@@ -132,7 +132,7 @@ void application_post_provisioning(void)
 	CLOUD_init(attDeviceID);
 }
 
-void application_cloud_mqqt_connect(char* host, pf_MQTT_CLIENT* pf_table, cloud_cb_t fpSendToCloud)
+void application_cloud_mqtt_connect(char* host, pf_MQTT_CLIENT* pf_table, cloud_cb_t fpSendToCloud)
 {
 	CLOUD_init_host(host, attDeviceID, pf_table);
     fpSendToCloudCallback = fpSendToCloud;

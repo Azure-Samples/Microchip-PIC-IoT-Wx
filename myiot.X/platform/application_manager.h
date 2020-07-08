@@ -26,7 +26,7 @@ typedef union
 extern shared_networking_params_t shared_networking_params;
 
 void application_init(void);
-void application_cloud_mqqt_connect(char* host, pf_MQTT_CLIENT* pf_table, void (*fpSendToCloud)());
+void application_cloud_mqtt_connect(char* host, pf_MQTT_CLIENT* pf_table, void (*fpSendToCloud)());
 void application_post_provisioning(void);
 void runScheduler(void);
 

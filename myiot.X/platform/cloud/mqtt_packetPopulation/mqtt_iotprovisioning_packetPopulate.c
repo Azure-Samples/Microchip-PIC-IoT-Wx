@@ -22,7 +22,7 @@
 #ifdef CFG_MQTT_PROVISIONING_HOST
 #define HALF_SECOND 1000L
 
-pf_MQTT_CLIENT pf_mqqt_iotprovisioning_client = {
+pf_MQTT_CLIENT pf_mqtt_iotprovisioning_client = {
   MQTT_CLIENT_iotprovisioning_publish,
   MQTT_CLIENT_iotprovisioning_receive,
   MQTT_CLIENT_iotprovisioning_connect,
@@ -88,7 +88,7 @@ void dps_client_register(uint8_t* topic, uint8_t* payload)
             timeout_delete(&dps_retry_timer); 
             az_span_to_str(hub_hostname_buf, sizeof(hub_hostname_buf), dps_register_response.registration_result.assigned_hub_hostname);
             hub_hostname = hub_hostname_buf;
-            pf_mqqt_iotprovisioning_client.MQTT_CLIENT_task_completed();
+            pf_mqtt_iotprovisioning_client.MQTT_CLIENT_task_completed();
             break;
             
         case AZ_IOT_PROVISIONING_STATUS_FAILED:
@@ -230,8 +230,6 @@ void MQTT_CLIENT_iotprovisioning_connected()
 		debug_printError("az_iot_provisioning_client_register_get_publish_topic failed");
 		return;
 	}
-    
-    debug_print("MQTT_CLIENT_iotprovisioning_connected %s", mqtt_dsp_topic_buf);
 
 	mqttPublishPacket cloudPublishPacket;
 	// Fixed header

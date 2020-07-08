@@ -61,8 +61,8 @@
 #include "azure/iot/az_iot_hub_client.h"
 
 extern az_iot_hub_client hub_client;
-extern pf_MQTT_CLIENT pf_mqqt_iotprovisioning_client;
-extern pf_MQTT_CLIENT pf_mqqt_iothub_client;
+extern pf_MQTT_CLIENT pf_mqtt_iotprovisioning_client;
+extern pf_MQTT_CLIENT pf_mqtt_iothub_client;
 
 char mqtt_method_topic_buf[256];
 char c2d_key[128];
@@ -366,7 +366,8 @@ void sendToCloud(void)
 #ifdef CFG_MQTT_PROVISIONING_HOST
 void iot_provisioning_completed(void)
 {
-    application_cloud_mqqt_connect(hub_hostname, &pf_mqqt_iothub_client, sendToCloud);
+    debug_printGOOD("IoT Provisioning Completed");
+    application_cloud_mqtt_connect(hub_hostname, &pf_mqtt_iothub_client, sendToCloud);
 }
 #endif //CFG_MQTT_PROVISIONING_HOST 
 
@@ -382,10 +383,10 @@ int main(void)
 	application_init();
 
 #ifdef CFG_MQTT_PROVISIONING_HOST
-    pf_mqqt_iotprovisioning_client.MQTT_CLIENT_task_completed = iot_provisioning_completed;
-	application_cloud_mqqt_connect(CFG_MQTT_PROVISIONING_HOST, &pf_mqqt_iotprovisioning_client, NULL);
+    pf_mqtt_iotprovisioning_client.MQTT_CLIENT_task_completed = iot_provisioning_completed;
+	application_cloud_mqtt_connect(CFG_MQTT_PROVISIONING_HOST, &pf_mqtt_iotprovisioning_client, NULL);
 #else
-	application_cloud_mqqt_connect(hub_hostname, &pf_mqqt_iothub_client, sendToCloud);
+	application_cloud_mqtt_connect(hub_hostname, &pf_mtqt_iothub_client, sendToCloud);
 #endif //CFG_MQTT_PROVISIONING_HOST 
 
 	while (true)

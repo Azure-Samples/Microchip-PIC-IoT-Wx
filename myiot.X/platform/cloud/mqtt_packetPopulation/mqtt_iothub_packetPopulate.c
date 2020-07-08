@@ -15,7 +15,7 @@
 #include "../../../platform/cryptoauthlib/lib/basic/atca_basic.h"
 #include "azure/iot/az_iot_hub_client.h"
 
-pf_MQTT_CLIENT pf_mqqt_iothub_client = {
+pf_MQTT_CLIENT pf_mqtt_iothub_client = {
   MQTT_CLIENT_iothub_publish,
   MQTT_CLIENT_iothub_receive,
   MQTT_CLIENT_iothub_connect,
