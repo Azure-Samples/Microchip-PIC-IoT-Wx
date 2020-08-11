@@ -6,7 +6,7 @@
 
 #include <stdbool.h>
 #include <stdint.h>
-#include "../../config/IoT_Sensor_Node_config.h"
+#include "../platform/config/IoT_Sensor_Node_config.h"
 
 extern char cid[];
 extern char mqtt_topic_buf[];

@@ -7,7 +7,7 @@
 
 #include <stdbool.h>
 #include <stdint.h>
-#include "../../config/IoT_Sensor_Node_config.h"
+#include "../platform/config/IoT_Sensor_Node_config.h"
 
 void MQTT_CLIENT_iothub_publish(uint8_t *data, uint16_t len);
 void MQTT_CLIENT_iothub_receive(uint8_t *data, uint16_t len);

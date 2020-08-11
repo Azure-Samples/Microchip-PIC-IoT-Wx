@@ -6,13 +6,13 @@
 #include <stdio.h>
 #include <time.h>
 #include <ctype.h>
-#include "../../mqtt/mqtt_core/mqtt_core.h"
-#include "../../mqtt/mqtt_packetTransfer_interface.h"
+#include "../platform/mqtt/mqtt_core/mqtt_core.h"
+#include "../platform/mqtt/mqtt_packetTransfer_interface.h"
 #include "mqtt_packetPopulate.h"
 #include "mqtt_iothub_packetPopulate.h"
-#include "../../config/IoT_Sensor_Node_config.h"
-#include "../../debug_print.h"
-#include "../../../platform/cryptoauthlib/lib/basic/atca_basic.h"
+#include "../platform/config/IoT_Sensor_Node_config.h"
+#include "../platform/debug_print.h"
+#include "../platform/cryptoauthlib/lib/basic/atca_basic.h"
 #include "azure/iot/az_iot_hub_client.h"
 
 pf_MQTT_CLIENT pf_mqtt_iothub_client = {

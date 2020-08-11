@@ -41,7 +41,7 @@ IN NO EVENT WILL MICROCHIP BE LIABLE FOR ANY INDIRECT, SPECIAL, PUNITIVE,
 #include "../mqtt_packetTransfer_interface.h"
 #include "../../config/mqtt_config.h"
 #include "../../debug_print.h"
-#include "../../cloud/mqtt_packetPopulation/mqtt_packetPopulate.h"
+#include "../../../mqtt_packetPopulation/mqtt_packetPopulate.h"
 
 extern pf_MQTT_CLIENT* pf_mqtt_client;
 

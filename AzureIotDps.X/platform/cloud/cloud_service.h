@@ -10,7 +10,7 @@
 
 #include <stdint.h>
 #include <stdbool.h>
-#include "mqtt_packetPopulation/mqtt_packetPopulate.h"
+#include "../../mqtt_packetPopulation/mqtt_packetPopulate.h"
 
 #define CLOUD_PACKET_RECV_TABLE_SIZE	2
 #define CLOUD_MAX_DEVICEID_LENGTH 30

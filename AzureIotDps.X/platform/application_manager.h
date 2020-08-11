@@ -10,7 +10,7 @@
 #define APPLICATION_MANAGER_H_
 
 #include <stdint.h>
-#include "cloud/mqtt_packetPopulation/mqtt_packetPopulate.h"
+#include "../mqtt_packetPopulation/mqtt_packetPopulate.h"
 
 typedef union
 {
