@@ -3,7 +3,7 @@
     <type>com.microchip.mplab.nbide.embedded.makeproject</type>
     <configuration>
         <data xmlns="http://www.netbeans.org/ns/make-project/1">
-            <name>myiot</name>
+            <name>AzureIotDps</name>
             <creation-uuid>379862ff-4200-4464-9676-3048d2bf7cf4</creation-uuid>
             <make-project-type>0</make-project-type>
             <c-extensions>c</c-extensions>
@@ -30,6 +30,7 @@
                 <sourceRootElem>azure-c-sdk/sdk/src/azure/iot</sourceRootElem>
                 <sourceRootElem>azure-c-sdk/sdk/src/azure/core</sourceRootElem>
                 <sourceRootElem>azure-c-sdk/sdk/src/azure/platform</sourceRootElem>
+                <sourceRootElem>mqtt_packetPopulation</sourceRootElem>
             </sourceRootList>
             <confList>
                 <confElem>

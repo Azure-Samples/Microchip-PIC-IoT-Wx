@@ -6,16 +6,16 @@
 #include <stdio.h>
 #include <time.h>
 #include <ctype.h>
-#include "../../mqtt/mqtt_core/mqtt_core.h"
-#include "../crypto_client/hmac-sha256.h"
-#include "../../mqtt/mqtt_packetTransfer_interface.h"
+#include "../platform/mqtt/mqtt_core/mqtt_core.h"
+#include "../platform/cloud/crypto_client/hmac-sha256.h"
+#include "../platform/mqtt/mqtt_packetTransfer_interface.h"
 #include "mqtt_packetPopulate.h"
 #include "mqtt_iotprovisioning_packetPopulate.h"
-#include "../../config/IoT_Sensor_Node_config.h"
-#include "../../debug_print.h"
-#include "../../../platform/cryptoauthlib/lib/basic/atca_basic.h"
-#include "../../../platform/drivers/timeout.h"
-#include "../../../platform/led.h"
+#include "../platform/config/IoT_Sensor_Node_config.h"
+#include "../platform/debug_print.h"
+#include "../platform/cryptoauthlib/lib/basic/atca_basic.h"
+#include "../platform/drivers/timeout.h"
+#include "../platform/led.h"
 #include "azure/iot/az_iot_provisioning_client.h"
 #include "azure/iot/az_iot_hub_client.h"
 

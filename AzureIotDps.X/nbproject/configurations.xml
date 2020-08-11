@@ -52,9 +52,9 @@
           <logicalFolder name="mqtt_packetPopulation"
                          displayName="mqtt_packetPopulation"
                          projectFiles="true">
-            <itemPath>platform/cloud/mqtt_packetPopulation/mqtt_iothub_packetPopulate.h</itemPath>
-            <itemPath>platform/cloud/mqtt_packetPopulation/mqtt_iotprovisioning_packetPopulate.h</itemPath>
-            <itemPath>platform/cloud/mqtt_packetPopulation/mqtt_packetPopulate.h</itemPath>
+            <itemPath>mqtt_packetPopulation/mqtt_iothub_packetPopulate.h</itemPath>
+            <itemPath>mqtt_packetPopulation/mqtt_iotprovisioning_packetPopulate.h</itemPath>
+            <itemPath>mqtt_packetPopulation/mqtt_packetPopulate.h</itemPath>
           </logicalFolder>
           <itemPath>platform/cloud/cloud_service.h</itemPath>
           <itemPath>platform/cloud/wifi_service.h</itemPath>
@@ -272,9 +272,9 @@
           <logicalFolder name="mqtt_packetPopulation"
                          displayName="mqtt_packetPopulation"
                          projectFiles="true">
-            <itemPath>platform/cloud/mqtt_packetPopulation/mqtt_iothub_packetPopulate.c</itemPath>
-            <itemPath>platform/cloud/mqtt_packetPopulation/mqtt_iotprovisioning_packetPopulate.c</itemPath>
-            <itemPath>platform/cloud/mqtt_packetPopulation/mqtt_packetPopulate.c</itemPath>
+            <itemPath>mqtt_packetPopulation/mqtt_iothub_packetPopulate.c</itemPath>
+            <itemPath>mqtt_packetPopulation/mqtt_iotprovisioning_packetPopulate.c</itemPath>
+            <itemPath>mqtt_packetPopulation/mqtt_packetPopulate.c</itemPath>
           </logicalFolder>
           <itemPath>platform/cloud/cloud_service.c</itemPath>
           <itemPath>platform/cloud/wifi_service.c</itemPath>
@@ -466,6 +466,7 @@
     <Elem>azure-c-sdk/sdk/src/azure/iot</Elem>
     <Elem>azure-c-sdk/sdk/src/azure/core</Elem>
     <Elem>azure-c-sdk/sdk/src/azure/platform</Elem>
+    <Elem>mqtt_packetPopulation</Elem>
   </sourceRootList>
   <projectmakefile>Makefile</projectmakefile>
   <confs>
@@ -475,13 +476,13 @@
         <targetDevice>PIC24FJ128GA705</targetDevice>
         <targetHeader></targetHeader>
         <targetPluginBoard></targetPluginBoard>
-        <platformTool>nEdbgTool</platformTool>
+        <platformTool>noID</platformTool>
         <languageToolchain>XC16</languageToolchain>
         <languageToolchainVersion>1.50</languageToolchainVersion>
         <platform>3</platform>
       </toolsSet>
       <packs>
-        <pack name="PIC24F-GA-GB_DFP" vendor="Microchip" version="1.1.74"/>
+        <pack name="PIC24F-GA-GB_DFP" vendor="Microchip" version="1.2.101"/>
       </packs>
       <compileType>
         <linkerTool>
@@ -627,6 +628,7 @@
         <property key="legacy-libc" value="true"/>
         <property key="mpreserve-all" value="false"/>
         <property key="oXC16glb-macros" value=""/>
+        <property key="omit-pack-options" value="1"/>
         <property key="output-file-format" value="elf"/>
         <property key="preserve-all" value="false"/>
         <property key="preserve-file" value=""/>
@@ -676,6 +678,8 @@
         <property key="debugoptions.useswbreakpoints" value="false"/>
         <property key="firmware.path"
                   value="Press to browse for a specific firmware version"/>
+        <property key="firmware.toolpack"
+                  value="Press to select which tool pack to use"/>
         <property key="firmware.update.action" value="firmware.update.use.latest"/>
         <property key="memories.aux" value="false"/>
         <property key="memories.bootflash" value="true"/>
@@ -691,8 +695,6 @@
         <property key="memories.programmemory" value="true"/>
         <property key="memories.programmemory.ranges" value="0-15eff"/>
         <property key="poweroptions.powerenable" value="false"/>
-        <property key="programmerToGoFilePath"
-                  value="C:/Users/ericwol/MPLABXProjects/GitHub/PIC_IoT/myiot.X/debug/default/myiot_ptg"/>
         <property key="programoptions.eraseb4program" value="true"/>
         <property key="programoptions.preservedataflash" value="false"/>
         <property key="programoptions.preservedataflash.ranges"
@@ -703,6 +705,10 @@
         <property key="programoptions.preserveprogramrange" value="false"/>
         <property key="programoptions.preserveuserid" value="false"/>
         <property key="programoptions.programuserotp" value="false"/>
+        <property key="toolpack.updateoptions"
+                  value="toolpack.updateoptions.uselatestoolpack"/>
+        <property key="toolpack.updateoptions.packversion"
+                  value="Press to select which tool pack to use"/>
         <property key="voltagevalue" value=""/>
       </nEdbgTool>
     </conf>
