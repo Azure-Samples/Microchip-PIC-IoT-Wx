@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://www.netbeans.org/ns/project/1">
+    <type>com.microchip.mplab.nbide.embedded.makeproject</type>
+    <configuration>
+        <data xmlns="http://www.netbeans.org/ns/make-project/1">
+            <name>AzureIotPnpDps</name>
+            <creation-uuid>379862ff-4200-4464-9676-3048d2bf7cf4</creation-uuid>
+            <make-project-type>0</make-project-type>
+            <c-extensions>c</c-extensions>
+            <cpp-extensions/>
+            <header-extensions>h</header-extensions>
+            <asminc-extensions/>
+            <sourceEncoding>ISO-8859-1</sourceEncoding>
+            <make-dep-projects/>
+            <sourceRootList>
+                <sourceRootElem>platform</sourceRootElem>
+                <sourceRootElem>mqtt_packetPopulation</sourceRootElem>
+                <sourceRootElem>azure-c-sdk/azure-sdk-for-c/sdk/src/azure/iot</sourceRootElem>
+                <sourceRootElem>azure-c-sdk/azure-sdk-for-c/sdk/src/azure/core</sourceRootElem>
+                <sourceRootElem>azure-c-sdk/azure-sdk-for-c/sdk/inc</sourceRootElem>
+                <sourceRootElem>azure-sdk-for-c/sdk/inc</sourceRootElem>
+                <sourceRootElem>azure-sdk-for-c/sdk/src/azure/core</sourceRootElem>
+                <sourceRootElem>azure-sdk-for-c/sdk/src/azure/iot</sourceRootElem>
+            </sourceRootList>
+            <confList>
+                <confElem>
+                    <name>default</name>
+                    <type>2</type>
+                </confElem>
+            </confList>
+            <formatting>
+                <project-formatting-style>false</project-formatting-style>
+            </formatting>
+        </data>
+    </configuration>
+</project>
