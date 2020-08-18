@@ -1,3 +1,6 @@
-[submodule "myiot.X/azure-c-sdk"]
+[submodule "AzureIotDps.X/azure-c-sdk"]
 	path = AzureIotDps.X/azure-c-sdk
+	url = https://github.com/Azure/azure-sdk-for-c.git
+[submodule "AzureIotPnpDps.X/azure-sdk-for-c"]
+	path = AzureIotPnpDps.X/azure-sdk-for-c
 	url = https://github.com/Azure/azure-sdk-for-c.git
