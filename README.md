@@ -1,7 +1,3 @@
-**Azure Ready \| Secured Core\***
-
-**(\*branding is not yet defined, internal use only)**
-
 **Repurpose PIC-IoT Wx Development Board to Connect to Azure through IoT
 Hub Device Provisioning Service (DPS)**
 
