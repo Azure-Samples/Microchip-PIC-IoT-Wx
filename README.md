@@ -145,7 +145,7 @@ and security, MQTT does not have to provide a username or password.
 
 - [Setup your Azure IoT hub](https://github.com/Azure/azure-iot-device-ecosystem/blob/master/setup_iothub.md)
 - [Azure IoT Explorer](https://github.com/Azure/azure-iot-explorer/releases)
-- For the PnP sample, download the PnP DTMI [here](https://github.com/Azure/opendigitaltwins-dtdl/blob/master/DTDL/v2/samples/Thermostat.json)
+- For the Plug and Play sample, download the Plug and Play DTMI [here](https://github.com/Azure/opendigitaltwins-dtdl/blob/master/DTDL/v2/samples/Thermostat.json)
 - [MPLAB X IDE V5.30 or later](https://www.microchip.com/mplab/mplab-x-ide)
 - [XC16 Compiler v1.50 or later](https://www.microchip.com/mplab/compilers)
 
@@ -157,9 +157,9 @@ Connect the device through Azure IoT Hub Device Provisioning to then connect to 
 
 ### AzureIotPnpDps.X
 
-Use a PnP enabled device with the DTMI detailed [here](https://github.com/Azure/opendigitaltwins-dtdl/blob/master/DTDL/v2/samples/Thermostat.json). To further understand what PnP is, please see documentation [here](https://docs.microsoft.com/en-us/azure/iot-pnp/overview-iot-plug-and-play).
+Use a Plug and Play enabled device with the DTMI detailed [here](https://github.com/Azure/opendigitaltwins-dtdl/blob/master/DTDL/v2/samples/Thermostat.json). To further understand what Plug and Play is, please see documentation [here](https://docs.microsoft.com/en-us/azure/iot-pnp/overview-iot-plug-and-play).
 
-Once the board is flashed (directions later), you can proceed to interact with the PnP device using the Azure IoT Explorer. The following steps make it as seamless as possible.
+Once the board is flashed (directions later), you can proceed to interact with the Plug and Play device using the Azure IoT Explorer. The following steps make it as seamless as possible.
 
 - Once you open the tool, on the left side, there should be a tab called "IoT Plug and Play Settings". Open that tab and add the directory where you downloaded the DTMI detailed from [prerequisites](#prerequisites).
 - Paste in the connection string for your IoT Hub from the portal.
