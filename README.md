@@ -148,7 +148,6 @@ and security, MQTT does not have to provide a username or password.
 - For the PnP sample, download the PnP DTMI [here](https://github.com/Azure/opendigitaltwins-dtdl/blob/master/DTDL/v2/samples/Thermostat.json)
 - [MPLAB X IDE V5.30 or later](https://www.microchip.com/mplab/mplab-x-ide)
 - [XC16 Compiler v1.50 or later](https://www.microchip.com/mplab/compilers)
-- MPLAB code configurator (Once you finish the installation of the previous items, open MPLAB X IDE, then click Tools > Plugin Download > search for MPLAB code configurator and install it)
 
 ## Sample Descriptions
 
