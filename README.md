@@ -1,22 +1,47 @@
 # Repurpose PIC-IoT Wx Development Board to Connect to Azure through IoT Hub Device Provisioning Service (DPS)
 
-Introduction
-============
+## Introduction
 
  This document describes how to connect the PIC-IoT Wx Development Board (featuring a 16-bit PIC24F MCU, ATECC608A secure element, and ATWINC1510 Wi-Fi module) to an Azure IoT Hub via Device Provisioning Service (DPS) while leveraging Microsoft’s Azure IoT Embedded C SDK. The PIC-IoT is provisioned for use with Azure using self-signed X.509 certificate-based authentication.
 
 <img src=".//media/image1.png" />
 
-Background Knowledge
-====================
+## Table of Contents
 
-### **PIC-IoT Wx Development Board Overview & Features (SMART \| CONNECTED \| SECURE)**
+- [Repurpose PIC-IoT Wx Development Board to Connect to Azure through IoT Hub Device Provisioning Service (DPS)](#repurpose-pic-iot-wx-development-board-to-connect-to-azure-through-iot-hub-device-provisioning-service-dps)
+  - [Introduction](#introduction)
+  - [Table of Contents](#table-of-contents)
+  - [Background Knowledge](#background-knowledge)
+    - [PIC-IoT Wx Development Board Overview & Features (SMART \| CONNECTED \| SECURE)](#pic-iot-wx-development-board-overview--features-smart--connected--secure)
+    - [Microchip “Provisioning” vs. Microsoft “Provisioning”](#microchip-provisioning-vs-microsoft-provisioning)
+    - [High Level Architecture between the Client (PIC-IoT) and the Cloud (Azure)](#high-level-architecture-between-the-client-pic-iot-and-the-cloud-azure)
+    - [Azure IoT Embedded C SDK](#azure-iot-embedded-c-sdk)
+    - [TLS connection](#tls-connection)
+    - [MQTT Connection](#mqtt-connection)
+  - [Checklist](#checklist)
+    - [2. Set up Azure cloud resources](#2-set-up-azure-cloud-resources)
+    - [3. Set up Git](#3-set-up-git)
+  - [Step 2: Prepare your PIC-IoT board to connect to Azure](#step-2-prepare-your-pic-iot-board-to-connect-to-azure)
+  - [Step 3: Enroll device into DPS](#step-3-enroll-device-into-dps)
+    - [1. Preparing your environment for the certification verifying process:](#1-preparing-your-environment-for-the-certification-verifying-process)
+    - [2. In Azure portal, upload the root CA cert “root-ca.pem” in DPS and do proof-of-possession for X.509 CA certificates with your Device Provisioning Service](#2-in-azure-portal-upload-the-root-ca-cert-root-capem-in-dps-and-do-proof-of-possession-for-x509-ca-certificates-with-your-device-provisioning-service)
+    - [3. Add a new enrollment group using the signer-ca.pem file](#3-add-a-new-enrollment-group-using-the-signer-capem-file)
+    - [STOP! Sanity checks:](#stop-sanity-checks)
+  - [Step 4: Connect the PIC-IoT device to Azure](#step-4-connect-the-pic-iot-device-to-azure)
+  - [Step 5: Verify the connection between PIC-IoT and Azure](#step-5-verify-the-connection-between-pic-iot-and-azure)
+  - [Step 6: View PIC-IoT board telemetry on Azure IoT Explorer](#step-6-view-pic-iot-board-telemetry-on-azure-iot-explorer)
+  - [Further consideration](#further-consideration)
+  - [Conclusion](#conclusion)
+
+## Background Knowledge
+
+### PIC-IoT Wx Development Board Overview & Features (SMART \| CONNECTED \| SECURE)
 
 <img src=".//media/image2.png"/>
 
  Download the [PIC-IoT Wx HW User Guide](http://ww1.microchip.com/downloads/en/DeviceDoc/PIC-IoT-Wx-Hardware-User-Guide-DS50002964A.pdf) for more details
 
-### **Microchip “Provisioning” vs. Microsoft “Provisioning”**
+### Microchip “Provisioning” vs. Microsoft “Provisioning”
 
 The term “provisioning” will be use throughout this document (e.g. IoT
 Provisioning Tool, provisioning key, provisioning device, device
@@ -30,36 +55,37 @@ allows the hardware to be provisioned securely to the right IoT Hub.
 
 <img src=".//media/image3.png"/>
 
-### **High Level Architecture between the Client (PIC-IoT) and the Cloud (Azure)**
+### High Level Architecture between the Client (PIC-IoT) and the Cloud (Azure)
+
 This high-level architecture description summarizes the interactions
 between the PIC-IoT board and Azure. These are the top six major puzzle
 pieces that make up this enablement work of connecting PIC-IoT to Azure
 through DPS using X.509-based authentication:
 
--   ATECC608A: a secure element from the Microchip CryptoAuthentication
+- ATECC608A: a secure element from the Microchip CryptoAuthentication
     portfolio. It securely stores a private key that is used to
     authenticate the hardware with cloud providers to uniquely identify
     every board <https://www.microchip.com/wwwproducts/en/ATECC608A>
 
--   ATWINC1510: a low-power consumption Wi-Fi module that has access to
+- ATWINC1510: a low-power consumption Wi-Fi module that has access to
     the device certificate, signer CA certificate, and public key for
     mutual TLS handshaking between the board and the cloud
     <https://www.microchip.com/wwwproducts/en/ATWINC1510>
 
--   IoT Provisioning Tool: Microchip-provided tool for provisioning
+- IoT Provisioning Tool: Microchip-provided tool for provisioning
     self-signed certificate utilizing the unique serial number and
     private key stored in the ATECC608A secure element.
 
--   Azure IoT Embedded C SDK: Microsoft-provided API designed to
+- Azure IoT Embedded C SDK: Microsoft-provided API designed to
     allow small, low-cost embedded IoT devices to communicate with Azure
     services, serving as translation logic between the application code
     and transport client
 
--   Azure IoT Hub: IoT Hub is a managed service, hosted in the cloud,
+- Azure IoT Hub: IoT Hub is a managed service, hosted in the cloud,
     that acts as a central message hub for bi-directional communication
     between your IoT application and the devices it manages
 
--   Device Provisioning Service (DPS): a helper service for IoT Hub that
+- Device Provisioning Service (DPS): a helper service for IoT Hub that
     enables zero-touch, just-in-time provisioning to the right IoT hub
     without requiring human intervention, allowing customers to
     provision millions of devices in a secure and scalable manner
@@ -80,18 +106,19 @@ only contains the private key. The self-signed certificate chain
 including root CA, signer CA (or intermediate CA), and device CA is
 stored in the ATWINC1510 Wi-Fi module used for the TLS handshake.
 
-### ** Azure IoT Embedded C SDK **
-This is the high-level view of the Embedded C SDK which translates the application code into an Azure-friendly logic that can be easily understood by Azure IoT Hub. Note that Microsoft is only responsible for the logic in the green box; it is up to the IoT Developer to provide the remaining layers of application code, Transport Client, TLS, and Socket. In the provided demo project, Microchip provides the layers in blue. Please the [Azure SDK for Embedded C](https://github.com/Azure/azure-sdk-for-c/tree/78a280b7160201cf10a106e8499e03eec88ea582) document for more details. 
+### Azure IoT Embedded C SDK
+
+This is the high-level view of the Embedded C SDK which translates the application code into an Azure-friendly logic that can be easily understood by Azure IoT Hub. Note that Microsoft is only responsible for the logic in the green box; it is up to the IoT Developer to provide the remaining layers of application code, Transport Client, TLS, and Socket. In the provided demo project, Microchip provides the layers in blue. Please the [Azure SDK for Embedded C](https://github.com/Azure/azure-sdk-for-c/tree/78a280b7160201cf10a106e8499e03eec88ea582) document for more details.
 
 <img src=".//media/image7.png" style="width:2in;height:2in"/>
 
-### **TLS connection**
+### TLS connection
 
 The TLS connection performs both authentication and encryption.
 Authentication consists of two parts:
 
--   Server authentication; the board authenticates the server
--   Client authentication; the server authenticates the board
+- Server authentication; the board authenticates the server
+- Client authentication; the server authenticates the board
 
 Server authentication happens transparently to the user since the
 ATWINC1510 on the PIC-IoT board comes preloaded with the required CA
@@ -102,15 +129,13 @@ calculations. Before the TLS connection is complete, a shared secret key
 must be negotiated between the server and the client. This key is used
 to encrypt all future communications during the connection.
 
-### **MQTT Connection** 
+### MQTT Connection
 
 After successfully connecting on the TLS level, the board starts
 establishing the MQTT connection. Since the TLS handles authentication
 and security, MQTT does not have to provide a username or password.
 
-
-Checklist
-=========
+## Checklist
 
 Here are major steps of this project. Track your progress using this
 list as you complete each stage:
@@ -118,32 +143,27 @@ list as you complete each stage:
 <img src=".//media/image5.png"/>
 
 Instruction
-==================
 
-Step 1: Prepare your development environment
-------------------------------------
-### 1. Set up Microchip’s MPLAB X IDE Tool Chain 
-
--   [MPLAB X IDE V5.30 or
+- [MPLAB X IDE V5.30 or
     later](https://www.microchip.com/mplab/mplab-x-ide)
 
--   [XC16 Compiler v1.50 or
+- [XC16 Compiler v1.50 or
     later](https://www.microchip.com/mplab/compilers)
 
--   MPLAB Code Configurator 3.95 or later (once you finish the
+- MPLAB Code Configurator 3.95 or later (once you finish the
     installation of the previous items, launch MPLAB X IDE &gt; click on
     Tools &gt; Plugins Download &gt; search for MPLAB Code Configurator
     and install it)
 
     <img src=".//media/image10.png" style="width:4.17917in;height:2.98149in"/>
 
-### 2. Set up Azure cloud resources 
+### 2. Set up Azure cloud resources
 
--   [Create an Azure free account for 30 day
+- [Create an Azure free account for 30 day
     trial](https://azure.microsoft.com/en-us/free/)    
     As a result, you should be able to access to Azure Portal by the end of this step.
 
--   [Set up Azure IoT Hub and Device Provisioning Service (DPS) in Azure
+- [Set up Azure IoT Hub and Device Provisioning Service (DPS) in Azure
     Portal](https://docs.microsoft.com/en-us/azure/iot-dps/quick-setup-auto-provision)    
     As a result, you should be able to create 1) an IoT Hub, 2) a  Device Provisioning Service and 3) have your DPS linked to your IoT Hub. 
 
@@ -159,20 +179,22 @@ Step 1: Prepare your development environment
 
 Step 2: Prepare your PIC-IoT board to connect to Azure
 -----------------------------------------------------------
-This step serves two purposes: 
-1.	Update the internal firmware of the ATWINC1510 Wi-Fi module on the PIC-IoT to enable mutual TLS handshake between client’s ECC and server’s RSA. 
+This step serves two purposes:
 
-2.	Provision the PIC-IoT board by securely inject certificates into the hardware. Perform this section to create a self-signed certificate chain which acts as a device unique ID to enroll into DPS. The final result is the ATWINC1510 obtains the device certificate, CA certificate, and CA public key. The device certificate is based on a key pair that has previously been generated and is already pre-programmed in the ATECC608A. The device certificate is the client certificate used by the TLS layer for the client authentication (“device” and “client” are used interchangeably in this document). The end goals of the provisioning process include the following: 
+1. Update the internal firmware of the ATWINC1510 Wi-Fi module on the PIC-IoT to enable mutual TLS handshake between client’s ECC and server’s RSA. 
+
+2. Provision the PIC-IoT board by securely inject certificates into the hardware. Perform this section to create a self-signed certificate chain which acts as a device unique ID to enroll into DPS. The final result is the ATWINC1510 obtains the device certificate, CA certificate, and CA public key. The device certificate is based on a key pair that has previously been generated and is already pre-programmed in the ATECC608A. The device certificate is the client certificate used by the TLS layer for the client authentication (“device” and “client” are used interchangeably in this document). The end goals of the provisioning process include the following:
     - The PC running the Python script requests and receives a Certificate Signing Request (CSR) based on the key pair stored in the ATECC608A
     - The signer CA generates the certificate and returns it alongside with its own certificate and public key to the MCU; the two (signer and device) certificates are stored in the ATWINC1510
 
 <img src=".//media/image11.png"/>
 
-Here are the steps: 	
+Here are the steps:
+
 1. Download the [Microchip provisioning tool v1.4](http://www.microchip.com/mymicrochip/filehandler.aspx?ddocname=en1001525)
 
-2. Unzip the downloaded folder and follow the instruction in the README.txt file to perform WINC FW upgrade and board provisioning. 
-3. Take note of the generated cert location mentioned in the output message starting with “Saving to your …[your path]\.microchip-iot\MCHP3261021800001185.”. These certs will be used in IoT Hub DPS enrollment in the next step: 
+2. Unzip the downloaded folder and follow the instruction in the README.txt file to perform WINC FW upgrade and board provisioning.
+3. Take note of the generated cert location mentioned in the output message starting with “Saving to your …[your path]\.microchip-iot\MCHP3261021800001185.”. These certs will be used in IoT Hub DPS enrollment in the next step:
     * root-ca.crt (or .key): self-signed root CA cert
     * signer-ca.crt (or .key) (aka. intermediate CA) is a uniquely generated by the root cert, which is then used to generate device cert in [your-path]\.microchip-iot\MCHP<xxxxxxxxxxxxxxxx>\device.crt
 
@@ -192,10 +214,10 @@ Step 3: Enroll device into DPS
 
 ### 1. Preparing your environment for the certification verifying process:
 
--   Go to generated cert location in the previous step at `\[your
+- Go to generated cert location in the previous step at `\[your
     path]\.microchip-iot`
 
--   Copy `*.crt` files and rename them to `*.pem`. (Note: DPS only accepts
+- Copy `*.crt` files and rename them to `*.pem`. (Note: DPS only accepts
     \*.pem or \*.cer file formats. If choosing \*.cer file, only base-64
     encoded certificate)
 
@@ -293,9 +315,8 @@ can assign to &gt; leave the rest as their existing defaults &gt; hit
 
     <img src=".//media/image20.png" style="width:2in;height:4in" alt="A screenshot of a cell phone Description automatically generated" />
 
-
-
 ### STOP! Sanity checks:
+
 At this point, you have successfully created an enrollment group in DPS. However, as we have not yet programmed the PIC-IoT board with
 the demo firmware, the device should not show up anywhere in Azure.
 This can be verified in both DPS and in IoT Hub.
@@ -314,7 +335,7 @@ Step 4: Connect the PIC-IoT device to Azure
 -----------------------------------
 In this step, we will flash the PIC-IoT board and connect it to Azure.
 
-1.  Create a local folder to check out (clone) the MPLAB X demo project
+1. Create a local folder to check out (clone) the MPLAB X demo project
     by issuing the following commands in a Command Prompt or PowerShell
     window:
     ```
@@ -325,7 +346,7 @@ In this step, we will flash the PIC-IoT board and connect it to Azure.
     ``` 
 
 2.  Launch the MPLAB X IDE and then open the demo project (\*.X) located
-    at: 
+    at:
     
     \[path\]\\Microchip-PIC-MCU16-AzureIoT\\myiot.X
 
@@ -372,7 +393,7 @@ In this step, we will flash the PIC-IoT board and connect it to Azure.
         <img src=".//media/image25.png" style="width:3.5in;height:1.2956in" alt="A picture containing bird Description automatically generated" />
 
 6.  Verify the project properties are set correctly before building the
-    project: 
+    project:
 
     -   Connect the board to PC, make sure “CURIOSITY” device shows up as a
     disk drive in a File Explorer window.
@@ -385,7 +406,7 @@ In this step, we will flash the PIC-IoT board and connect it to Azure.
 
         <img src=".//media/image26.png" style="width:5.88652in;height:2.68981in" alt="A screenshot of a social media post Description automatically generated" />
 
-7.  Build the project and program the device to connect to Azure with
+7. Build the project and program the device to connect to Azure with
     the following steps:
 
     -   Open a serial terminal (e.g. PuTTY or TeraTerm) and connect to the board at 9600 baud to view debug/status messages (open PuTTY Configuration window &gt; choose “session” &gt; choose “Serial”&gt; Enter the right COMx port). You can find the COM info by opening your PC’s Device Manager &gt; expand Ports(COM & LPT) &gt; take note of Curiosity Virtual COM Port. 
@@ -435,13 +456,13 @@ Here are the steps:
 
 
 
-2.  Verify in the Azure Device Provisioning Service
+2. Verify in the Azure Device Provisioning Service
 
     - In Azure Portal, go to your DPS &gt; click “Manage enrollments” &gt; under Enrollment Group, click “your group name” &gt; click “Registration Records” &gt; device should show up with the IoT Hub info that it got assigned to. Like so:
 
         <img src=".//media/image28.png" style="width:5.64758in;height:2.34954in" alt="A screenshot of a social media post Description automatically generated" />
 
-3.  In the Azure Portal, go to your IoT Hub &gt; click “IoT
+3. In the Azure Portal, go to your IoT Hub &gt; click “IoT
     Devices” &gt; click “Refresh” &gt; device should show up with the
     Status “Enabled” and Authentication Type of “SelfSigned”
 
@@ -488,16 +509,14 @@ Step 6: View PIC-IoT board telemetry on Azure IoT Explorer
     <img src=".//media/image35.png" style="width:5.38735in;height:3.18982in" alt="A screenshot of a cell phone Description automatically generated" />
     
 
-Further consideration
-=====================
+## Further consideration
 
 Instead of connection to IoT Hub and view the telemetry on Azure IoT
 explorer, the PIC-IoT board can be provisioned to the IoT Central
 instead, which has a built-in dashboard to monitor the telemetry. This
 can be considered in your future project.
 
-Conclusion 
-==========
+## Conclusion
 
 You are now able to connect PIC-IoT to Azure using self-signed cert base
 authentication and have deeper knowledge of how all the pieces of puzzle
@@ -508,5 +527,3 @@ quick a massive number of Microchip devkits to Azure and safely manage
 them through the whole device life cycle.
 
 Support 
-=======
-TBD. 
