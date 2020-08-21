@@ -18,11 +18,12 @@
     - [Azure IoT Embedded C SDK](#azure-iot-embedded-c-sdk)
     - [TLS connection](#tls-connection)
     - [MQTT Connection](#mqtt-connection)
-  - [Prerequisites](#prerequisites)
   - [Sample Descriptions](#sample-descriptions)
     - [AzureIotDps.X](#azureiotdpsx)
     - [AzureIotPnpDps.X](#azureiotpnpdpsx)
   - [Checklist](#checklist)
+  - [Prerequisites](#prerequisites)
+    - [Step 1: Set up Microchip’s MPLAB X IDE Tool Chain](#step-1-set-up-microchips-mplab-x-ide-tool-chain)
     - [2. Set up Azure cloud resources](#2-set-up-azure-cloud-resources)
     - [3. Set up Git](#3-set-up-git)
   - [Step 2: Prepare your PIC-IoT board to connect to Azure](#step-2-prepare-your-pic-iot-board-to-connect-to-azure)
@@ -34,6 +35,7 @@
   - [Step 4: Connect the PIC-IoT device to Azure](#step-4-connect-the-pic-iot-device-to-azure)
   - [Step 5: Verify the connection between PIC-IoT and Azure](#step-5-verify-the-connection-between-pic-iot-and-azure)
   - [Step 6: View PIC-IoT board telemetry on Azure IoT Explorer](#step-6-view-pic-iot-board-telemetry-on-azure-iot-explorer)
+    - [Further instructions for IoT Plug and Play](#further-instructions-for-iot-plug-and-play)
   - [Further consideration](#further-consideration)
   - [Conclusion](#conclusion)
 
@@ -141,30 +143,18 @@ and security, MQTT does not have to provide a username or password.
 
 <img src=".//media/image8.ppm"/>
 
-## Prerequisites
-
-- [Setup your Azure IoT hub](https://github.com/Azure/azure-iot-device-ecosystem/blob/master/setup_iothub.md)
-- [Azure IoT Explorer](https://github.com/Azure/azure-iot-explorer/releases)
-- For the Plug and Play sample, download the Plug and Play DTMI [here](https://github.com/Azure/opendigitaltwins-dtdl/blob/master/DTDL/v2/samples/Thermostat.json)
-- [MPLAB X IDE V5.30 or later](https://www.microchip.com/mplab/mplab-x-ide)
-- [XC16 Compiler v1.50 or later](https://www.microchip.com/mplab/compilers)
-
 ## Sample Descriptions
+
+Currently we have two samples to use with the PIC-IoT-Wx. The first one is using DPS to provision and then connects and interacts with IoT Hub using unprocessed application code. The second one is using DPS to provision and then connects and interacts with IoT Hub using the IoT Plug and Plug programming model. To further understand what IoT Plug and Play is, please see the documentation [here](https://docs.microsoft.com/en-us/azure/iot-pnp/overview-iot-plug-and-play). Both samples use the same setup process, differing only slightly in how you interact with them with the IoT Explorer.
 
 ### AzureIotDps.X
 
-Connect the device through Azure IoT Hub Device Provisioning to then connect to your IoT Hub.
+Connect the device through Azure IoT Hub Device Provisioning to then connect to your IoT Hub. Use the IoT Explorer to view the telemetry as it is received by the service.
 
 ### AzureIotPnpDps.X
 
-Use a Plug and Play enabled device with the DTMI detailed [here](https://github.com/Azure/opendigitaltwins-dtdl/blob/master/DTDL/v2/samples/Thermostat.json). To further understand what Plug and Play is, please see documentation [here](https://docs.microsoft.com/en-us/azure/iot-pnp/overview-iot-plug-and-play).
-
-Once the board is flashed (directions later), you can proceed to interact with the Plug and Play device using the Azure IoT Explorer. The following steps make it as seamless as possible.
-
-- Once you open the tool, on the left side, there should be a tab called "IoT Plug and Play Settings". Open that tab and add the directory where you downloaded the DTMI detailed from [prerequisites](#prerequisites).
-- Paste in the connection string for your IoT Hub from the portal.
-- Find your device listed after clicking on your newly connected IoT Hub and navigate to the left hand side where you will find a "IoT Plug and Play components" tab.
-- There, click on the component listed near the bottom and use the tabs that result on the top to use the various features (Commands, Twin, Telemetry, etc). It should look similar to the picture below.
+Use an IoT Plug and Play enabled device with the DTMI detailed [here](https://github.com/Azure/opendigitaltwins-dtdl/blob/master/DTDL/v2/samples/Thermostat.json).
+You can monitor the telemetry, invoke methods, and modify properties easily with the additional instructions listed at [here](#further-instructions-for-iot-plug-and-play).
 
     ![Iot Explorer](./docs/images/iotexplorer.png)
 
@@ -176,7 +166,17 @@ list as you complete each stage:
 
 <img src=".//media/image5.png"/>
 
-Instruction
+## Prerequisites
+
+Prepare your development environment
+
+- [Setup your Azure IoT hub](https://github.com/Azure/azure-iot-device-ecosystem/blob/master/setup_iothub.md)
+- [Azure IoT Explorer](https://github.com/Azure/azure-iot-explorer/releases)
+- For the IoT Plug and Play sample, download the IoT Plug and Play DTMI [here](https://github.com/Azure/opendigitaltwins-dtdl/blob/master/DTDL/v2/samples/Thermostat.json)
+- [MPLAB X IDE V5.30 or later](https://www.microchip.com/mplab/mplab-x-ide)
+- [XC16 Compiler v1.50 or later](https://www.microchip.com/mplab/compilers)
+
+### Step 1: Set up Microchip’s MPLAB X IDE Tool Chain
 
 - [MPLAB X IDE V5.30 or
     later](https://www.microchip.com/mplab/mplab-x-ide)
@@ -542,6 +542,13 @@ Step 6: View PIC-IoT board telemetry on Azure IoT Explorer
    
     <img src=".//media/image35.png" style="width:5.38735in;height:3.18982in" alt="A screenshot of a cell phone Description automatically generated" />
     
+
+### Further instructions for IoT Plug and Play
+
+- Once you open the tool, on the left side, there should be a tab called "IoT Plug and Play Settings". Open that tab and add the directory where you downloaded the DTMI detailed from [prerequisites](#prerequisites).
+- Paste in the connection string for your IoT Hub from the portal.
+- Find your device listed after clicking on your newly connected IoT Hub and navigate to the left hand side where you will find a "IoT Plug and Play components" tab.
+- There, click on the component listed near the bottom and use the tabs that result on the top to use the various features (Commands, Twin, Telemetry). It should look similar to the picture below.
 
 ## Further consideration
 
