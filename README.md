@@ -27,8 +27,8 @@
     - [Step 2: Prepare your PIC-IoT board to connect to Azure](#step-2-prepare-your-pic-iot-board-to-connect-to-azure)
     - [Step 3: Enroll device into DPS](#step-3-enroll-device-into-dps)
     - [Step 4: Connect the PIC-IoT device to Azure](#step-4-connect-the-pic-iot-device-to-azure)
-  - [Step 5: Verify the connection between PIC-IoT and Azure](#step-5-verify-the-connection-between-pic-iot-and-azure)
-  - [Step 6: View PIC-IoT board telemetry on Azure IoT Explorer](#step-6-view-pic-iot-board-telemetry-on-azure-iot-explorer)
+    - [Step 5: Verify the connection between PIC-IoT and Azure](#step-5-verify-the-connection-between-pic-iot-and-azure)
+    - [Step 6: View PIC-IoT board telemetry on Azure IoT Explorer](#step-6-view-pic-iot-board-telemetry-on-azure-iot-explorer)
     - [Further instructions for IoT Plug and Play](#further-instructions-for-iot-plug-and-play)
   - [Further consideration](#further-consideration)
   - [Conclusion](#conclusion)
@@ -442,8 +442,7 @@ In this step, we will flash the PIC-IoT board and connect it to Azure.
         -   GREEN: Solid ON all the time (COMM)
         -   RED: Toggling every few seconds (DATA)
 
-Step 5: Verify the connection between PIC-IoT and Azure
------------------------------------------------
+### Step 5: Verify the connection between PIC-IoT and Azure
 
 PIC-IoT and Azure connection can be verified by different ways:
 1) View debug log messages in the serial terminal
@@ -489,8 +488,7 @@ Here are the steps:
 
     <img src=".//media/image29.png" style="width:4.91723in;height:2.58102in" alt="A screenshot of a cell phone Description automatically generated" />
 
-Step 6: View PIC-IoT board telemetry on Azure IoT Explorer
---------------------------------------------------
+### Step 6: View PIC-IoT board telemetry on Azure IoT Explorer
 
  Once the PIC-IoT connection to Azure has been verified in the previous step, the telemetry can be monitored by taking advantage of Azure IoT Explorer. The Azure IoT explorer is a graphical tool for interacting with and testing your IoT device on Azure. View [this document](https://docs.microsoft.com/en-us/azure/iot-pnp/howto-install-iot-explorer#install-azure-iot-explorer) for more details.
  
