@@ -38,6 +38,7 @@
     - [Further instructions for IoT Plug and Play](#further-instructions-for-iot-plug-and-play)
   - [Further consideration](#further-consideration)
   - [Conclusion](#conclusion)
+  - [Support](#support)
 
 ## Background Knowledge
 
@@ -156,8 +157,7 @@ Connect the device through Azure IoT Hub Device Provisioning to then connect to 
 Use an IoT Plug and Play enabled device with the DTMI detailed [here](https://github.com/Azure/opendigitaltwins-dtdl/blob/master/DTDL/v2/samples/Thermostat.json).
 You can monitor the telemetry, invoke methods, and modify properties easily with the additional instructions listed at [here](#further-instructions-for-iot-plug-and-play).
 
-    ![Iot Explorer](./docs/images/iotexplorer.png)
-
+![Iot Explorer](./docs/images/iotexplorer.png)
 
 ## Checklist
 
@@ -567,4 +567,6 @@ box and see how you can apply this project to provision securely and
 quick a massive number of Microchip devkits to Azure and safely manage
 them through the whole device life cycle.
 
-Support 
+## Support
+
+TBD.
