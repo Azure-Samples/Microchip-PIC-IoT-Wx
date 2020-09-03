@@ -24,15 +24,25 @@
   - [Checklist](#checklist)
   - [Instruction](#instruction)
     - [Step 1: Prepare your development environment](#step-1-prepare-your-development-environment)
+      - [1. Set up Microchip’s MPLAB X IDE Tool Chain](#1-set-up-microchips-mplab-x-ide-tool-chain)
+      - [2. Set up Azure cloud resources](#2-set-up-azure-cloud-resources)
+      - [3. Set up Git](#3-set-up-git)
     - [Step 2: Prepare your PIC-IoT board to connect to Azure](#step-2-prepare-your-pic-iot-board-to-connect-to-azure)
     - [Step 3: Enroll device into DPS](#step-3-enroll-device-into-dps)
+      - [1. Preparing your environment for the certification verifying process:](#1-preparing-your-environment-for-the-certification-verifying-process)
+      - [2. In Azure portal, upload the root CA cert “root-ca.pem” in DPS and do proof-of-possession for X.509 CA certificates with your Device Provisioning Service](#2-in-azure-portal-upload-the-root-ca-cert-root-capem-in-dps-and-do-proof-of-possession-for-x509-ca-certificates-with-your-device-provisioning-service)
+        - [a. Register the public part of an X.509 certificate and get a verification code](#a-register-the-public-part-of-an-x509-certificate-and-get-a-verification-code)
+        - [b. Digitally sign the verification code to create a verification certificate](#b-digitally-sign-the-verification-code-to-create-a-verification-certificate)
+        - [c. Upload the signed verification certificate to DPS](#c-upload-the-signed-verification-certificate-to-dps)
+        - [STOP! Quick summary of this step](#stop-quick-summary-of-this-step)
+      - [3. Add a new enrollment group using the signer-ca.pem file](#3-add-a-new-enrollment-group-using-the-signer-capem-file)
+      - [STOP! Sanity checks:](#stop-sanity-checks)
     - [Step 4: Connect the PIC-IoT device to Azure](#step-4-connect-the-pic-iot-device-to-azure)
     - [Step 5: Verify the connection between PIC-IoT and Azure](#step-5-verify-the-connection-between-pic-iot-and-azure)
     - [Step 6: View PIC-IoT board telemetry on Azure IoT Explorer](#step-6-view-pic-iot-board-telemetry-on-azure-iot-explorer)
     - [Further instructions for IoT Plug and Play](#further-instructions-for-iot-plug-and-play)
   - [Further consideration](#further-consideration)
   - [Conclusion](#conclusion)
-  - [Support](#support)
 
 ## Background Knowledge
 
@@ -138,7 +148,7 @@ and security, MQTT does not have to provide a username or password.
 
 ## Sample Descriptions
 
-Currently we have two samples to use with the PIC-IoT-Wx. The first one is using DPS to provision and then connects and interacts with IoT Hub using unprocessed application code. The second one is using DPS to provision and then connects and interacts with IoT Hub using the IoT Plug and Plug programming model. To further understand what IoT Plug and Play is, please see the documentation [here](https://docs.microsoft.com/en-us/azure/iot-pnp/overview-iot-plug-and-play). Both samples use the same setup process, differing only slightly in how you interact with them with the IoT Explorer.
+Currently we have two samples to use with the PIC-IoT-Wx. The first one is using DPS to provision and then connects and interacts with IoT Hub using unprocessed application code. The second one is using DPS to provision and then connects and interacts with IoT Hub using the IoT Plug and Play programming model. To further understand what IoT Plug and Play is, please see the documentation [here](https://docs.microsoft.com/en-us/azure/iot-pnp/overview-iot-plug-and-play). Both samples use the same setup process, differing only slightly in how you interact with them with the IoT Explorer.
 
 ### AzureIotDps.X
 
@@ -187,7 +197,7 @@ list as you complete each stage:
     Portal](https://docs.microsoft.com/en-us/azure/iot-dps/quick-setup-auto-provision)    
     As a result, you should be able to create 1) an IoT Hub, 2) a  Device Provisioning Service and 3) have your DPS linked to your IoT Hub. 
 
--  [Install Azure IoT Explorer](https://docs.microsoft.com/en-us/azure/iot-pnp/howto-install-iot-explorer#install-azure-iot-explorer) (make sure to download \*.msi file of the release 0.12.1 or later). The Azure IoT explorer is a graphical tool for interacting with and testing your IoT device on Azure. View [this document](https://docs.microsoft.com/en-us/azure/iot-pnp/howto-install-iot-explorer#install-azure-iot-explorer) for more details.
+-  [Install Azure IoT Explorer](https://docs.microsoft.com/en-us/azure/iot-pnp/howto-install-iot-explorer#install-azure-iot-explorer) (make sure to download \*.msi file of the release 0.12.1 or later). The Azure IoT explorer is a graphical tool for interacting with and testing your IoT device on Azure. View [this GitHub](https://github.com/Azure/azure-iot-explorer) for more details.
 
 #### 3. Set up Git
 
@@ -213,7 +223,15 @@ Here are the steps:
 
 1. Download the [Microchip provisioning tool v1.4](http://www.microchip.com/mymicrochip/filehandler.aspx?ddocname=en1001525)
 
-2. Unzip the downloaded folder and follow the instruction in the README.txt file to perform WINC FW upgrade and board provisioning.
+2. Unzip the downloaded folder and follow the instruction in the README.txt file to perform WINC FW upgrade and board provisioning. 
+   
+   - Launch PowerShell: click on Start > type “PowerShell” in the Search field > Open
+   - Go to the directory where the “iotprovision-azure” executable file resides
+   - Type the following command (this should generate and write all the certs to your disk):
+        ```
+        iotprovision-bin.exe -c azure -m custom
+        ```
+
 3. Take note of the generated cert location mentioned in the output message starting with “Saving to your …[your path]\.microchip-iot\MCHP3261021800001185.”. These certs will be used in IoT Hub DPS enrollment in the next step:
     * root-ca.crt (or .key): self-signed root CA cert
     * signer-ca.crt (or .key) (aka. intermediate CA) is a uniquely generated by the root cert, which is then used to generate device cert in [your-path]\.microchip-iot\MCHP<xxxxxxxxxxxxxxxx>\device.crt
@@ -295,7 +313,7 @@ Here are the steps:
 4. Generate a verification certificate by entering the following.
 
     ``` 
-    openssl x509 -req -in azure\_root\_ca\_verification.csr -CA root-ca.crt -CAkey root-ca.key -CAcreateserial -out azure\_signer\_verification.cer -days 365 -sha256
+    openssl x509 -req -in azure_root_ca_verification.csr -CA root-ca.crt -CAkey root-ca.key -CAcreateserial -out azure_signer_verification.cer -days 365 -sha256
     ```
     As the result, you should see this file `azure_root_ca_verification.cer` in your \\.microchip-iot folder.
 
@@ -360,30 +378,29 @@ In this step, we will flash the PIC-IoT board and connect it to Azure.
     window:
 
     ```
-    git clone https://github.com/jasmineymlo/Microchip-PIC-MCU16-AzureIoT
-    cd Microchip-PIC-MCU16-AzureIoT
-    git checkout –t origin/wip
+    git clone https://github.com/Azure-Samples/Microchip-PIC-IoT-Wx.git
+    cd Microchip-PIC-IoT-Wx
     git submodule update --init
     ```
 
 2. Launch the MPLAB X IDE and then open the demo project (\*.X) located
     at:
-    
-    \[path\]\\Microchip-PIC-MCU16-AzureIoT\\myiot.X
+    ```
+    [path]\Microchip-PIC-IoT-Wx\AzureIotDps.X
+    ```
 
-    Ignore the following warning messages that may show up in the Output
-    window after the project has been loaded: 
+   If the load error message in red appears, click on the “Resolve DFP for configuration: default” link: 
 
     <img src=".//media/image21.png" style="width:6.5in;height:1.00833in" alt="A screenshot of a cell phone Description automatically generated" />
 
-3. Modify `myiot/Header Files/platform/config/conf_winc.h` with your
+3. Modify `AzureIotDps/Header Files/platform/config/conf_winc.h` with your
     wireless router’s SSID and password:
     ```c
     #define CFG_MAIN_WLAN_SSID "Your SSID"
     #define CFG_MAIN_WLAN_PSK  "Your WiFi Password"
     ```
 
-4.  Modify `myiot/Header Files/platform/config/IoT_Sensor_Node_config.h` with your DPS ID Scope and comment out the Hub Device ID:
+4.  Modify `AzureIotDps/Header Files/platform/config/IoT_Sensor_Node_config.h` with your DPS ID Scope and comment out the Hub Device ID:
 
     - Comment out the definition for HUB\_DEVICE\_ID
         ```c
@@ -398,7 +415,7 @@ In this step, we will flash the PIC-IoT board and connect it to Azure.
         ```
 
 
-5.  Modify `myiot\Source Files\platform\application_manager.c` to set
+5.  Modify `AzureIotDps\Source Files\platform\application_manager.c` to set
     the highest severity debug level:
 
     - Locate this line of code:
@@ -407,7 +424,7 @@ In this step, we will flash the PIC-IoT board and connect it to Azure.
         ```
     - Add the this function call right below the debug_init call. 
         ```
-        `debug\_setSeverity(SEVERITY\_DEBUG)`  
+        `debug_setSeverity(SEVERITY_DEBUG)`  
         ``` 
         This line is added for debugging purpose.  By default the debug level is set to only output when there is error. The result looks like this:
 
@@ -419,7 +436,7 @@ In this step, we will flash the PIC-IoT board and connect it to Azure.
     -   Connect the board to PC, make sure “CURIOSITY” device shows up as a
     disk drive in a File Explorer window.
 
-    -   Right-click the project myiot &gt; select “Properties” &gt; Verify
+    -   Right-click the project AzureIotDps &gt; select “Properties” &gt; Verify
     that all Configuration settings are at least the minimum versions as
     shown in the below screenshot (and that your PIC-IoT board is
     selected as the Connected Hardware Tool). If any changes were made,
@@ -434,13 +451,13 @@ In this step, we will flash the PIC-IoT board and connect it to Azure.
 
         <img src=".//media/image27.png" style="width:2in;height:2in" alt="A screenshot of a cell phone Description automatically generated" />
 
-    -   Right-click the myiot project and select “Set as Main Project”
+    -   Right-click the AzureIotDps project and select “Set as Main Project”
 
-    -   Right-click the myiot project and select “Make and Program Device”. This will first automatically clean and build the project. After the “BUILD SUCCESSFUL” message appears in the Output window, the application HEX file will be programmed onto the PIC-IoT board. Once programming has finished, the board will automatically reset and start running its application code. After a few seconds, you can check if the PIC-IoT board has successfully connected to your Wi-Fi Access Point by observing 3 colored LED’s on the board:
+    -   Right-click the AzureIotDps project, select "Set as Main Project" and select “Make and Program Device”. This will first automatically clean and build the project. After the “BUILD SUCCESSFUL” message appears in the Output window, the application HEX file will be programmed onto the PIC-IoT board. Once programming has finished, the board will automatically reset and start running its application code. After a few seconds, you can check if the PIC-IoT board has successfully connected to your Wi-Fi Access Point by observing 3 colored LED’s on the board:
 
         -   BLUE: Solid ON all the time (WIFI)
         -   GREEN: Solid ON all the time (COMM)
-        -   RED: Toggling every few seconds (DATA)
+        -   ORANGE: Toggling every few seconds (DATA)
 
 ### Step 5: Verify the connection between PIC-IoT and Azure
 
@@ -506,15 +523,19 @@ Here are the steps:
 
         <img src=".//media/image31.png" style="width:5.56482in;height:2.24436in" alt="A screenshot of a cell phone Description automatically generated" />
 
-        <img src=".//media/image32.png" style="width:4.49781in;height:3.72222in" alt="A screenshot of a social media post Description automatically generated" />
+        <img src=".//media/image37.png" style="width:4.49781in;height:3.72222in" alt="A screenshot of a social media post Description automatically generated" />
 
-  3. Once the IoT Hub connection has been added, the list of devices
+  3. Once the IoT Hub connection has been added, go to your specific IoT Hub and click on "View devices in this hub" like so:
+   
+       <img src=".//media/image36.png" style="width:5.in;height:3.18982in" alt="A screenshot of a cell phone Description automatically generated" />
+   
+  4. Once the IoT Hub connection has been added, the list of devices
     connected to the hub appears. Verify that the correct PIC-IoT serial
     number is displayed, and then click on it:
 
         <img src=".//media/image33.png" style="width:5.76119in;height:1.45753in" alt="A screenshot of a cell phone Description automatically generated" />
 
-  4. Verify that the IoT Hub can send a command to the device. In the
+  5. Verify that the IoT Hub can send a command to the device. In the
     device window:
 
         Click Direct method tab &gt; enter “blink” in Method name &gt; enter {"duration":10} for payload &gt; Invoke method (a pop-up message displaying ERROR will appear, but that is expected since the IoT Hub is sending a simulated error condition to the PIC-IoT board). Observe that the RED LED stays on for 10 seconds.
@@ -555,6 +576,3 @@ box and see how you can apply this project to provision securely and
 quick a massive number of Microchip devkits to Azure and safely manage
 them through the whole device life cycle.
 
-## Support
-
-TBD.
