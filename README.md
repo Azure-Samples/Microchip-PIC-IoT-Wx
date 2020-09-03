@@ -523,7 +523,7 @@ Here are the steps:
 
         <img src=".//media/image31.png" style="width:5.56482in;height:2.24436in" alt="A screenshot of a cell phone Description automatically generated" />
 
-        <img src=".//media/image32.png" style="width:4.49781in;height:3.72222in" alt="A screenshot of a social media post Description automatically generated" />
+        <img src=".//media/image37.png" style="width:4.49781in;height:3.72222in" alt="A screenshot of a social media post Description automatically generated" />
 
   3. Once the IoT Hub connection has been added, go to your specific IoT Hub and click on "View devices in this hub" like so:
    
