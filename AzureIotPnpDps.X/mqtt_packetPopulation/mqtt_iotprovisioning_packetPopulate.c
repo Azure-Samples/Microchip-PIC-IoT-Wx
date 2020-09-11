@@ -31,6 +31,7 @@ pf_MQTT_CLIENT pf_mqtt_iotprovisioning_client = {
   NULL
 };
 
+extern const az_span device_model_id;
 extern uint8_t device_id_buf[100];
 extern az_span device_id;
 char hub_device_key_buf[64];
@@ -240,8 +241,14 @@ void MQTT_CLIENT_iotprovisioning_connected()
     cloudPublishPacket.topic = (uint8_t*)mqtt_dsp_topic_buf;
 
     // Payload
-    cloudPublishPacket.payload = NULL;
-    cloudPublishPacket.payloadLength = 0;
+    az_span register_payload = az_span_create((uint8_t*)register_payload_buf, sizeof(register_payload_buf));
+    az_span remainder = az_span_copy(register_payload, az_span_create_from_str("{\"payload\":{\"modelId\":\""));
+    remainder = az_span_copy(remainder, device_model_id);
+    remainder = az_span_copy(remainder, az_span_create_from_str("\"}}"));
+    az_span_copy_u8(remainder, '\0');
+    
+    cloudPublishPacket.payload = register_payload_buf;
+    cloudPublishPacket.payloadLength = strlen(register_payload_buf);
 
     if (MQTT_CreatePublishPacket(&cloudPublishPacket) != true)
     {
