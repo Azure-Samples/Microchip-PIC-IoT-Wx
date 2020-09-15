@@ -512,7 +512,7 @@ static void handle_twin_message(
   switch (twin_response->response_type)
   {
     // A response from a twin GET publish message with the twin document as a payload.
-    case AZ_IOT_CLIENT_TWIN_RESPONSE_TYPE_GET:
+    case AZ_IOT_HUB_CLIENT_TWIN_RESPONSE_TYPE_GET:
       debug_printInfo("A twin GET response was received");
       if (az_result_failed(
               result = parse_twin_desired_temperature_property(
@@ -527,7 +527,7 @@ static void handle_twin_message(
       }
       break;
     // An update to the desired properties with the properties as a JSON payload.
-    case AZ_IOT_CLIENT_TWIN_RESPONSE_TYPE_DESIRED_PROPERTIES:
+    case AZ_IOT_HUB_CLIENT_TWIN_RESPONSE_TYPE_DESIRED_PROPERTIES:
       debug_printInfo("A twin desired properties message was received");
 
       // Get the new temperature
@@ -544,7 +544,7 @@ static void handle_twin_message(
 
     // A response from a twin reported properties publish message. With a successfull update of
     // the reported properties, the payload will be empty and the status will be 204.
-    case AZ_IOT_CLIENT_TWIN_RESPONSE_TYPE_REPORTED_PROPERTIES:
+    case AZ_IOT_HUB_CLIENT_TWIN_RESPONSE_TYPE_REPORTED_PROPERTIES:
       debug_printInfo("A twin reported properties response message was received");
       break;
   }
