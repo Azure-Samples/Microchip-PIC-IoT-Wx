@@ -74,7 +74,7 @@ bool MQTT_Send(mqttContext *connectionPtr)
 		ret = true;
 	}
 	
-	debug_print("MQTT: sendresult (%d)", sendRet);
+	debug_print("MQTT: sendresult (len %d)", sendRet);
 	return ret;
 }
 
