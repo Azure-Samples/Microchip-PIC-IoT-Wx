@@ -30,7 +30,7 @@ extern pf_MQTT_CLIENT pf_mqtt_iothub_client;
 // Please see the sample README for more information on this DTMI.
 const az_span device_model_id = AZ_SPAN_LITERAL_FROM_STR("dtmi:com:example:Thermostat;1");
 // ISO8601 Time Format
-static const char iso_spec_time_format[] = "%Y-%m-%dT%H:%M:%S%z";
+static const char iso_spec_time_format[] = "%Y-%m-%dT%H:%M:%S.000%zZ";
 
 // IoT Hub Connection Values
 static int32_t request_id_int;
