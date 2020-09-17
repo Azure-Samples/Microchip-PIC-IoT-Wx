@@ -20,14 +20,12 @@
       <itemPath>azure-c-sdk/sdk/src/azure/iot/az_iot_hub_client_twin.c</itemPath>
       <itemPath>azure-c-sdk/sdk/src/azure/iot/az_iot_provisioning_client.c</itemPath>
       <itemPath>azure-c-sdk/sdk/src/azure/iot/az_iot_provisioning_client_sas.c</itemPath>
-      <itemPath>azure-c-sdk/sdk/src/azure/core/az_json_parser.c</itemPath>
-      <itemPath>azure-c-sdk/sdk/src/azure/core/az_json_pointer.c</itemPath>
-      <itemPath>azure-c-sdk/sdk/src/azure/core/az_json_string.c</itemPath>
       <itemPath>azure-c-sdk/sdk/src/azure/core/az_log.c</itemPath>
       <itemPath>azure-c-sdk/sdk/src/azure/core/az_precondition.c</itemPath>
       <itemPath>azure-c-sdk/sdk/src/azure/core/az_span.c</itemPath>
       <itemPath>azure-c-sdk/sdk/src/azure/platform/az_noplatform.c</itemPath>
       <itemPath>azure-c-sdk/sdk/src/azure/core/az_json_token.c</itemPath>
+      <itemPath>azure-c-sdk/sdk/src/azure/core/az_json_reader.c</itemPath>
     </logicalFolder>
     <logicalFolder name="HeaderFiles"
                    displayName="Header Files"
@@ -476,14 +474,16 @@
         <targetDevice>PIC24FJ128GA705</targetDevice>
         <targetHeader></targetHeader>
         <targetPluginBoard></targetPluginBoard>
-        <platformTool>noID</platformTool>
+        <platformTool>nEdbgTool</platformTool>
         <languageToolchain>XC16</languageToolchain>
         <languageToolchainVersion>1.50</languageToolchainVersion>
         <platform>3</platform>
       </toolsSet>
       <packs>
-        <pack name="PIC24F-GA-GB_DFP" vendor="Microchip" version="1.2.101"/>
+        <pack name="PIC24F-GA-GB_DFP" vendor="Microchip" version="1.3.109"/>
       </packs>
+      <ScriptingSettings>
+      </ScriptingSettings>
       <compileType>
         <linkerTool>
           <linkerLibItems>
@@ -526,7 +526,7 @@
         <property key="extra-include-directories" value="azure-c-sdk\sdk\inc"/>
         <property key="isolate-each-function" value="true"/>
         <property key="keep-inline" value="false"/>
-        <property key="oXC16gcc-align-arr" value="false"/>
+        <property key="oXC16gcc-align-arr" value="true"/>
         <property key="oXC16gcc-cnsts-mauxflash" value="false"/>
         <property key="oXC16gcc-data-sects" value="false"/>
         <property key="oXC16gcc-errata" value=""/>

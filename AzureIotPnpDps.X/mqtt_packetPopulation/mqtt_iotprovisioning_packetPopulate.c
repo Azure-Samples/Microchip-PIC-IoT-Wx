@@ -178,8 +178,7 @@ void MQTT_CLIENT_iotprovisioning_connect(char* deviceID)
         return;
     }
     
-    mqttConnectPacket cloudConnectPacket;
-    memset(&cloudConnectPacket, 0, sizeof(mqttConnectPacket));
+    mqttConnectPacket cloudConnectPacket = { 0 };
     cloudConnectPacket.connectVariableHeader.connectFlagsByte.cleanSession = 1; 
     cloudConnectPacket.connectVariableHeader.keepAliveTimer = AZ_IOT_DEFAULT_MQTT_CONNECT_KEEPALIVE_SECONDS;    
     cloudConnectPacket.clientID = (uint8_t*) az_span_ptr(device_id);

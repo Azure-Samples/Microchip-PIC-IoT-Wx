@@ -115,6 +115,7 @@ void CLOUD_reset(void)
 {
 	debug_printError("CLOUD: Cloud Reset");
 	cloudInitialized = false;   
+	CLOUD_disconnect();
 }
 
 uint32_t mqttTimeoutTask(void* payload) {
@@ -137,6 +138,7 @@ void CLOUD_init(char* attDeviceID)
 	// Create timers for the application scheduler
 	timeout_create(&CLOUD_taskTimer, CLOUD_TASK_INTERVAL);
     deviceId = attDeviceID;
+	CLOUD_reset();
 }
 
 void CLOUD_init_host(char* host, char* attDeviceID, pf_MQTT_CLIENT* pf_table)
@@ -149,7 +151,7 @@ void CLOUD_init_host(char* host, char* attDeviceID, pf_MQTT_CLIENT* pf_table)
 
 static void connectMQTT()
 {
-	debug_print("CLOUD: MQTT Connect");
+	debug_print("CLOUD: MQTT Connect %s", mqtt_host);
 
 	uint32_t currentTime = time(NULL);
 	if (currentTime > 0)
@@ -387,7 +389,7 @@ static void dnsHandler(uint8_t* domainName, uint32_t serverIP)
 	{
         dnsRetryDelay = 0;
         mqttHostIP = serverIP;       
-		debug_printInfo("CLOUD: mqttHostIP = (%lu.%lu.%lu.%lu)", (0x0FF & (serverIP)), (0x0FF & (serverIP >> 8)), (0x0FF & (serverIP >> 16)), (0x0FF & (serverIP >> 24)));
+		debug_printInfo("CLOUD: mqttHostIP %s = (%lu.%lu.%lu.%lu)", domainName, (0x0FF & (serverIP)), (0x0FF & (serverIP >> 8)), (0x0FF & (serverIP >> 16)), (0x0FF & (serverIP >> 24)));
 	}
 }
 
