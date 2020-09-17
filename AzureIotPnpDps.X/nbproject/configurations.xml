@@ -465,7 +465,7 @@
         <platform>3</platform>
       </toolsSet>
       <packs>
-        <pack name="PIC24F-GA-GB_DFP" vendor="Microchip" version="1.2.101"/>
+        <pack name="PIC24F-GA-GB_DFP" vendor="Microchip" version="1.3.109"/>
       </packs>
       <ScriptingSettings>
       </ScriptingSettings>
@@ -511,7 +511,7 @@
         <property key="extra-include-directories" value="azure-sdk-for-c\sdk\inc"/>
         <property key="isolate-each-function" value="true"/>
         <property key="keep-inline" value="false"/>
-        <property key="oXC16gcc-align-arr" value="false"/>
+        <property key="oXC16gcc-align-arr" value="true"/>
         <property key="oXC16gcc-cnsts-mauxflash" value="false"/>
         <property key="oXC16gcc-data-sects" value="false"/>
         <property key="oXC16gcc-errata" value=""/>

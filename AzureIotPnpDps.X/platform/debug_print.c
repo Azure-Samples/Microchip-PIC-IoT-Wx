@@ -36,7 +36,7 @@ static const char *severity_strings[] = {
    CSI_YELLOW  "WARNING" CSI_WHITE,
    CSI_BLUE    " NOTICE" CSI_WHITE,
    CSI_MAGENTA "   INFO" CSI_WHITE,
-   CSI_RED     "  DEBUG" CSI_NORMAL CSI_WHITE
+   CSI_CYAN    "  DEBUG" CSI_NORMAL CSI_WHITE
 };
 
 static const char *level_strings[] = {
@@ -47,7 +47,7 @@ static const char *level_strings[] = {
 };
  
 static debug_severity_t debug_severity_filter = SEVERITY_NONE;
-static char debug_message_prefix[20] = "<PREFIX>";
+static char debug_message_prefix[40] = "<PREFIX>";
 
 void debug_init(const char *prefix)
 { 
@@ -64,6 +64,7 @@ void debug_setSeverity(debug_severity_t debug_level)
 void debug_setPrefix(const char *prefix)
 {
    strncpy(debug_message_prefix,prefix,sizeof(debug_message_prefix));
+   debug_message_prefix[sizeof(debug_message_prefix)-1] = 0;
 }
 
 void debug_printer(debug_severity_t debug_severity, debug_errorLevel_t error_level, char* format, ...)
@@ -75,7 +76,7 @@ void debug_printer(debug_severity_t debug_severity, debug_errorLevel_t error_lev
          if(error_level < LEVEL_NORMAL) error_level = LEVEL_NORMAL;
          if(error_level > LEVEL_ERROR) error_level = LEVEL_ERROR;
 
-         printf("%s\4 %s %s ",debug_message_prefix, severity_strings[debug_severity], level_strings[error_level]);
+         printf("%s  %s %s ",debug_message_prefix, severity_strings[debug_severity], level_strings[error_level]);
 
          va_list argptr;
          va_start(argptr, format);

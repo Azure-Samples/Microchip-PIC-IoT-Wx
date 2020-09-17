@@ -55,3 +55,5 @@ modules.order
 Module.symvers
 Mkfile.old
 dkms.conf
+/AzureIotPnpDps.X/.vs
+/AzureIotDps.X/.vs

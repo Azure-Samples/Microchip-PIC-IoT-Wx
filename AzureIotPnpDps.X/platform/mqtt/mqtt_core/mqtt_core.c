@@ -499,6 +499,7 @@ mqttCurrentState MQTT_GetConnectionState(void) {
 }
 
 bool MQTT_CreateConnectPacket(mqttConnectPacket* newConnectPacket) {
+    debug_print("MQTT: MQTT_CreateConnectPacket");
 	uint16_t payloadLength = 0;
 	memset(&txConnectPacket, 0, sizeof(txConnectPacket));
 
@@ -623,6 +624,7 @@ bool MQTT_CreateSubscribePacket(mqttSubscribePacket* newSubscribePacket) {
 
 		// Payload
 		for (topicCount = 0; topicCount < MAX_NUM_TOPICS_SUBSCRIBE && newSubscribePacket->subscribePayload[topicCount].topicLength > 0; topicCount++) {
+            debug_print("MQTT: Subscribe %s", newSubscribePacket->subscribePayload[topicCount].topic);
 			txSubscribePacket.subscribePayload[topicCount].topicLength = htons(newSubscribePacket->subscribePayload[topicCount].topicLength);
 			txSubscribePacket.subscribePayload[topicCount].topic = newSubscribePacket->subscribePayload[topicCount].topic;
 			txSubscribePacket.subscribePayload[topicCount].requestedQoS = newSubscribePacket->subscribePayload[topicCount].requestedQoS;
@@ -689,6 +691,7 @@ bool MQTT_CreateUnsubscribePacket(mqttUnsubscribePacket* newUnsubscribePacket)
 static bool mqttSendConnect(mqttContext* mqttConnectionPtr) {
 	bool ret = false;
 
+    debug_print("MQTT: mqttSendConnect");
 	MQTT_ExchangeBufferInit(&mqttConnectionPtr->mqttDataExchangeBuffers.txbuff);
 	MQTT_ExchangeBufferInit(&mqttConnectionPtr->mqttDataExchangeBuffers.rxbuff);
 
@@ -719,6 +722,7 @@ static bool mqttSendConnect(mqttContext* mqttConnectionPtr) {
 static bool mqttSendPublish(mqttContext* mqttConnectionPtr) {
 	bool ret = false;
 
+    debug_print("MQTT: mqttSendPublish: %s", txPublishPacket.topic);
 	MQTT_ExchangeBufferInit(&mqttConnectionPtr->mqttDataExchangeBuffers.txbuff);
 	MQTT_ExchangeBufferInit(&mqttConnectionPtr->mqttDataExchangeBuffers.rxbuff);
 
@@ -1056,6 +1060,7 @@ mqttCurrentState MQTT_TransmissionHandler(mqttContext* mqttConnectionPtr) {
 			switch (mqttConnectTxSubstate) {
 			case SENDPINGREQ:
 				if (pingreqTimeoutOccured == true) {
+                    debug_print("MQTT: SENDPINGREQ");
 					// Change state for the next timeout to occur correctly
 					pingreqTimeoutOccured = false;
 					// Periodic sending of PINGREQ packet
@@ -1063,6 +1068,7 @@ mqttCurrentState MQTT_TransmissionHandler(mqttContext* mqttConnectionPtr) {
 				}
 				break;
 			case SENDPUBLISH:
+                debug_print("MQTT: SENDPUBLISH");
 				timeout_delete(&pingreqTimer);
 				packetSent = mqttSendPublish(mqttConnectionPtr);
 
@@ -1072,6 +1078,7 @@ mqttCurrentState MQTT_TransmissionHandler(mqttContext* mqttConnectionPtr) {
 				}
 				break;
 			case SENDSUBSCRIBE:
+                debug_print("MQTT: SENDSUBSCRIBE");
 				timeout_delete(&pingreqTimer);
 				mqttSendSubscribe(mqttConnectionPtr);
 				keepAliveTimeout = ntohs(txConnectPacket.connectVariableHeader.keepAliveTimer);
@@ -1173,6 +1180,7 @@ mqttCurrentState MQTT_ReceptionHandler(mqttContext* mqttConnectionPtr) {
 		switch (receivedPacketHeader.controlPacketType) {
 		case PINGRESP:
 			// PINGRESP received
+            debug_print("MQTT: PINGRESP");
 			if ((mqttRxFlags.newRxPingrespPacket == 1) && (pingrespTimeoutOccured == false)) {
 				timeout_delete(&pingrespTimer);
 				mqttProcessPingresp(mqttConnectionPtr);
@@ -1180,6 +1188,7 @@ mqttCurrentState MQTT_ReceptionHandler(mqttContext* mqttConnectionPtr) {
 			break;
 		case SUBACK:
 			// SUBACK received
+            debug_print("MQTT: SUBACK");
 			if ((mqttRxFlags.newRxSubackPacket == 1) && (subackTimeoutOccured == false)) {
 				timeout_delete(&subackTimer);
 				mqttState = mqttProcessSuback(mqttConnectionPtr);
@@ -1198,6 +1207,7 @@ mqttCurrentState MQTT_ReceptionHandler(mqttContext* mqttConnectionPtr) {
 			mqttProcessPublish(mqttConnectionPtr);
 			break;
 		case PUBACK:
+            debug_print("MQTT: PUBACK");
 			mqttProcessPuback(mqttConnectionPtr);
 			break;
 		default:
@@ -1221,6 +1231,8 @@ static bool mqttSendSubscribe(mqttContext* mqttConnectionPtr) {
 	bool ret = false;
 	uint8_t topicCount = 0;
 
+    debug_print("MQTT: mqttSendSubscribe");
+            
 	MQTT_ExchangeBufferInit(&mqttConnectionPtr->mqttDataExchangeBuffers.txbuff);
 	MQTT_ExchangeBufferInit(&mqttConnectionPtr->mqttDataExchangeBuffers.rxbuff);
 
@@ -1358,9 +1370,11 @@ static mqttCurrentState mqttProcessConnack(mqttContext* mqttConnectionPtr) {
 	MQTT_ExchangeBufferRead(&mqttConnectionPtr->mqttDataExchangeBuffers.rxbuff, (uint8_t*)&mqttConnackPacket.connackVariableHeader.connackReturnCode, sizeof(mqttConnackPacket.connackVariableHeader.connackReturnCode));
 
 	if (mqttConnackPacket.connackVariableHeader.connackReturnCode == CONN_ACCEPTED) {
-		return CONNECTED;
+        debug_print("MQTT: mqttProcessConnack CONNECTED");
+        return CONNECTED;
 	}
 	else {
+        debug_print("MQTT: mqttProcessConnack DISCONNECTED");
 		return DISCONNECTED;
 	}
 }

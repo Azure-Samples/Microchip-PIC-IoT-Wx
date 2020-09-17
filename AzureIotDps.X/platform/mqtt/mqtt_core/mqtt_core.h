@@ -207,7 +207,7 @@ typedef struct
 	uint8_t packetIdentifierMSB;
 
 	// Payload
-	uint8_t payloadLength;
+	uint16_t payloadLength;
 	uint8_t* payload;
 
 	uint16_t totalLength;

@@ -6,7 +6,7 @@
 // <o> Send Interval <0-100000>
 // <i> Send interval in seconds
 // <id> application_send_interval
-#define CFG_SEND_INTERVAL 5
+#define CFG_SEND_INTERVAL 10
 
 // <o> Timeout <0-100000>
 // <i> Timeout
@@ -36,7 +36,7 @@
 // <i> hub device ID in the Azure IoT hub
 // <id> id
 // >>comment this out to use embedded ID device from the HSM
-#define HUB_DEVICE_ID "01233EAD58E86797FE"
+//#define HUB_DEVICE_ID "01233EAD58E86797FE"
 
 // <s> hub device key
 // <i> hub device key of the device in the Azure IoT hub
@@ -52,11 +52,6 @@
 // <i> provisioning id scope of the DPS service
 // <id> id
 #define PROVISIONING_ID_SCOPE "0nXXXX"
-
-// <s> provisioning enrollment key
-// <i> provisioning enrollment key of the DPS enrollment group
-// <id> key
-#define PROVISIONING_ENROLLMENT_KEY "XXXXXXXXXXHASH"
 
 // </h>
 
