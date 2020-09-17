@@ -106,7 +106,7 @@ bool wifi_connectToAp(uint8_t passed_wifi_creds)
 {
 	int8_t e = 0;
 
-	m2m_wifi_configure_sntp((char*)"time-a-g.nist.gov", 18, SNTP_ENABLE_DHCP);
+	m2m_wifi_configure_sntp((char*)"time.nist.gov", 18, SNTP_ENABLE_DHCP);
 	//e = m2m_wifi_set_device_name((uint8*)"01233EAD58E86797FE", strlen("01233EAD58E86797FE"));
         
 #ifdef CFG_MAIN_WLAN_SSID
