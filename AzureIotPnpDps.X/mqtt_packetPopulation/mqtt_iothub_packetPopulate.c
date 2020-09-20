@@ -76,11 +76,15 @@ void MQTT_CLIENT_iothub_publish(uint8_t* data, uint16_t len)
         return;
     }
 
+    static uint16_t packetIdentifier;
+    packetIdentifier++;
     mqttPublishPacket cloudPublishPacket;
     // Fixed header
     cloudPublishPacket.publishHeaderFlags.duplicate = 0;
     cloudPublishPacket.publishHeaderFlags.qos = 1;
     cloudPublishPacket.publishHeaderFlags.retain = 0;
+    cloudPublishPacket.packetIdentifierLSB = packetIdentifier & 0xff;
+    cloudPublishPacket.packetIdentifierMSB = packetIdentifier >> 8;
     // Variable header
     cloudPublishPacket.topic = (uint8_t*)mqtt_telemetry_topic_buf;
 
