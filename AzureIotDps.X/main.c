@@ -77,7 +77,9 @@ void receivedFromCloud_message(uint8_t* topic, uint8_t* payload)
     if (az_span_is_content_equal_ignoring_case(method_topic.name, blink))
     {
         az_json_reader json_parser;
-        result = az_json_reader_init(&json_parser, az_span_create_from_str((char*)payload), NULL);
+        static az_span message_payload;
+        message_payload = az_span_create_from_str((char*)payload);
+        result = az_json_reader_init(&json_parser, message_payload, NULL);
         if (az_result_failed(result))
         {
             debug_printError("az_json_reader_init failed");
@@ -317,15 +319,16 @@ void receivedFromCloud_patch(uint8_t* topic, uint8_t* payload)
 void sendToCloud(void)
 {
     static char json[70];
-
-    // This part runs every CFG_SEND_INTERVAL seconds
-    int rawTemperature = SENSORS_getTempValue();
-    int light = SENSORS_getLightValue();
-    int len = sprintf(json, "{\"Light\":%d,\"Temp\":\"%d.%02d\"}", light, rawTemperature / 100, abs(rawTemperature) % 100);
-
-    if (len > 0) {
-        CLOUD_publishData((uint8_t*)json, len);
-        LED_flashYellow();
+    if (is_desired_properties_valid)
+    {
+        // This part runs every CFG_SEND_INTERVAL seconds
+        int rawTemperature = SENSORS_getTempValue();
+        int light = SENSORS_getLightValue();
+        int len = sprintf(json, "{\"Light\":%d,\"Temp\":\"%d.%02d\"}", light, rawTemperature / 100, abs(rawTemperature) % 100);
+        if (len > 0) {
+            CLOUD_publishData((uint8_t*)json, len);
+            LED_flashYellow();
+        }
     }
 }
 
