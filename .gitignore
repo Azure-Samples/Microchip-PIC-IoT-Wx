@@ -58,8 +58,7 @@ dkms.conf
 /AzureIotPnpDps.X/.vs
 /AzureIotDps.X/.vs
 AzureIotPnpDps.X/dist/default/production/memoryfile.xml
-AzureIotPnpDps.X/nbproject/Makefile-default.mk
 AzureIotPnpDps.X/nbproject/Makefile-genesis.properties
-AzureIotPnpDps.X/nbproject/Makefile-impl.mk
-*.mk
 AzureIotPnpDps.X/nbproject/private/configurations.xml
+AzureIotPnpDps.X/dist/default/production/memoryfile.xml
+*.mk
