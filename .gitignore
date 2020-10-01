@@ -62,3 +62,10 @@ AzureIotPnpDps.X/nbproject/Makefile-genesis.properties
 AzureIotPnpDps.X/nbproject/private/configurations.xml
 AzureIotPnpDps.X/dist/default/production/memoryfile.xml
 *.mk
+AzureIotPnpDps.X/nbproject/Makefile-default.mk
+AzureIotPnpDps.X/nbproject/Makefile-genesis.properties
+AzureIotPnpDps.X/nbproject/Makefile-impl.mk
+AzureIotPnpDps.X/nbproject/Makefile-local-default.mk
+AzureIotPnpDps.X/nbproject/Makefile-variables.mk
+AzureIotPnpDps.X/nbproject/Package-default.bash
+AzureIotPnpDps.X/nbproject/private/configurations.xml
