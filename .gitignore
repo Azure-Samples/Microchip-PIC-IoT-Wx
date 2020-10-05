@@ -70,3 +70,4 @@ AzureIotPnpDps.X/nbproject/Makefile-variables.mk
 AzureIotPnpDps.X/nbproject/Package-default.bash
 AzureIotPnpDps.X/nbproject/private/configurations.xml
 *.xml
+*.tmp
