@@ -71,3 +71,5 @@ AzureIotPnpDps.X/nbproject/Package-default.bash
 AzureIotPnpDps.X/nbproject/private/configurations.xml
 *.xml
 *.tmp
+AzureIotPnpDps.X/dist/default/production/memoryfile.xml
+AzureIotPnpDps.X/nbproject/configurations.xml
