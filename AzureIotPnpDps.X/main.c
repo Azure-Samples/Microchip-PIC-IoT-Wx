@@ -96,7 +96,7 @@ static const az_span led_blue_property_name = AZ_SPAN_LITERAL_FROM_STR("led_blue
 static const az_span led_green_property_name = AZ_SPAN_LITERAL_FROM_STR("led_green");
 static const az_span led_yellow_property_name = AZ_SPAN_LITERAL_FROM_STR("led_yellow");
 static const az_span led_red_property_name = AZ_SPAN_LITERAL_FROM_STR("led_red");
-static char reported_property_payload[256];
+static char reported_property_payload[512];
 
 // PnP Device Values
 static bool max_temp_changed = false;
@@ -537,7 +537,6 @@ static int send_reported_property(
 
   if (twin_desired_properties->desired_temp_found)
   {
-    debug_printInfo("desired temp");
     if (az_result_failed(
             rc = add_confirmed_reported_property_int32(
                 &json_builder,
@@ -553,7 +552,6 @@ static int send_reported_property(
 
   if (twin_desired_properties->desired_led_red_found)
   {
-    debug_printInfo("desired red");
     if (az_result_failed(
             rc = add_confirmed_reported_property_int32(
                 &json_builder,
@@ -570,7 +568,6 @@ static int send_reported_property(
 
   if (twin_desired_properties->desired_led_yellow_found)
   {
-    debug_printInfo("desired yellow");
     if (az_result_failed(
             rc = add_confirmed_reported_property_int32(
                 &json_builder,
@@ -587,7 +584,6 @@ static int send_reported_property(
 
   if (twin_desired_properties->desired_led_blue_found)
   {
-    debug_printInfo("desired blue");
     if (az_result_failed(
             rc = add_confirmed_reported_property_int32(
                 &json_builder,
@@ -604,7 +600,6 @@ static int send_reported_property(
 
   if (twin_desired_properties->desired_led_green_found)
   {
-    debug_printInfo("desired green");
     if (az_result_failed(
             rc = add_confirmed_reported_property_int32(
                 &json_builder,
@@ -960,18 +955,18 @@ int main(void)
 #endif //CFG_MQTT_PROVISIONING_HOST 
 
     while (true) {
-        runScheduler();
-        /*** Add your APPlication code below this line ***/
-        if (BUTTON_SW0_wasPushed == BUTTON_ENUM_TRUE) {// Was SW0 button pressed?
-            BUTTON_SW0_numPresses++; // Increment button presses counter for SW0
-            DELAY_milliseconds(DEBOUNCE_DLY_MSEC); // Switch debounce delay
-            BUTTON_SW0_wasPushed = BUTTON_ENUM_FALSE; // End while (SW0 released)
-        } // End (SW0 button was released)
-        if (BUTTON_SW1_wasPushed == BUTTON_ENUM_TRUE) {// Was SW1 button pressed?
-            BUTTON_SW1_numPresses++; // Increment button presses counter for SW1
-            DELAY_milliseconds(DEBOUNCE_DLY_MSEC); // Switch debounce delay
-            BUTTON_SW1_wasPushed = BUTTON_ENUM_FALSE; // End while (SW1 released)
-        } // End (SW1 button was released)
+      runScheduler();
+      /*** Add your APPlication code below this line ***/
+      if (BUTTON_SW0_wasPushed == BUTTON_ENUM_TRUE) {// Was SW0 button pressed?
+        BUTTON_SW0_numPresses++; // Increment button presses counter for SW0
+        DELAY_milliseconds(DEBOUNCE_DLY_MSEC); // Switch debounce delay
+        BUTTON_SW0_wasPushed = BUTTON_ENUM_FALSE; // End while (SW0 released)
+      } // End (SW0 button was released)
+      if (BUTTON_SW1_wasPushed == BUTTON_ENUM_TRUE) {// Was SW1 button pressed?
+        BUTTON_SW1_numPresses++; // Increment button presses counter for SW1
+        DELAY_milliseconds(DEBOUNCE_DLY_MSEC); // Switch debounce delay
+        BUTTON_SW1_wasPushed = BUTTON_ENUM_FALSE; // End while (SW1 released)
+      } // End (SW1 button was released)
     }
 
     return true;
