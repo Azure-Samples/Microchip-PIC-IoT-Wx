@@ -51,6 +51,15 @@
 */
 #include <xc.h>
 
+#define BUTTON_ENUM_FALSE 0
+#define BUTTON_ENUM_TRUE  1
+
+extern uint8_t BUTTON_SW0_wasPushed;
+extern uint8_t BUTTON_SW1_wasPushed;
+
+extern uint32_t BUTTON_SW0_numPresses;
+extern uint32_t BUTTON_SW1_numPresses;
+
 /**
     Section: Device Pin Macros
 */
@@ -2281,6 +2290,48 @@ void PIN_MANAGER_Initialize (void);
 
 /**
   @Summary
+    Callback for SW0 Pin.
+
+  @Description
+    This routine is callback for SW0 Pin
+
+  @Param
+    None.
+
+  @Returns
+    None
+ 
+ 
+  @Example 
+    <code>
+        SW0_SetInterruptHandler(&SW0_CallBack);
+    </code>
+*/
+void SW0_CallBack(void);
+
+/**
+  @Summary
+    Callback for SW1 Pin.
+
+  @Description
+    This routine is callback for SW1 Pin
+
+  @Param
+    None.
+
+  @Returns
+    None
+ 
+ 
+  @Example 
+    <code>
+        SW1_SetInterruptHandler(&SW1_CallBack);
+    </code>
+*/
+void SW1_CallBack(void);
+
+/**
+  @Summary
     Callback for INT Pin.
 
   @Description
@@ -2300,6 +2351,86 @@ void PIN_MANAGER_Initialize (void);
 */
 void INT_CallBack(void);
 
+
+/**
+  @Summary
+    Assigns a function pointer with a callback address.
+
+  @Description
+    This routine assigns a function pointer with a callback address.
+
+  @Param
+    Address of the callback routine.
+
+  @Returns
+    None
+ 
+  @Example 
+    <code>
+        SW0_SetInterruptHandler(&SW0_CallBack);
+    </code>
+*/
+void SW0_SetInterruptHandler(void (* InterruptHandler)(void));
+
+/**
+  @Summary
+    Assigns a function pointer with a callback address.
+
+  @Description
+    This routine assigns a function pointer with a callback address.
+
+  @Param
+    Address of the callback routine.
+
+  @Returns
+    None
+ 
+  @Example 
+    <code>
+        SW0_SetIOCInterruptHandler(&SW0_CallBack);
+    </code>
+*/
+void __attribute__((deprecated("\nThis will be removed in future MCC releases. \nUse SW0_SetInterruptHandler instead."))) SW0_SetIOCInterruptHandler(void *handler);
+
+/**
+  @Summary
+    Assigns a function pointer with a callback address.
+
+  @Description
+    This routine assigns a function pointer with a callback address.
+
+  @Param
+    Address of the callback routine.
+
+  @Returns
+    None
+ 
+  @Example 
+    <code>
+        SW1_SetInterruptHandler(&SW1_CallBack);
+    </code>
+*/
+void SW1_SetInterruptHandler(void (* InterruptHandler)(void));
+
+/**
+  @Summary
+    Assigns a function pointer with a callback address.
+
+  @Description
+    This routine assigns a function pointer with a callback address.
+
+  @Param
+    Address of the callback routine.
+
+  @Returns
+    None
+ 
+  @Example 
+    <code>
+        SW1_SetIOCInterruptHandler(&SW1_CallBack);
+    </code>
+*/
+void __attribute__((deprecated("\nThis will be removed in future MCC releases. \nUse SW1_SetInterruptHandler instead."))) SW1_SetIOCInterruptHandler(void *handler);
 
 /**
   @Summary

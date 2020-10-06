@@ -190,7 +190,7 @@ ${OBJECTDIR}/azure-sdk-for-c/sdk/src/azure/iot/az_iot_provisioning_client.o: azu
 	@${MKDIR} "${OBJECTDIR}/azure-sdk-for-c/sdk/src/azure/iot" 
 	@${RM} ${OBJECTDIR}/azure-sdk-for-c/sdk/src/azure/iot/az_iot_provisioning_client.o.d 
 	@${RM} ${OBJECTDIR}/azure-sdk-for-c/sdk/src/azure/iot/az_iot_provisioning_client.o 
-	${MP_CC} $(MP_EXTRA_CC_PRE)  azure-sdk-for-c/sdk/src/azure/iot/az_iot_provisioning_client.c  -o ${OBJECTDIR}/azure-sdk-for-c/sdk/src/azure/iot/az_iot_provisioning_client.o  -c -mcpu=$(MP_PROCESSOR_OPTION)  -MMD -MF "${OBJECTDIR}/azure-sdk-for-c/sdk/src/azure/iot/az_iot_provisioning_client.o.d"      -g -D__DEBUG   -mno-eds-warn  -omf=elf -DXPRJ_default=$(CND_CONF)  -legacy-libc  $(COMPARISON_BUILD)  -ffunction-sections -mlarge-code -O1 -falign-arrays -I"azure-sdk-for-c/sdk/inc" -Duintptr_t=void* -msmart-io=1 -Wall -msfr-warn=off   -std=gnu99  -mdfp="${DFP_DIR}/xc16"
+	${MP_CC} $(MP_EXTRA_CC_PRE)  azure-sdk-for-c/sdk/src/azure/iot/az_iot_provisioning_client.c  -o ${OBJECTDIR}/azure-sdk-for-c/sdk/src/azure/iot/az_iot_provisioning_client.o  -c -mcpu=$(MP_PROCESSOR_OPTION)  -MMD -MF "${OBJECTDIR}/azure-sdk-for-c/sdk/src/azure/iot/az_iot_provisioning_client.o.d"      -g -D__DEBUG   -mno-eds-warn  -omf=elf -DXPRJ_default=$(CND_CONF)  -legacy-libc  $(COMPARISON_BUILD)  -ffunction-sections -mlarge-code -O2 -falign-arrays -I"azure-sdk-for-c/sdk/inc" -Duintptr_t=void* -msmart-io=1 -Wall -msfr-warn=off   -std=gnu99  -mdfp="${DFP_DIR}/xc16"
 	@${FIXDEPS} "${OBJECTDIR}/azure-sdk-for-c/sdk/src/azure/iot/az_iot_provisioning_client.o.d" $(SILENT)  -rsi ${MP_CC_DIR}../ 
 	
 ${OBJECTDIR}/azure-sdk-for-c/sdk/src/azure/iot/az_iot_provisioning_client_sas.o: azure-sdk-for-c/sdk/src/azure/iot/az_iot_provisioning_client_sas.c  nbproject/Makefile-${CND_CONF}.mk
@@ -1038,7 +1038,7 @@ ${OBJECTDIR}/azure-sdk-for-c/sdk/src/azure/iot/az_iot_provisioning_client.o: azu
 	@${MKDIR} "${OBJECTDIR}/azure-sdk-for-c/sdk/src/azure/iot" 
 	@${RM} ${OBJECTDIR}/azure-sdk-for-c/sdk/src/azure/iot/az_iot_provisioning_client.o.d 
 	@${RM} ${OBJECTDIR}/azure-sdk-for-c/sdk/src/azure/iot/az_iot_provisioning_client.o 
-	${MP_CC} $(MP_EXTRA_CC_PRE)  azure-sdk-for-c/sdk/src/azure/iot/az_iot_provisioning_client.c  -o ${OBJECTDIR}/azure-sdk-for-c/sdk/src/azure/iot/az_iot_provisioning_client.o  -c -mcpu=$(MP_PROCESSOR_OPTION)  -MMD -MF "${OBJECTDIR}/azure-sdk-for-c/sdk/src/azure/iot/az_iot_provisioning_client.o.d"      -mno-eds-warn  -g -omf=elf -DXPRJ_default=$(CND_CONF)  -legacy-libc  $(COMPARISON_BUILD)  -ffunction-sections -mlarge-code -O1 -falign-arrays -I"azure-sdk-for-c/sdk/inc" -Duintptr_t=void* -msmart-io=1 -Wall -msfr-warn=off   -std=gnu99  -mdfp="${DFP_DIR}/xc16"
+	${MP_CC} $(MP_EXTRA_CC_PRE)  azure-sdk-for-c/sdk/src/azure/iot/az_iot_provisioning_client.c  -o ${OBJECTDIR}/azure-sdk-for-c/sdk/src/azure/iot/az_iot_provisioning_client.o  -c -mcpu=$(MP_PROCESSOR_OPTION)  -MMD -MF "${OBJECTDIR}/azure-sdk-for-c/sdk/src/azure/iot/az_iot_provisioning_client.o.d"      -mno-eds-warn  -g -omf=elf -DXPRJ_default=$(CND_CONF)  -legacy-libc  $(COMPARISON_BUILD)  -ffunction-sections -mlarge-code -O2 -falign-arrays -I"azure-sdk-for-c/sdk/inc" -Duintptr_t=void* -msmart-io=1 -Wall -msfr-warn=off   -std=gnu99  -mdfp="${DFP_DIR}/xc16"
 	@${FIXDEPS} "${OBJECTDIR}/azure-sdk-for-c/sdk/src/azure/iot/az_iot_provisioning_client.o.d" $(SILENT)  -rsi ${MP_CC_DIR}../ 
 	
 ${OBJECTDIR}/azure-sdk-for-c/sdk/src/azure/iot/az_iot_provisioning_client_sas.o: azure-sdk-for-c/sdk/src/azure/iot/az_iot_provisioning_client_sas.c  nbproject/Makefile-${CND_CONF}.mk

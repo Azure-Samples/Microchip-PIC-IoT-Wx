@@ -33,6 +33,7 @@ static const az_span twin_request_id = AZ_SPAN_LITERAL_FROM_STR("initial_get");
 char mqtt_telemetry_topic_buf[64];
 char mqtt_get_topic_twin_buf[64];
 uint8_t device_id_buf[100];
+uint8_t scope_id_buf[100];
 az_span device_id;
 az_iot_hub_client hub_client;
 
@@ -76,15 +77,11 @@ void MQTT_CLIENT_iothub_publish(uint8_t* data, uint16_t len)
         return;
     }
 
-    static uint16_t packetIdentifier;
-    packetIdentifier++;
     mqttPublishPacket cloudPublishPacket;
     // Fixed header
     cloudPublishPacket.publishHeaderFlags.duplicate = 0;
     cloudPublishPacket.publishHeaderFlags.qos = 1;
     cloudPublishPacket.publishHeaderFlags.retain = 0;
-    cloudPublishPacket.packetIdentifierLSB = packetIdentifier & 0xff;
-    cloudPublishPacket.packetIdentifierMSB = packetIdentifier >> 8;
     // Variable header
     cloudPublishPacket.topic = (uint8_t*)mqtt_telemetry_topic_buf;
 

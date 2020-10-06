@@ -1,0 +1,220 @@
+{
+  "@context": "dtmi:dtdl:context;2",
+  "@id": "dtmi:com:Microchip:PIC_IoT_WM;1",
+  "@type": "Interface",
+  "displayName": "PIC-IoT WM",
+  "description": "Reports temperature, light intensity, and states of the 2 buttons & 4 LEDs.  Provides ability to turn on/off any of the 4 LEDs.",
+  "contents": [
+    {
+      "@type": [
+        "Telemetry",
+        "Temperature"
+      ],
+      "name": "temperature",
+      "displayName" : "Temperature",
+      "description" : "Temperature in degrees Celsius from Microchip MCP9808 high-accuracy temperature sensor",
+      "schema": "integer",
+      "unit": "degreeCelsius"
+    },
+    {
+      "@type": [
+        "Telemetry",
+        "Illuminance"
+      ],
+      "name": "light",
+      "displayName" : "Brightness from light sensor",
+      "description" : "Brightness in illuminance from Vishay TEMT6000X01 ambient light sensor",
+      "schema": "integer",
+      "unit": "lux"
+    },
+    {
+      "@type": [
+        "Telemetry",
+        "Button_Presses_SW0"
+      ],
+      "name": "button_presses_sw0",
+      "displayName" : "Number of presses for user button SW0",
+      "description" : "Number of times the SW0 user button has been pressed since device reset",
+      "schema": "integer"
+    },
+    {
+      "@type": [
+        "Telemetry",
+        "Button_Presses_SW1"
+      ],
+      "name": "button_presses_sw1",
+      "displayName" : "Number of presses for user button SW1",
+      "description" : "Number of times the SW1 user button has been pressed since device reset",
+      "schema": "integer"
+    },
+    {
+      "@type": [
+        "Property"
+      ],
+      "name": "led_blue",
+      "displayName" : "Blue LED State",
+      "description" : "Turn On/Off Blue LED",
+      "schema": {
+        "@type": "Enum",
+        "valueSchema": "integer",
+        "enumValues": [
+          {
+            "name": "On",
+            "displayName": "Turn On",
+            "enumValue": 1
+          },
+          {
+            "name": "Off",
+            "displayName": "Turn Off",
+            "enumValue": 2
+          }
+        ]
+      },
+      "writable": true
+    },
+    {
+      "@type": [
+        "Property"
+      ],
+      "name": "led_green",
+      "displayName" : "Green LED State",
+      "description" : "Turn On/Off Green LED",
+      "schema": {
+        "@type": "Enum",
+        "valueSchema": "integer",
+        "enumValues": [
+          {
+            "name": "On",
+            "displayName": "Turn On",
+            "enumValue": 1
+          },
+          {
+            "name": "Off",
+            "displayName": "Turn Off",
+            "enumValue": 2
+          }
+        ]
+      },
+      "writable": true
+    },
+    {
+      "@type": [
+        "Property"
+      ],
+      "name": "led_yellow",
+      "displayName" : "Yellow LED State",
+      "description" : "Turn On/Off Yellow LED",
+      "schema": {
+        "@type": "Enum",
+        "valueSchema": "integer",
+        "enumValues": [
+          {
+            "name": "On",
+            "displayName": "Turn On",
+            "enumValue": 1
+          },
+          {
+            "name": "Off",
+            "displayName": "Turn Off",
+            "enumValue": 2
+          }
+        ]
+      },
+      "writable": true
+    },
+    {
+      "@type": [
+        "Property"
+      ],
+      "name": "led_red",
+      "displayName" : "Red LED State",
+      "description" : "Turn On/Off Red LED",
+      "schema": {
+        "@type": "Enum",
+        "valueSchema": "integer",
+        "enumValues": [
+          {
+            "name": "On",
+            "displayName": "Turn On",
+            "enumValue": 1
+          },
+          {
+            "name": "Off",
+            "displayName": "Turn Off",
+            "enumValue": 2
+          }
+        ]
+      },
+      "writable": true
+    },
+    {
+      "@type": [
+        "Property",
+        "Temperature"
+      ],
+      "name": "targetTemperature",
+      "schema": "double",
+      "displayName": "Target Temperature",
+      "description": "Allows to remotely specify the desired target temperature",
+      "unit" : "degreeCelsius",
+      "writable": true
+    },
+    {
+      "@type": [
+        "Property",
+        "Temperature"
+      ],
+      "name": "maxTempSinceLastReboot",
+      "schema": "double",
+      "unit" : "degreeCelsius",
+      "displayName": "Max temperature since last reboot",
+      "description": "Returns the max temperature since last device reboot"
+    },
+    {
+      "@type": "Command",
+      "name": "getMaxMinReport",
+      "displayName": "Get Max-Min report",
+      "description": "This command returns the max, min and average temperature from the specified time to the current time",
+      "request": {
+        "name": "since",
+        "displayName": "Since",
+        "description": "Period to return the max-min report",
+        "schema": "dateTime"
+      },
+      "response": {
+        "name" : "tempReport",
+        "displayName": "Temperature Report",
+        "schema": {
+          "@type": "Object",
+          "fields": [
+            {
+              "name": "maxTemp",
+              "displayName": "Max temperature",
+              "schema": "double"
+            },
+            {
+              "name": "minTemp",
+              "displayName": "Min temperature",
+              "schema": "double"
+            },
+            {
+              "name" : "avgTemp",
+              "displayName": "Average Temperature",
+              "schema": "double"
+            },
+            {
+              "name" : "startTime",
+              "displayName": "Start Time",
+              "schema": "dateTime"
+            },
+            {
+              "name" : "endTime",
+              "displayName": "End Time",
+              "schema": "dateTime"
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

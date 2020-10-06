@@ -7,8 +7,12 @@
 #include "platform/application_manager.h"
 #include "platform/system.h"
 #include "platform/led.h"
+#include "platform/pin_manager.h"
 #include "platform/sensors_handling.h"
 #include "platform/cloud/cloud_service.h"
+#include "platform/cryptoauthlib/lib/atca_command.h"
+#include "platform/cryptoauthlib/lib/basic/atca_basic.h"
+#include "platform/delay.h"
 #include "platform/debug_print.h"
 #include "platform/mqtt/mqtt_core/mqtt_core.h"
 #include "platform/mqtt/mqtt_packetTransfer_interface.h"
@@ -17,10 +21,29 @@
 #include "azure/iot/az_iot_hub_client.h"
 
 #define DEFAULT_START_TEMP_CELSIUS 22
+#define ATCA_SLOT_IDSCOPE 8 // Slot # in ATECC608A SE which stores the ID Scope
+#define DEBOUNCE_DLY_MSEC 50 // Delay to prevent switch debouncing on release
 
 extern az_iot_hub_client hub_client;
 extern pf_MQTT_CLIENT pf_mqtt_iotprovisioning_client;
 extern pf_MQTT_CLIENT pf_mqtt_iothub_client;
+extern uint8_t atca_id_scope[20];
+
+typedef struct
+{
+  bool version_found;
+  bool desired_temp_found;
+  bool desired_led_red_found;
+  bool desired_led_yellow_found;
+  bool desired_led_blue_found;
+  bool desired_led_green_found;
+  int32_t version_num;
+  int32_t desired_temp;
+  int32_t desired_led_red;
+  int32_t desired_led_yellow;
+  int32_t desired_led_blue;
+  int32_t desired_led_green;
+}desired_properties;
 
 // * PnP Values *
 // The model id is the JSON document (also called the Digital Twins Model Identifier or DTMI)
@@ -28,9 +51,9 @@ extern pf_MQTT_CLIENT pf_mqtt_iothub_client;
 // is described in the corresponding DTMI. Should you choose to program your own PnP capable device,
 // the functionality would need to match the DTMI and you would need to update the below 'model_id'.
 // Please see the sample README for more information on this DTMI.
-const az_span device_model_id = AZ_SPAN_LITERAL_FROM_STR("dtmi:com:example:Thermostat;1");
+const az_span device_model_id = AZ_SPAN_LITERAL_FROM_STR("dtmi:com:Microchip:PIC_IoT_WM;1");
 // ISO8601 Time Format
-static const char iso_spec_time_format[] = "%Y-%m-%dT%H:%M:%S.000%zZ";
+static const char iso_spec_time_format[] = "%Y-%m-%dT%H:%M:%S%z";
 
 // IoT Hub Connection Values
 static int32_t request_id_int;
@@ -38,7 +61,10 @@ static char request_id_buf[8];
 
 // IoT Hub Telemetry Values
 char telemetry_topic[128];
-static const az_span telemetry_name = AZ_SPAN_LITERAL_FROM_STR("temperature");
+static const az_span telemetry_name_temperature = AZ_SPAN_LITERAL_FROM_STR("temperature");
+static const az_span telemetry_name_light = AZ_SPAN_LITERAL_FROM_STR("light");
+static const az_span telemetry_name_sw0 = AZ_SPAN_LITERAL_FROM_STR("button_presses_sw0");
+static const az_span telemetry_name_sw1 = AZ_SPAN_LITERAL_FROM_STR("button_presses_sw1");
 static char telemetry_payload[256];
 
 // IoT Hub Commands Values
@@ -56,21 +82,26 @@ static char incoming_since_value[32];
 
 // IoT Hub Twin Values
 //static char twin_get_topic[128];
-static char reported_property_topic[128];
+static char reported_property_topic[256];
 static const az_span desired_property_name = AZ_SPAN_LITERAL_FROM_STR("desired");
 static const az_span desired_property_version_name = AZ_SPAN_LITERAL_FROM_STR("$version");
 static const az_span desired_temp_property_name = AZ_SPAN_LITERAL_FROM_STR("targetTemperature");
-static const az_span desired_temp_response_value_name = AZ_SPAN_LITERAL_FROM_STR("value");
-static const az_span desired_temp_ack_code_name = AZ_SPAN_LITERAL_FROM_STR("ac");
-static const az_span desired_temp_ack_version_name = AZ_SPAN_LITERAL_FROM_STR("av");
-static const az_span desired_temp_ack_description_name = AZ_SPAN_LITERAL_FROM_STR("ad");
+static const az_span desired_response_value_name = AZ_SPAN_LITERAL_FROM_STR("value");
+static const az_span desired_ack_code_name = AZ_SPAN_LITERAL_FROM_STR("ac");
+static const az_span desired_ack_version_name = AZ_SPAN_LITERAL_FROM_STR("av");
+static const az_span desired_ack_description_name = AZ_SPAN_LITERAL_FROM_STR("ad");
 static const az_span max_temp_reported_property_name
     = AZ_SPAN_LITERAL_FROM_STR("maxTempSinceLastReboot");
-static char reported_property_payload[128];
+static const az_span led_blue_property_name = AZ_SPAN_LITERAL_FROM_STR("led_blue");
+static const az_span led_green_property_name = AZ_SPAN_LITERAL_FROM_STR("led_green");
+static const az_span led_yellow_property_name = AZ_SPAN_LITERAL_FROM_STR("led_yellow");
+static const az_span led_red_property_name = AZ_SPAN_LITERAL_FROM_STR("led_red");
+static char reported_property_payload[256];
 
 // PnP Device Values
 static bool max_temp_changed = false;
-static int32_t current_device_temp;
+static int32_t device_current_temp;
+static int32_t device_current_light;
 static int32_t device_temperature_avg_total;
 static uint32_t device_temperature_avg_count = 0;
 static int32_t device_max_temp;
@@ -151,6 +182,7 @@ static int send_command_response(
 
   return rc;
 }
+
 static az_result build_command_response_payload(
     az_json_writer* json_builder,
     az_span start_time_span,
@@ -179,7 +211,6 @@ static az_result build_command_response_payload(
 
   return AZ_OK;
 }
-
 
 static az_result invoke_getMaxMinReport(az_span payload, az_span response, az_span* out_response)
 {
@@ -269,7 +300,7 @@ static void handle_command_message(
 
 void receivedFromCloud_methods(uint8_t* topic, uint8_t* payload)
 {
-    debug_printInfo("Methods");
+  debug_printInfo("Methods");
 	az_iot_hub_client_method_request method_request;
 	az_result result = az_iot_hub_client_methods_parse_received_topic(&hub_client, az_span_create_from_str((char*)topic), &method_request);
 	if (az_result_failed(result))
@@ -281,21 +312,31 @@ void receivedFromCloud_methods(uint8_t* topic, uint8_t* payload)
   handle_command_message(az_span_create_from_str((char*)payload), &method_request);
 }
 
-// Parse the desired temperature property from the incoming JSON
-static az_result parse_twin_desired_temperature_property(
+/*****************************************************************************************
+
+Properties (Device Twin)
+
+*****************************************************************************************/
+//
+// Parse Device Twin JSON
+//
+static az_result parse_twin_desired_property(
     az_span twin_payload_span,
     bool is_twin_get,
-    int32_t* parsed_value,
-    int32_t* version_number)
+    desired_properties* twin_desired_properties)
 {
   az_json_reader jp;
   bool desired_found = false;
+
   RETURN_IF_AZ_RESULT_FAILED(az_json_reader_init(&jp, twin_payload_span, NULL));
   RETURN_IF_AZ_RESULT_FAILED(az_json_reader_next_token(&jp));
+
   if (jp.token.kind != AZ_JSON_TOKEN_BEGIN_OBJECT)
   {
     return AZ_ERROR_UNEXPECTED_CHAR;
   }
+
+  debug_printInfo("Parsing Device Twin\r\n%s", az_span_ptr(twin_payload_span));
 
   if (is_twin_get)
   {
@@ -303,18 +344,26 @@ static az_result parse_twin_desired_temperature_property(
     RETURN_IF_AZ_RESULT_FAILED(az_json_reader_next_token(&jp));
     while (jp.token.kind != AZ_JSON_TOKEN_END_OBJECT)
     {
-      if (az_json_token_is_text_equal(&jp.token, desired_property_name))
+
+      if (jp.token.kind != AZ_JSON_TOKEN_PROPERTY_NAME)
       {
-        desired_found = true;
-        RETURN_IF_AZ_RESULT_FAILED(az_json_reader_next_token(&jp));
-        break;
+        debug_print("Token Kind %d", jp.token.kind);
+        RETURN_IF_AZ_RESULT_FAILED(az_json_reader_skip_children(&jp));
       }
       else
       {
-        // else ignore token.
-        RETURN_IF_AZ_RESULT_FAILED(az_json_reader_skip_children(&jp));
-      }
 
+        if (az_json_token_is_text_equal(&jp.token, desired_property_name))
+        {
+          desired_found = true;
+          RETURN_IF_AZ_RESULT_FAILED(az_json_reader_next_token(&jp));
+          break;
+        }
+        else
+        {
+          RETURN_IF_AZ_RESULT_FAILED(az_json_reader_skip_children(&jp));
+        }
+      }
       RETURN_IF_AZ_RESULT_FAILED(az_json_reader_next_token(&jp));
     }
   }
@@ -333,23 +382,49 @@ static az_result parse_twin_desired_temperature_property(
   {
     return AZ_ERROR_UNEXPECTED_CHAR;
   }
+
   RETURN_IF_AZ_RESULT_FAILED(az_json_reader_next_token(&jp));
 
-  bool temp_found = false;
-  bool version_found = false;
-  while (!(temp_found && version_found) || (jp.token.kind != AZ_JSON_TOKEN_END_OBJECT))
+  //
+  // Loop through Desired Twin
+  //
+  while (jp.token.kind != AZ_JSON_TOKEN_END_OBJECT)
   {
-    if (az_json_token_is_text_equal(&jp.token, desired_temp_property_name))
+    if (az_json_token_is_text_equal(&jp.token, desired_property_version_name))
     {
       RETURN_IF_AZ_RESULT_FAILED(az_json_reader_next_token(&jp));
-      RETURN_IF_AZ_RESULT_FAILED(az_json_token_get_int32(&jp.token, parsed_value));
-      temp_found = true;
+      RETURN_IF_AZ_RESULT_FAILED(az_json_token_get_int32(&jp.token, &twin_desired_properties->version_num));
+      twin_desired_properties->version_found = true;
     }
-    else if (az_json_token_is_text_equal(&jp.token, desired_property_version_name))
+    else if (az_json_token_is_text_equal(&jp.token, desired_temp_property_name))
     {
       RETURN_IF_AZ_RESULT_FAILED(az_json_reader_next_token(&jp));
-      RETURN_IF_AZ_RESULT_FAILED(az_json_token_get_int32(&jp.token, version_number));
-      version_found = true;
+      RETURN_IF_AZ_RESULT_FAILED(az_json_token_get_int32(&jp.token, &twin_desired_properties->desired_temp));
+      twin_desired_properties->desired_temp_found = true;
+    }
+    else if (az_json_token_is_text_equal(&jp.token, led_red_property_name))
+    {
+      RETURN_IF_AZ_RESULT_FAILED(az_json_reader_next_token(&jp));
+      RETURN_IF_AZ_RESULT_FAILED(az_json_token_get_int32(&jp.token, &twin_desired_properties->desired_led_red));
+      twin_desired_properties->desired_led_red_found = true;
+    }
+    else if (az_json_token_is_text_equal(&jp.token, led_yellow_property_name))
+    {
+      RETURN_IF_AZ_RESULT_FAILED(az_json_reader_next_token(&jp));
+      RETURN_IF_AZ_RESULT_FAILED(az_json_token_get_int32(&jp.token, &twin_desired_properties->desired_led_yellow));
+      twin_desired_properties->desired_led_yellow_found = true;
+    }
+    else if (az_json_token_is_text_equal(&jp.token, led_blue_property_name))
+    {
+      RETURN_IF_AZ_RESULT_FAILED(az_json_reader_next_token(&jp));
+      RETURN_IF_AZ_RESULT_FAILED(az_json_token_get_int32(&jp.token, &twin_desired_properties->desired_led_blue));
+      twin_desired_properties->desired_led_blue_found = true;
+    }
+    else if (az_json_token_is_text_equal(&jp.token, led_green_property_name))
+    {
+      RETURN_IF_AZ_RESULT_FAILED(az_json_reader_next_token(&jp));
+      RETURN_IF_AZ_RESULT_FAILED(az_json_token_get_int32(&jp.token, &twin_desired_properties->desired_led_green));
+      twin_desired_properties->desired_led_green_found = true;
     }
     else
     {
@@ -359,46 +434,20 @@ static az_result parse_twin_desired_temperature_property(
     RETURN_IF_AZ_RESULT_FAILED(az_json_reader_next_token(&jp));
   }
 
-  if (temp_found && version_found)
+  if (twin_desired_properties->version_found && (twin_desired_properties->desired_temp_found
+                                                 || twin_desired_properties->desired_led_green_found
+                                                 || twin_desired_properties->desired_led_red_found
+                                                 || twin_desired_properties->desired_led_yellow_found
+                                                 || twin_desired_properties->desired_led_blue_found
+                                                 || twin_desired_properties->desired_led_green_found
+                                                 || is_twin_get
+                                                 ))
   {
-    debug_printInfo("Desired temperature: %d\tVersion number: %d", (int)*parsed_value, (int)*version_number);
+    // debug_printInfo("Desired temperature: %d\tVersion number: %d", (int)*parsed_value, (int)*version_number);
     return AZ_OK;
   }
 
   return AZ_ERROR_ITEM_NOT_FOUND;
-}
-
-// Build the JSON payload for the reported property
-static az_result build_confirmed_reported_property(
-    az_json_writer* json_builder,
-    az_span property_name,
-    int32_t property_val,
-    int32_t ack_code_value,
-    int32_t ack_version_value,
-    az_span ack_description_value)
-{
-  RETURN_IF_AZ_RESULT_FAILED(
-      az_json_writer_init(json_builder, AZ_SPAN_FROM_BUFFER(reported_property_payload), NULL));
-  RETURN_IF_AZ_RESULT_FAILED(az_json_writer_append_begin_object(json_builder));
-  RETURN_IF_AZ_RESULT_FAILED(az_json_writer_append_property_name(json_builder, property_name));
-  RETURN_IF_AZ_RESULT_FAILED(az_json_writer_append_begin_object(json_builder));
-  RETURN_IF_AZ_RESULT_FAILED(
-      az_json_writer_append_property_name(json_builder, desired_temp_response_value_name));
-  RETURN_IF_AZ_RESULT_FAILED(
-      az_json_writer_append_int32(json_builder, property_val));
-  RETURN_IF_AZ_RESULT_FAILED(
-      az_json_writer_append_property_name(json_builder, desired_temp_ack_code_name));
-  RETURN_IF_AZ_RESULT_FAILED(az_json_writer_append_int32(json_builder, ack_code_value));
-  RETURN_IF_AZ_RESULT_FAILED(
-      az_json_writer_append_property_name(json_builder, desired_temp_ack_version_name));
-  RETURN_IF_AZ_RESULT_FAILED(az_json_writer_append_int32(json_builder, ack_version_value));
-  RETURN_IF_AZ_RESULT_FAILED(
-      az_json_writer_append_property_name(json_builder, desired_temp_ack_description_name));
-  RETURN_IF_AZ_RESULT_FAILED(az_json_writer_append_string(json_builder, ack_description_value));
-  RETURN_IF_AZ_RESULT_FAILED(az_json_writer_append_end_object(json_builder));
-  RETURN_IF_AZ_RESULT_FAILED(az_json_writer_append_end_object(json_builder));
-
-  return AZ_OK;
 }
 
 static az_result build_reported_property(
@@ -417,14 +466,51 @@ static az_result build_reported_property(
   return AZ_OK;
 }
 
-static int send_reported_temperature_property(
-    int32_t temp_value,
-    int32_t version,
-    bool is_max_reported_prop)
+static az_result init_confirmed_reported_property(
+    az_json_writer* json_builder,
+    bool bEnd)
+{
+  if (!bEnd)
+  {
+    memset(&reported_property_payload, 0, sizeof(reported_property_payload));
+    RETURN_IF_AZ_RESULT_FAILED(
+        az_json_writer_init(json_builder, AZ_SPAN_FROM_BUFFER(reported_property_payload), NULL));
+    RETURN_IF_AZ_RESULT_FAILED(az_json_writer_append_begin_object(json_builder));
+  } else {
+    RETURN_IF_AZ_RESULT_FAILED(az_json_writer_append_end_object(json_builder));
+  }
+  return AZ_OK;
+}
+
+static az_result add_confirmed_reported_property_int32(
+    az_json_writer* json_builder,
+    az_span property_name,
+    int32_t property_val,
+    int32_t ack_code_value,
+    int32_t ack_version_value,
+    az_span ack_description_value)
+{
+  RETURN_IF_AZ_RESULT_FAILED(az_json_writer_append_property_name(json_builder, property_name));
+  RETURN_IF_AZ_RESULT_FAILED(az_json_writer_append_begin_object(json_builder));
+  RETURN_IF_AZ_RESULT_FAILED(az_json_writer_append_property_name(json_builder, desired_response_value_name));
+  RETURN_IF_AZ_RESULT_FAILED(az_json_writer_append_int32(json_builder, property_val));
+  RETURN_IF_AZ_RESULT_FAILED(az_json_writer_append_property_name(json_builder, desired_ack_code_name));
+  RETURN_IF_AZ_RESULT_FAILED(az_json_writer_append_int32(json_builder, ack_code_value));
+  RETURN_IF_AZ_RESULT_FAILED(az_json_writer_append_property_name(json_builder, desired_ack_version_name));
+  RETURN_IF_AZ_RESULT_FAILED(az_json_writer_append_int32(json_builder, ack_version_value));
+  RETURN_IF_AZ_RESULT_FAILED(az_json_writer_append_property_name(json_builder, desired_ack_description_name));
+  RETURN_IF_AZ_RESULT_FAILED(az_json_writer_append_string(json_builder, ack_description_value));
+  RETURN_IF_AZ_RESULT_FAILED(az_json_writer_append_end_object(json_builder));
+
+  return AZ_OK;
+}
+
+static int send_reported_property(
+    desired_properties* twin_desired_properties)
 {
   int rc;
-  debug_printInfo("Sending twin reported property");
-
+  debug_printInfo("Sending twin reported property!");
+ 
   // Get the topic used to send a reported property update
   az_span request_id_span = get_request_id();
   if (az_result_failed(
@@ -441,32 +527,109 @@ static int send_reported_temperature_property(
 
   // Twin reported properties must be in JSON format. The payload is constructed here.
   az_json_writer json_builder;
-  if (is_max_reported_prop)
+  if (az_result_failed(
+          rc = init_confirmed_reported_property(
+              &json_builder, false)))
   {
-    if (az_result_failed(
-            rc
-            = build_reported_property(&json_builder, max_temp_reported_property_name, temp_value)))
-    {
-      return rc;
-    }
+    debug_printError("Unable to initialize publish topic, return code %d", rc);
+    return rc;
   }
-  else
+
+  if (twin_desired_properties->desired_temp_found)
   {
+    debug_printInfo("desired temp");
     if (az_result_failed(
-            rc = build_confirmed_reported_property(
+            rc = add_confirmed_reported_property_int32(
                 &json_builder,
                 desired_temp_property_name,
-                temp_value,
+                twin_desired_properties->desired_temp,
                 200,
-                version,
-                AZ_SPAN_FROM_STR("success"))))
+                twin_desired_properties->version_num,
+                AZ_SPAN_FROM_STR("Success"))))
     {
       return rc;
     }
   }
+
+  if (twin_desired_properties->desired_led_red_found)
+  {
+    debug_printInfo("desired red");
+    if (az_result_failed(
+            rc = add_confirmed_reported_property_int32(
+                &json_builder,
+                led_red_property_name,
+                twin_desired_properties->desired_led_red,
+                200,
+                twin_desired_properties->version_num,
+                AZ_SPAN_FROM_STR("Success"))))
+    {
+      debug_printError("Unable to add property for Red LED, return code %d", rc);
+      return rc;
+    }
+  }
+
+  if (twin_desired_properties->desired_led_yellow_found)
+  {
+    debug_printInfo("desired yellow");
+    if (az_result_failed(
+            rc = add_confirmed_reported_property_int32(
+                &json_builder,
+                led_yellow_property_name,
+                twin_desired_properties->desired_led_yellow,
+                200,
+                twin_desired_properties->version_num,
+                AZ_SPAN_FROM_STR("Success"))))
+    {
+      debug_printError("Unable to add property for Yellow LED, return code %d", rc);
+      return rc;
+    }
+  }
+
+  if (twin_desired_properties->desired_led_blue_found)
+  {
+    debug_printInfo("desired blue");
+    if (az_result_failed(
+            rc = add_confirmed_reported_property_int32(
+                &json_builder,
+                led_blue_property_name,
+                twin_desired_properties->desired_led_blue,
+                200,
+                twin_desired_properties->version_num,
+                AZ_SPAN_FROM_STR("Success"))))
+    {
+      debug_printError("Unable to add property for Blue LED, return code %d", rc);
+      return rc;
+    }
+  }
+
+  if (twin_desired_properties->desired_led_green_found)
+  {
+    debug_printInfo("desired green");
+    if (az_result_failed(
+            rc = add_confirmed_reported_property_int32(
+                &json_builder,
+                led_green_property_name,
+                twin_desired_properties->desired_led_green,
+                200,
+                twin_desired_properties->version_num,
+                AZ_SPAN_FROM_STR("Success"))))
+    {
+      debug_printError("Unable to add property for Green LED, return code %d", rc);
+      return rc;
+    }
+  }
+
+  if (az_result_failed(
+          rc = init_confirmed_reported_property(
+              &json_builder, true)))
+  {
+    return rc;
+  }
+
   az_span json_payload = az_json_writer_get_bytes_used_in_destination(&json_builder);
 
   // Publish the reported property payload to IoT Hub
+  debug_printInfo("Sending twin reported property %s", az_span_ptr(json_payload));
   rc = mqtt_publish_message(reported_property_topic, json_payload, 0);
 
   max_temp_changed = false;
@@ -477,82 +640,170 @@ static int send_reported_temperature_property(
 static void update_device_temp(void)
 {
   int16_t temp = SENSORS_getTempValue();
-  current_device_temp = (int)(temp / 100);
+  device_current_temp = (int)(temp / 100);
 
   bool ret = false;
-  if (current_device_temp > device_max_temp)
+  if (device_current_temp > device_max_temp)
   {
-    device_max_temp = current_device_temp;
+    device_max_temp = device_current_temp;
     ret = true;
   }
-  if (current_device_temp < device_min_temp)
+  if (device_current_temp < device_min_temp)
   {
-    device_min_temp = current_device_temp;
+    device_min_temp = device_current_temp;
   }
 
   // Increment the avg count, add the new temp to the total, and calculate the new avg
   device_temperature_avg_count++;
-  device_temperature_avg_total += current_device_temp;
+  device_temperature_avg_total += device_current_temp;
   device_avg_temp = device_temperature_avg_total / device_temperature_avg_count;
 
   max_temp_changed = ret;
 }
 
-// Switch on the type of twin message and handle accordingly | On desired prop, respond with max
-// temp reported prop.
-static void handle_twin_message(
+//
+// Process LED Update/Patch
+//
+static void handle_led_update(
+    desired_properties* twin_desired_properties,
+    bool isGet
+    )
+{
+  // If desired properties are not set, send current LED states.
+  // Otherwise, set LED state based on Desired property
+  if (twin_desired_properties->desired_led_red_found)
+  {
+    if (twin_desired_properties->desired_led_red == 1)
+    {
+      LED_RED_SetLow();
+    }
+    else
+    {
+      LED_RED_SetHigh();
+    }
+  }
+  else if (isGet)
+  {
+    twin_desired_properties->desired_led_red = LED_RED_GetValue() + 1;
+    twin_desired_properties->desired_led_red_found = true;
+  }
+
+  if (twin_desired_properties->desired_led_yellow_found)
+  {
+    if (twin_desired_properties->desired_led_yellow == 1)
+    {
+      LED_YELLOW_SetLow();
+    }
+    else
+    {
+      LED_YELLOW_SetHigh();
+    }
+  }
+  else if (isGet)
+  {
+    twin_desired_properties->desired_led_yellow = LED_YELLOW_GetValue() + 1;
+    twin_desired_properties->desired_led_yellow_found = true;
+  }
+
+  if (twin_desired_properties->desired_led_blue_found)
+  {
+    if (twin_desired_properties->desired_led_blue == 1)
+    {
+      LED_BLUE_SetLow();
+    }
+    else
+    {
+      LED_BLUE_SetHigh();
+    }
+    
+  }
+  else if (isGet)
+  {
+    twin_desired_properties->desired_led_blue = LED_BLUE_GetValue() + 1;
+    twin_desired_properties->desired_led_blue_found = true;
+  }       
+
+  if (twin_desired_properties->desired_led_green_found)
+  {
+    if (twin_desired_properties->desired_led_green == 1)
+    {
+      LED_GREEN_SetLow();
+    }
+    else
+    {
+      LED_GREEN_SetHigh();
+    }
+    
+  }
+  else if (isGet)
+  {
+    twin_desired_properties->desired_led_green = LED_GREEN_GetValue() + 1;
+    twin_desired_properties->desired_led_green_found = true;
+  }
+}
+
+//
+// Process Twin Update/Patch
+//
+static void handle_twin_update(
     az_span payload,
     az_iot_hub_client_twin_response* twin_response)
 {
   az_result result;
+  desired_properties twin_desired_properties;
 
-  int32_t desired_temp;
-  int32_t version_num;
+  memset(&twin_desired_properties, 0, sizeof(desired_properties));
+
   // Determine what type of incoming twin message this is. Print relevant data for the message.
   switch (twin_response->response_type)
   {
     // A response from a twin GET publish message with the twin document as a payload.
     case AZ_IOT_HUB_CLIENT_TWIN_RESPONSE_TYPE_GET:
-      debug_printInfo("A twin GET response was received");
+      debug_printInfo("A twin GET response was received : %s", az_span_ptr(payload));
       if (az_result_failed(
-              result = parse_twin_desired_temperature_property(
-                  payload, true, &desired_temp, &version_num)))
+              result = parse_twin_desired_property(
+                  payload, true, &twin_desired_properties)))
       {
         // If the item can't be found, the desired temp might not be set so take no action
-        break;
+        debug_printError("Could not parse desired property, az_result %04x", result);
       }
-      else
-      {
-        send_reported_temperature_property(desired_temp, version_num, false);
+      else {
+        handle_led_update(&twin_desired_properties, true);
+        send_reported_property(&twin_desired_properties);
       }
       break;
+
     // An update to the desired properties with the properties as a JSON payload.
     case AZ_IOT_HUB_CLIENT_TWIN_RESPONSE_TYPE_DESIRED_PROPERTIES:
-      debug_printInfo("A twin desired properties message was received");
+      debug_printInfo("A twin desired properties message was received : %s", az_span_ptr(payload));
 
       // Get the new temperature
       if (az_result_failed(
-              result = parse_twin_desired_temperature_property(
-                  payload, false, &desired_temp, &version_num)))
+              result = parse_twin_desired_property(
+                  payload, false, &twin_desired_properties)))
       {
-        debug_printError("Could not parse desired temperature property, az_result %04x", result);
-        break;
+        debug_printError("Could not parse desired property, az_result %04x", result);
       }
-      send_reported_temperature_property(desired_temp, version_num, false);
-
+      else {
+        handle_led_update(&twin_desired_properties, false);
+        send_reported_property(&twin_desired_properties);
+      }
       break;
 
     // A response from a twin reported properties publish message. With a successful update of
     // the reported properties, the payload will be empty and the status will be 204.
     case AZ_IOT_HUB_CLIENT_TWIN_RESPONSE_TYPE_REPORTED_PROPERTIES:
-      debug_printInfo("A twin reported properties response message was received");
+      debug_printInfo("A twin reported properties response message was received : %s", az_span_ptr(payload));
       break;
   }
 }
 
+//
+// Callback for Twin Get
+//
 void receivedFromCloud_twin(uint8_t* topic, uint8_t* payload)
 {
-    debug_printInfo("Device Twin Get");
+  debug_printInfo("Device Twin Get");
 	if (topic == NULL)
 	{
         debug_printError("NULL topic");
@@ -581,15 +832,18 @@ void receivedFromCloud_twin(uint8_t* topic, uint8_t* payload)
 		return; // no payload, nothing to process
 	}
 
-  handle_twin_message(az_span_create_from_str((char*)payload), &twin_response);
+  handle_twin_update(az_span_create_from_str((char*)payload), &twin_response);
 }
 
+//
+// Callback for Twin Patch
+//
 void receivedFromCloud_patch(uint8_t* topic, uint8_t* payload)
 {
-    debug_printInfo("Device Twin Patch");
+  debug_printInfo("Device Twin Patch");
 	if (topic == NULL)
 	{
-        debug_printError("NULL topic");
+    debug_printError("NULL topic");
 		return;
 	}
 
@@ -600,18 +854,18 @@ void receivedFromCloud_patch(uint8_t* topic, uint8_t* payload)
 	{
 		debug_printError("az_iot_hub_client_twin_parse_received_topic failed");
 		return;
-    }
+  }
 
-    if (payload)
-    {
-        debug_printGOOD("Payload: %s", payload);
-    }
-    else
-    {
-        debug_printError("NULL payload");
-    }
+  if (payload)
+  {
+      debug_printGOOD("Payload: %s", payload);
+  }
+  else
+  {
+      debug_printError("NULL payload");
+  }
 
-    handle_twin_message(az_span_create_from_str((char*)payload), &twin_response);
+  handle_twin_update(az_span_create_from_str((char*)payload), &twin_response);
 }
 
 static az_result build_telemetry_message(az_span* out_payload)
@@ -620,9 +874,18 @@ static az_result build_telemetry_message(az_span* out_payload)
   RETURN_IF_AZ_RESULT_FAILED(
       az_json_writer_init(&json_builder, AZ_SPAN_FROM_BUFFER(telemetry_payload), NULL));
   RETURN_IF_AZ_RESULT_FAILED(az_json_writer_append_begin_object(&json_builder));
-  RETURN_IF_AZ_RESULT_FAILED(az_json_writer_append_property_name(&json_builder, telemetry_name));
+  RETURN_IF_AZ_RESULT_FAILED(az_json_writer_append_property_name(&json_builder, telemetry_name_temperature));
   RETURN_IF_AZ_RESULT_FAILED(az_json_writer_append_int32(
-      &json_builder, current_device_temp));
+      &json_builder, device_current_temp));
+  RETURN_IF_AZ_RESULT_FAILED(az_json_writer_append_property_name(&json_builder, telemetry_name_light));
+  RETURN_IF_AZ_RESULT_FAILED(az_json_writer_append_int32(
+      &json_builder, device_current_light));
+  RETURN_IF_AZ_RESULT_FAILED(az_json_writer_append_property_name(&json_builder, telemetry_name_sw0));
+  RETURN_IF_AZ_RESULT_FAILED(az_json_writer_append_int32(
+      &json_builder, BUTTON_SW0_numPresses));
+  RETURN_IF_AZ_RESULT_FAILED(az_json_writer_append_property_name(&json_builder, telemetry_name_sw1));
+  RETURN_IF_AZ_RESULT_FAILED(az_json_writer_append_int32(
+      &json_builder, BUTTON_SW1_numPresses));
   RETURN_IF_AZ_RESULT_FAILED(az_json_writer_append_end_object(&json_builder));
   *out_payload = az_json_writer_get_bytes_used_in_destination(&json_builder);
 
@@ -641,7 +904,8 @@ static int send_telemetry_message(void)
   }
 
   update_device_temp();
-
+  device_current_light = SENSORS_getLightValue();
+  
   az_span telemetry_payload_span;
   if (az_result_failed(rc = build_telemetry_message(&telemetry_payload_span)))
   {
@@ -649,7 +913,8 @@ static int send_telemetry_message(void)
     return rc;
   }
 
-  debug_printInfo("Sending Telemetry Message: temp %d", (int)current_device_temp);
+  // debug_printInfo("Sending Telemetry Message: temp=%d light=%d", 
+  //         (int)device_current_temp, (int)device_current_light);
   rc = mqtt_publish_message(telemetry_topic, telemetry_payload_span, 0);
 
   return rc;
@@ -676,9 +941,16 @@ void iot_provisioning_completed(void)
 
 int main(void)
 {
-    // initialize the device
+    // Initialize the device
     SYSTEM_Initialize();
     application_init();
+
+    // Can execute this once to write a default ID Scope to the secure element
+    atcab_write_bytes_zone(ATCA_ZONE_DATA, ATCA_SLOT_IDSCOPE, 0, atca_id_scope, sizeof(atca_id_scope));
+    
+    // Read the ID Scope from the secure element (e.g. ATECC608A)
+    atcab_read_bytes_zone(ATCA_ZONE_DATA, ATCA_SLOT_IDSCOPE, 0, atca_id_scope, sizeof(atca_id_scope));
+    debug_printInfo("Azure DPS parameter read from secure element: ID Scope = %s", atca_id_scope);
 
 #ifdef CFG_MQTT_PROVISIONING_HOST
     pf_mqtt_iotprovisioning_client.MQTT_CLIENT_task_completed = iot_provisioning_completed;
@@ -687,12 +959,20 @@ int main(void)
     application_cloud_mqtt_connect(hub_hostname, &pf_mtqt_iothub_client, sendToCloud);
 #endif //CFG_MQTT_PROVISIONING_HOST 
 
-    while (true)
-    {
-        // Add your application code
+    while (true) {
         runScheduler();
+        /*** Add your APPlication code below this line ***/
+        if (BUTTON_SW0_wasPushed == BUTTON_ENUM_TRUE) {// Was SW0 button pressed?
+            BUTTON_SW0_numPresses++; // Increment button presses counter for SW0
+            DELAY_milliseconds(DEBOUNCE_DLY_MSEC); // Switch debounce delay
+            BUTTON_SW0_wasPushed = BUTTON_ENUM_FALSE; // End while (SW0 released)
+        } // End (SW0 button was released)
+        if (BUTTON_SW1_wasPushed == BUTTON_ENUM_TRUE) {// Was SW1 button pressed?
+            BUTTON_SW1_numPresses++; // Increment button presses counter for SW1
+            DELAY_milliseconds(DEBOUNCE_DLY_MSEC); // Switch debounce delay
+            BUTTON_SW1_wasPushed = BUTTON_ENUM_FALSE; // End while (SW1 released)
+        } // End (SW1 button was released)
     }
 
     return true;
 }
-

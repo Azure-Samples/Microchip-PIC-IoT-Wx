@@ -34,7 +34,9 @@ pf_MQTT_CLIENT pf_mqtt_iotprovisioning_client = {
 
 extern const az_span device_model_id;
 extern uint8_t device_id_buf[100];
+extern uint8_t scope_id_buf[100];
 extern az_span device_id;
+uint8_t atca_id_scope[20] = PROVISIONING_ID_SCOPE;
 char hub_device_key_buf[64];
 char hub_hostname_buf[128];
 
@@ -123,7 +125,7 @@ static uint32_t dps_assigning_task(void* payload)
 }
 
 static uint32_t dps_retry_task(void* payload)
-{
+{       
     if (++dps_retryTimer % 120 == 0)  // retry every 1 min
     {
         LED_holdRedOn(LED_ON);
@@ -155,14 +157,21 @@ void MQTT_CLIENT_iotprovisioning_receive(uint8_t* data, uint16_t len)
 }
 
 void MQTT_CLIENT_iotprovisioning_connect(char* deviceID)
-{
+{   
     const az_span deviceID_parm = az_span_create_from_str(deviceID);
     az_span device_id = AZ_SPAN_FROM_BUFFER(device_id_buf);
     az_span_copy(device_id, deviceID_parm);
     device_id = az_span_slice(device_id, 0, az_span_size(deviceID_parm));
-   
+
     const az_span global_device_endpoint = AZ_SPAN_LITERAL_FROM_STR(CFG_MQTT_PROVISIONING_HOST);
-    const az_span id_scope = AZ_SPAN_LITERAL_FROM_STR(PROVISIONING_ID_SCOPE);
+    
+    //const az_span id_scope = AZ_SPAN_LITERAL_FROM_STR(PROVISIONING_ID_SCOPE);
+    
+    const az_span scopeID_parm = az_span_create_from_str(atca_id_scope);
+    az_span id_scope = AZ_SPAN_FROM_BUFFER(scope_id_buf);
+    az_span_copy(id_scope, scopeID_parm);
+    id_scope = az_span_slice(id_scope, 0, az_span_size(scopeID_parm));
+    
     az_result result = az_iot_provisioning_client_init(&provisioning_client, global_device_endpoint, id_scope, device_id, NULL);
     if (az_result_failed(result))
     {
