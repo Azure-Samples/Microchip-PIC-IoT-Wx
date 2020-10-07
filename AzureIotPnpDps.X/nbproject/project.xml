@@ -15,12 +15,7 @@
             <sourceRootList>
                 <sourceRootElem>platform</sourceRootElem>
                 <sourceRootElem>mqtt_packetPopulation</sourceRootElem>
-                <sourceRootElem>azure-c-sdk/azure-sdk-for-c/sdk/src/azure/iot</sourceRootElem>
-                <sourceRootElem>azure-c-sdk/azure-sdk-for-c/sdk/src/azure/core</sourceRootElem>
-                <sourceRootElem>azure-c-sdk/azure-sdk-for-c/sdk/inc</sourceRootElem>
                 <sourceRootElem>azure-sdk-for-c/sdk/inc</sourceRootElem>
-                <sourceRootElem>azure-sdk-for-c/sdk/src/azure/core</sourceRootElem>
-                <sourceRootElem>azure-sdk-for-c/sdk/src/azure/iot</sourceRootElem>
             </sourceRootList>
             <confList>
                 <confElem>
