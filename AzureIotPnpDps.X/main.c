@@ -218,7 +218,7 @@ static az_result invoke_getMaxMinReport(az_span payload, az_span response, az_sp
   az_span end_time_span = az_span_create((uint8_t*)end_time_buffer, (int32_t)len);
 
   az_json_writer json_writer;
-  rc = az_json_writer_init(&json_writer, response, NULL);
+  az_result rc = az_json_writer_init(&json_writer, response, NULL);
   if(az_result_failed(rc))
   {
     return rc;

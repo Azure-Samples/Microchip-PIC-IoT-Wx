@@ -122,6 +122,9 @@ void MQTT_CLIENT_iothub_connect(char* deviceID)
     size_t mqtt_username_buf_len;
     result = az_iot_pnp_client_get_user_name(&pnp_client, mqtt_username_buf, sizeof(mqtt_username_buf), &mqtt_username_buf_len);
     if (az_result_failed(result))
+    {
+      debug_printError("az_iot_pnp_client_sas_get_signature failed");
+      return;
     }
 #ifdef SAS
     time_t expire_time = time(NULL) + 60 * 60; // token expires in 1 hour
