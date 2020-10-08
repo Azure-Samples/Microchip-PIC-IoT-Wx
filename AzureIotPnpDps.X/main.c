@@ -582,7 +582,7 @@ int main(void)
     pf_mqtt_iotprovisioning_client.MQTT_CLIENT_task_completed = iot_provisioning_completed;
     application_cloud_mqtt_connect(CFG_MQTT_PROVISIONING_HOST, &pf_mqtt_iotprovisioning_client, NULL);
 #else
-    application_cloud_mqtt_connect(hub_hostname, &pf_mtqt_iothub_client, sendToCloud);
+    application_cloud_mqtt_connect(hub_hostname, &pf_mqtt_pnp_client, sendToCloud);
 #endif //CFG_MQTT_PROVISIONING_HOST
 
     while (true)
