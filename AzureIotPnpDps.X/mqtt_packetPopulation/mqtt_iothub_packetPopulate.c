@@ -16,18 +16,18 @@
 #include <azure/iot/az_iot_common.h>
 #include <azure/iot/az_iot_pnp_client.h>
 
-pf_MQTT_CLIENT pf_mqtt_iothub_client = {
-  MQTT_CLIENT_iothub_publish,
-  MQTT_CLIENT_iothub_receive,
-  MQTT_CLIENT_iothub_connect,
-  MQTT_CLIENT_iothub_subscribe,
-  MQTT_CLIENT_iothub_connected,
+pf_MQTT_CLIENT pf_mqtt_pnp_client = {
+  MQTT_CLIENT_pnp_publish,
+  MQTT_CLIENT_pnp_receive,
+  MQTT_CLIENT_pnp_connect,
+  MQTT_CLIENT_pnp_subscribe,
+  MQTT_CLIENT_pnp_connected,
   NULL
 };
 
 extern const az_span device_model_id;
-extern void receivedFromCloud_methods(uint8_t* topic, uint8_t* payload);
-extern void receivedFromCloud_twin(uint8_t* topic, uint8_t* payload);
+extern void receivedFromCloud_commands(uint8_t* topic, uint8_t* payload);
+extern void receivedFromCloud_property(uint8_t* topic, uint8_t* payload);
 extern void receivedFromCloud_patch(uint8_t* topic, uint8_t* payload);
 static const az_span twin_request_id = AZ_SPAN_LITERAL_FROM_STR("initial_get");
 
@@ -49,7 +49,7 @@ az_iot_pnp_client pnp_client;
  */
 publishReceptionHandler_t imqtt_publishReceiveCallBackTable[MAX_NUM_TOPICS_SUBSCRIBE];
 
-void MQTT_CLIENT_iothub_publish(uint8_t* data, uint16_t len)
+void MQTT_CLIENT_pnp_publish(uint8_t* data, uint16_t len)
 {
     uint8_t properties_buf[256];
     az_span properties = AZ_SPAN_FROM_BUFFER(properties_buf);
@@ -99,12 +99,12 @@ void MQTT_CLIENT_iothub_publish(uint8_t* data, uint16_t len)
     }
 }
 
-void MQTT_CLIENT_iothub_receive(uint8_t* data, uint16_t len)
+void MQTT_CLIENT_pnp_receive(uint8_t* data, uint16_t len)
 {
     MQTT_GetReceivedData(data, len);
 }
 
-void MQTT_CLIENT_iothub_connect(char* deviceID)
+void MQTT_CLIENT_pnp_connect(char* deviceID)
 {
     const az_span iothub_hostname = az_span_create_from_str(hub_hostname);
     const az_span deviceID_parm = az_span_create_from_str(deviceID);
@@ -184,7 +184,7 @@ void MQTT_CLIENT_iothub_connect(char* deviceID)
     MQTT_CreateConnectPacket(&cloudConnectPacket);
 }
 
-bool MQTT_CLIENT_iothub_subscribe()
+bool MQTT_CLIENT_pnp_subscribe()
 {
     mqttSubscribePacket cloudSubscribePacket = { 0 };
     // Variable header   
@@ -203,11 +203,11 @@ bool MQTT_CLIENT_iothub_subscribe()
 
     memset(imqtt_publishReceiveCallBackTable, 0, sizeof(imqtt_publishReceiveCallBackTable));
     imqtt_publishReceiveCallBackTable[0].topic = (uint8_t*) AZ_IOT_PNP_CLIENT_COMMANDS_SUBSCRIBE_TOPIC;
-    imqtt_publishReceiveCallBackTable[0].mqttHandlePublishDataCallBack = receivedFromCloud_methods;
+    imqtt_publishReceiveCallBackTable[0].mqttHandlePublishDataCallBack = receivedFromCloud_commands;
     imqtt_publishReceiveCallBackTable[1].topic = (uint8_t*) AZ_IOT_PNP_CLIENT_PROPERTY_PATCH_SUBSCRIBE_TOPIC;
     imqtt_publishReceiveCallBackTable[1].mqttHandlePublishDataCallBack = receivedFromCloud_patch;
     imqtt_publishReceiveCallBackTable[2].topic = (uint8_t*) AZ_IOT_PNP_CLIENT_PROPERTY_RESPONSE_SUBSCRIBE_TOPIC;
-    imqtt_publishReceiveCallBackTable[2].mqttHandlePublishDataCallBack = receivedFromCloud_twin;
+    imqtt_publishReceiveCallBackTable[2].mqttHandlePublishDataCallBack = receivedFromCloud_property;
     MQTT_SetPublishReceptionHandlerTable(imqtt_publishReceiveCallBackTable);
 
     bool ret = MQTT_CreateSubscribePacket(&cloudSubscribePacket);
@@ -219,7 +219,7 @@ bool MQTT_CLIENT_iothub_subscribe()
     return ret;
 }
 
-void MQTT_CLIENT_iothub_connected()
+void MQTT_CLIENT_pnp_connected()
 {
     // get the current state of the device properties
 
