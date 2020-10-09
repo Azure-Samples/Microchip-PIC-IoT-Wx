@@ -70,7 +70,7 @@ bool isResetting = false;
 bool cloudResetTimerFlag = false;
 bool sendSubscribe = true;
 
-#define CLOUD_TASK_INTERVAL            timeout_mSecToTicks(500L)
+#define CLOUD_TASK_INTERVAL	          timeout_mSecToTicks(500L)
 #define CLOUD_MQTT_TIMEOUT_COUNT       timeout_mSecToTicks(10000L)  // 10 seconds max allowed to establish a connection
 #define MQTT_CONN_AGE_TIMEOUT          3600L                        // 3600 seconds = 60minutes
 #define CLOUD_RESET_TIMEOUT            timeout_mSecToTicks(2000L)   // 2 seconds
@@ -120,6 +120,7 @@ void CLOUD_reset(void)
 
 uint32_t mqttTimeoutTask(void* payload) {
 	debug_printError("CLOUD: MQTT Connection Timeout");
+	LED_holdRed(LED_ON);
 	CLOUD_reset();
 	waitingForMQTT = false;
 	return 0;
@@ -127,7 +128,6 @@ uint32_t mqttTimeoutTask(void* payload) {
 
 uint32_t cloudResetTask(void* payload) {
 	debug_printError("CLOUD: Reset task");
-	LED_holdGreenOn(LED_OFF);
 	cloudInitialized = reInit();
 	return 0;
 }
@@ -165,6 +165,7 @@ static void connectMQTT()
 
 void CLOUD_subscribe(void)
 {
+	debug_printInfo("CLOUD: Subscribe()");
     if (pf_mqtt_client->MQTT_CLIENT_subscribe() == true)
     {
         sendSubscribe = false;
@@ -227,7 +228,6 @@ static int8_t connectMQTTSocket(void)
 			if (ret != BSD_SUCCESS) {
 				debug_printError("CLOUD connect received %d", ret);
 				shared_networking_params.haveERROR = 1;
-                LED_holdGreenOn(LED_OFF);
 				BSD_close(*context->tcpClientSocket);
 			}
 		}
@@ -269,7 +269,6 @@ uint32_t CLOUD_task(void* param)
 	{
 		//Cleared on Access Point Connection
 		shared_networking_params.haveERROR = 1;
-        LED_holdGreenOn(LED_OFF);
 		if (MQTT_GetConnectionState() == CONNECTED)
 		{
 			MQTT_initialiseState();
@@ -290,11 +289,9 @@ uint32_t CLOUD_task(void* param)
 		{
 			if (MQTT_GetConnectionState() == CONNECTED)
 			{
-				LED_stopBlinkingGreen();
-				LED_holdGreenOn(LED_ON);
 				if (lastAge != thisAge)
 				{
-					debug_printInfo("CLOUD: Uptime %lus SocketState (%d) MQTT (%d)", thisAge, socketState, MQTT_GetConnectionState());
+					//debug_printInfo("CLOUD: Uptime %lus SocketState (%d) MQTT (%d)", thisAge, socketState, MQTT_GetConnectionState());
 					lastAge = thisAge;
 				}
 			}
@@ -304,7 +301,7 @@ uint32_t CLOUD_task(void* param)
 		{
 		case NOT_A_SOCKET:
 		case SOCKET_CLOSED:
-            if (dnsRetryDelay)
+			if (dnsRetryDelay)
             {
                 dnsRetryDelay--;
                 // still waiting for DNS look up
@@ -335,11 +332,10 @@ uint32_t CLOUD_task(void* param)
 
 				// Todo: We already processed the data in place using PEEK, this just flushes the buffer
 				BSD_recv(*MQTT_GetClientConnectionInfo()->tcpClientSocket, MQTT_GetClientConnectionInfo()->mqttDataExchangeBuffers.rxbuff.start, MQTT_GetClientConnectionInfo()->mqttDataExchangeBuffers.rxbuff.bufferLength, 0);
-                
-                if (MQTT_GetConnectionState() == CONNECTED)
+
+				if (MQTT_GetConnectionState() == CONNECTED)
 				{
 					shared_networking_params.haveERROR = 0;
-                    LED_holdGreenOn(LED_ON);
 					timeout_delete(&mqttTimeoutTaskTimer);
 					timeout_delete(&cloudResetTaskTimer);
 					isResetting = false;
@@ -351,7 +347,7 @@ uint32_t CLOUD_task(void* param)
 					}
 
 					// The Authorization timeout is set to 3600, so we need to re-connect that often
-                    // ericwol: todo remove this
+					// ericwol: todo remove this
 					if (MQTT_getConnectionAge() > MQTT_CONN_AGE_TIMEOUT) {
 						debug_printError("MQTT: Connection aged, Uptime %lus SocketState (%d) MQTT (%d)", thisAge, socketState, MQTT_GetConnectionState());
 						MQTT_Disconnect(mqttConnnectionInfo);
@@ -366,7 +362,6 @@ uint32_t CLOUD_task(void* param)
 
 		default:
 			shared_networking_params.haveERROR = 1;
-            LED_holdGreenOn(LED_OFF);
 			break;
 		}
 	}
@@ -380,15 +375,15 @@ bool CLOUD_isConnected(void)
 
 void CLOUD_publishData(uint8_t* data, unsigned int len)
 {
-    pf_mqtt_client->MQTT_CLIENT_publish(data, len);
+	pf_mqtt_client->MQTT_CLIENT_publish(data, len);
 }
 
 static void dnsHandler(uint8_t* domainName, uint32_t serverIP)
 {
 	if (serverIP != 0)
 	{
-        dnsRetryDelay = 0;
-        mqttHostIP = serverIP;       
+		dnsRetryDelay = 0;
+		mqttHostIP = serverIP;
 		debug_printInfo("CLOUD: mqttHostIP %s = (%lu.%lu.%lu.%lu)", domainName, (0x0FF & (serverIP)), (0x0FF & (serverIP >> 8)), (0x0FF & (serverIP >> 16)), (0x0FF & (serverIP >> 24)));
 	}
 }

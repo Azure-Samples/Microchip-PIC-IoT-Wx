@@ -26,33 +26,39 @@
 */
 #include <xc.h>
 #include <stdbool.h>
+#include <stddef.h>
 #include "led.h"
 #include "drivers/timeout.h"
 #include "delay.h"
+#include "debug_print.h"
+#include "../main.h"
 
-#define LEDS_TEST_INTERVAL        50L
-#define LED_ON_INTERVAL           timeout_mSecToTicks(200L)
-#define LED_ON_INTERVAL_FAST      timeout_mSecToTicks(100L)
-#define LEDS_HOLD_INTERVAL	      timeout_mSecToTicks(2000L)
+led_change_t led_change;
 
-static bool ledForHubConnection = false;
-static bool ledYellowHeld = false;
-static bool isRedLedFlashing = false;
+#define LEDS_TEST_INTERVAL  50L
+#define LED_100ms_INTERVAL	timeout_mSecToTicks(100L)
+#define LED_200ms_INTERVAL	timeout_mSecToTicks(200L)
+#define LED_500ms_INTERVAL	timeout_mSecToTicks(500L)
 
-static uint32_t redblink_task(void* payload);
-static timerStruct_t redBlink_timer = { redblink_task };
+// static bool ledYellowHeld = false;
 
-static uint32_t yellow_task(void* payload);
-static timerStruct_t yellow_timer = { yellow_task };
+static bool isSoftAp = false;
+static bool isLedBlinking_blue = false;
+static uint32_t blink_task_blue(void* payload);
+static timerStruct_t blinkTimer_blue = { blink_task_blue };
 
-static uint32_t red_task(void* payload);
-static timerStruct_t red_timer = { red_task };
+static bool isProvisioning = false;
+static bool isLedBlinking_green = false;
+static uint32_t blink_task_green(void* payload);
+static timerStruct_t blinkTimer_green = { blink_task_green };
 
-static uint32_t hubConnection_task(void* payload);
-static timerStruct_t hubConnection_timer = { hubConnection_task };
+static bool isLedBlinking_red = false;
+static uint32_t blink_task_red(void* payload);
+static timerStruct_t blinkTimer_red = { blink_task_red };
 
-static uint32_t softAp_task(void* payload);
-static timerStruct_t softAP_timer = { softAp_task };
+static bool isLedBlinking_yellow = false;
+static uint32_t blink_task_yellow(void* payload);
+static timerStruct_t blinkTimer_yellow = { blink_task_yellow };
 
 static void testSequence(uint8_t ledState)
 {
@@ -82,70 +88,91 @@ static void testSequence(uint8_t ledState)
 
 void LED_test(void)
 {
+	led_change.AsUSHORT = 0;
 	testSequence(LED_ON);
 	testSequence(LED_OFF);
 }
 
-static uint32_t yellow_task(void* payload)
+/*************************************************
+* Blue LED
+*************************************************/
+void LED_holdBlue(bool setLed)
 {
-	LATCbits.LATC3 = 1; /* set LED_YELLOW output high */
-	ledYellowHeld = false;
-	return 0;
-}
-
-static uint32_t red_task(void* payload)
-{
-	isRedLedFlashing = false;
-	LATBbits.LATB4 = 1; /* set LED_RED output high */
-	return 0;
-}
-
-static uint32_t redblink_task(void* payload)
-{
-	LATBbits.LATB4 ^= 1; /* toggle LED_RED output */
-	return isRedLedFlashing ? LED_ON_INTERVAL_FAST : 0;
-}
-
-static uint32_t softAp_task(void* payload)
-{
-	LATCbits.LATC5 ^= 1; /* toggle LED_BLUE output */
-	return LED_ON_INTERVAL;
-}
-
-static uint32_t hubConnection_task(void* payload)
-{
-	LATCbits.LATC4 ^= 1; /* toggle LED_GREEN output */
-	return LED_ON_INTERVAL;
-}
-
-void LED_flashYellow(void)
-{
-	if (ledYellowHeld == false)
+	// if blinking, WiFi is in AP mode
+	if (isSoftAp != true)
 	{
-		LATCbits.LATC3 = 0; /* set LED_YELLOW output low */
-		timeout_create(&yellow_timer, LED_ON_INTERVAL);
-	}
-
-}
-
-void LED_holdYellowOn(bool holdHigh)
-{
-	if (holdHigh == true)
-	{
-		LATCbits.LATC3 = 0; /* set LED_YELLOW output low */
+//		debug_printGOOD("LED (B): Hold LED On? %d", !setLed);
+		if (setLed == LED_ON)
+		{
+			LATCbits.LATC5 = 0; /* set LED_GREEN output low */
+		}
+		else
+		{
+			LATCbits.LATC5 = 1; /* set LED_GREEN output high */
+		}
+		led_change.blue = 1;
 	}
 	else
 	{
-		LATCbits.LATC3 = 1; /* set LED_YELLOW output high */
+//		debug_printGOOD("LED (B): IsBlinking");
 	}
-	// Re-Use yellow_timer task
-	ledYellowHeld = true;
-	timeout_create(&yellow_timer, LEDS_HOLD_INTERVAL);
+	
 }
 
-void LED_holdGreenOn(bool holdHigh)
+static uint32_t blink_task_blue(void* payload)
 {
-	if (holdHigh == LED_ON)
+	LATCbits.LATC5 ^= 1; /* toggle LED_GREEN output */
+	return isSoftAp?LED_500ms_INTERVAL:LED_200ms_INTERVAL;
+}
+
+bool LED_isBlinkingBlue(void)
+{
+	return (isLedBlinking_blue || isSoftAp);
+}
+
+void LED_startBlinkingBlue(bool softAp)
+{
+//	debug_printGOOD("LED (B): Start Blink : Soft AP? %d", softAp);
+
+	if (isLedBlinking_blue)
+	{
+		timeout_delete(&blinkTimer_blue);
+	}
+
+	isLedBlinking_blue = true;
+	isSoftAp = softAp;
+
+	if (isSoftAp)
+	{
+		timeout_create(&blinkTimer_blue, LED_500ms_INTERVAL);
+	}
+	else
+	{
+		timeout_create(&blinkTimer_blue, LED_200ms_INTERVAL);
+	}
+	led_change.blue = 1;
+}
+
+void LED_stopBlinkingAndSetBlue(bool setLed)
+{
+//	debug_printGOOD("LED (B): Stop Blink isBlinking? %x Soft AP? %x LED ON? %x", isLedBlinking_blue, isSoftAp, !setLed);
+	if (isLedBlinking_blue && !isSoftAp)
+	{
+		// don't stop blink if the device is in Soft AP mode
+		timeout_delete(&blinkTimer_blue);
+		isLedBlinking_blue = false;
+	}
+	LED_holdBlue(setLed);
+}
+
+/*************************************************
+* Green LED (DPS and IoTHub)
+*************************************************/
+void LED_holdGreen(bool setLed)
+{
+//	debug_printGOOD("LED (G): Hold LED On? %d", !setLed);
+
+	if (setLed == LED_ON)
 	{
 		LATCbits.LATC4 = 0; /* set LED_GREEN output low */
 	}
@@ -153,39 +180,62 @@ void LED_holdGreenOn(bool holdHigh)
 	{
 		LATCbits.LATC4 = 1; /* set LED_GREEN output high */
 	}
+	led_change.green = 1;
 }
 
-void LED_flashRed(double interval_seconds)
+static uint32_t blink_task_green(void* payload)
 {
-	isRedLedFlashing = true;
-	long interval_ms = LED_ON_INTERVAL;
-	if (interval_seconds > 0)
+	LATCbits.LATC4 ^= 1; /* toggle LED_GREEN output */
+	return isProvisioning ? LED_200ms_INTERVAL : LED_500ms_INTERVAL;
+}
+
+bool LED_isBlinkingGreen(void)
+{
+	return isLedBlinking_green;
+}
+
+void LED_startBlinkingGreen(bool provisioning)
+{
+//	debug_printGOOD("LED (G): Start Blink Provisioning? %x", provisioning);
+
+	if (isLedBlinking_green)
 	{
-		interval_ms = timeout_mSecToTicks(interval_seconds * 1000L);
+		timeout_delete(&blinkTimer_green);
 	}
-	LATBbits.LATB4 = 0; /* set LED_RED output low */
-	timeout_create(&red_timer, interval_ms);
+
+	isLedBlinking_green = true;
+	isProvisioning = provisioning;
+	if (isProvisioning)
+	{
+		timeout_create(&blinkTimer_green, LED_200ms_INTERVAL);
+	}
+	else
+	{
+		timeout_create(&blinkTimer_green, LED_500ms_INTERVAL);
+	}
+
+	led_change.green = 1;
 }
 
-bool LED_isBlinkingRed(void)
+void LED_stopBlinkingAndSetGreen(bool setLed)
 {
-	return isRedLedFlashing;
+//	debug_printGOOD("LED (G): Stop Blink isBlinking? %x LED ON? %x", isLedBlinking_green, !setLed);
+	if (isLedBlinking_green == true)
+	{
+		timeout_delete(&blinkTimer_green);
+		isLedBlinking_green = false;
+	}
+	LED_holdGreen(setLed);
 }
 
-void LED_stopBlinkingRed(void)
+/*************************************************
+* Red LED (Error)
+*************************************************/
+void LED_holdRed(bool setLed)
 {
-	isRedLedFlashing = false;
-}
+//	debug_printGOOD("LED (R): Hold LED On? %d", !setLed);
 
-void LED_startBlinkingRed(void)
-{
-	timeout_create(&redBlink_timer, LED_ON_INTERVAL_FAST);
-	isRedLedFlashing = true;
-}
-
-void LED_holdRedOn(bool holdHigh)
-{
-	if (holdHigh == LED_ON)
+	if (setLed == LED_ON)
 	{
 		LATBbits.LATB4 = 0; /* set LED_RED output low */
 	}
@@ -193,36 +243,79 @@ void LED_holdRedOn(bool holdHigh)
 	{
 		LATBbits.LATB4 = 1; /* set LED_RED output high */
 	}
+	led_change.red = 1;
 }
 
-void LED_blinkingBlue(bool amBlinking)
+static uint32_t blink_task_red(void* payload)
 {
-	if (amBlinking == true)
+	LATBbits.LATB4 ^= 1; /* toggle LED_RED output */
+	return isLedBlinking_red ? LED_100ms_INTERVAL : 0;
+}
+
+bool LED_isBlinkingRed(void)
+{
+	return isLedBlinking_red;
+}
+
+void LED_startBlinkingRed(void)
+{
+//	debug_printGOOD("LED (R): Start Blink");
+	timeout_create(&blinkTimer_red, LED_100ms_INTERVAL);
+	isLedBlinking_red = true;
+	led_change.red = 1;
+}
+
+void LED_stopBlinkingAndSetRed(bool setLed)
+{
+//	debug_printGOOD("LED (R): Stop Blink isBlinking? %x %x LED ON? %x", isLedBlinking_blue, !setLed);
+
+	timeout_delete(&blinkTimer_red);
+	isLedBlinking_red = false;
+	LED_holdRed(setLed);
+}
+
+/*************************************************
+* Yellow LED (User LED)
+*************************************************/
+void LED_holdYellow(bool setLed)
+{
+//	debug_printGOOD("LED (Y): Hold LED On? %d", !setLed);
+	if (setLed == LED_ON)
 	{
-		timeout_create(&softAP_timer, LED_ON_INTERVAL);
+		LATCbits.LATC3 = 0; /* set LED_RED output low */
 	}
 	else
 	{
-		timeout_delete(&softAP_timer);
+		LATCbits.LATC3 = 1; /* set LED_RED output high */
 	}
+	led_change.yellow = 1;
 }
 
-void LED_startBlinkingGreen(void)
+static uint32_t blink_task_yellow(void* payload)
 {
-	timeout_create(&hubConnection_timer, LED_ON_INTERVAL);
-	ledForHubConnection = true;
+	LATCbits.LATC3 ^= 1; /* toggle LED_RED output */
+	return isLedBlinking_yellow ? LED_200ms_INTERVAL : 0;
 }
 
-void LED_stopBlinkingGreen(void)
+bool LED_isBlinkingYellow(void)
 {
-	if (ledForHubConnection == true)
-	{
-		timeout_delete(&hubConnection_timer);
-		ledForHubConnection = false;
-	}
+	return isLedBlinking_yellow;
 }
 
-bool LED_isBlinkingGreen(void)
+void LED_startBlinkingYellow(void)
 {
-	return ledForHubConnection;
+//	debug_printGOOD("LED (Y): Start Blink");
+	timeout_create(&blinkTimer_yellow, LED_200ms_INTERVAL);
+	isLedBlinking_yellow = true;
+	led_change.yellow = 1;
 }
+
+void LED_stopBlinkingAndSetYellow(bool setLed)
+{
+//	debug_printGOOD("LED (Y): Stop Blink isBlinking? %x %x LED ON? %x", isLedBlinking_yellow, !setLed);
+
+	timeout_delete(&blinkTimer_yellow);
+	isLedBlinking_yellow = false;
+	LED_holdYellow(setLed);
+}
+

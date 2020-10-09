@@ -34,18 +34,41 @@
 #define LED_ON				false
 #define LED_OFF				true
 
+typedef union
+{
+    struct {
+        unsigned short red:1;
+        unsigned short green:1;
+        unsigned short blue:1;
+        unsigned short yellow:1;
+        unsigned short reserved:12;
+    };
+    unsigned short AsUSHORT;
+} led_change_t;
+
 void LED_test(void);
-void LED_flashYellow(void);
-void LED_holdYellowOn(bool holdHigh);
-void LED_holdGreenOn(bool holdHigh);
-void LED_holdRedOn(bool holdHigh);
-void LED_flashRed(double interval_seconds);
-bool LED_isBlinkingRed(void);
-void LED_blinkingBlue(bool amBlinking);
-void LED_startBlinkingGreen(void);
-void LED_stopBlinkingGreen(void);
+
+void LED_holdBlue(bool setLed);
+void LED_holdGreen(bool setLed);
+void LED_holdRed(bool setLed);
+
+bool LED_isBlinkingBlue(void);
+void LED_startBlinkingBlue(bool softAp);
+void LED_stopBlinkingAndSetBlue(bool setLed);
+
+void LED_holdGreen(bool setLed);
 bool LED_isBlinkingGreen(void);
+void LED_startBlinkingGreen(bool provisioning);
+void LED_stopBlinkingAndSetGreen(bool setLed);
+
+void LED_holdRed(bool setLed);
+bool LED_isBlinkingRed(void);
 void LED_startBlinkingRed(void);
-void LED_stopBlinkingRed(void);
+void LED_stopBlinkingAndSetRed(bool setLed);
+
+void LED_holdYellow(bool setLed);
+bool LED_isBlinkingYellow(void);
+void LED_startBlinkingYellow(void);
+void LED_stopBlinkingAndSetYellow(bool setLed);
 
 #endif /* LED_H_ */

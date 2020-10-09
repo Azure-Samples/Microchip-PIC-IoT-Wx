@@ -40,6 +40,7 @@
 #include "../debug_print.h"
 #include "../cloud/wifi_service.h"
 #include "../cloud/cloud_service.h"
+#include "../../mqtt_packetPopulation/mqtt_iotprovisioning_packetPopulate.h"
 
 #define WIFI_PARAMS_OPEN    1
 #define WIFI_PARAMS_PSK     2
@@ -58,6 +59,8 @@
                         "cli_version" NEWLINE\
                         "wifi <ssid>[,<pass>,[authType]]" NEWLINE\
                         "debug" NEWLINE\
+                        "led <led>,<state>" NEWLINE\
+                        "idscope <idscope>" NEWLINE\
                         "--------------------------------------------"NEWLINE"\4"
 
 static char command[MAX_COMMAND_SIZE];
@@ -77,6 +80,8 @@ static void get_device_id(char *pArg);
 static void get_cli_version(char *pArg);
 static void get_firmware_version(char *pArg);
 static void set_debug_level(char *pArg);
+static void set_led(char *pArg);
+static void get_set_idscope(char *pArg);
 
 static bool endOfLineTest(char c);
 static void enableUsartRxInterrupts(void);
@@ -101,7 +106,9 @@ const struct cmd commands[] =
     { "device",      get_device_id },
     { "cli_version", get_cli_version },
     { "version",     get_firmware_version },
-    { "debug",       set_debug_level }
+    { "debug",       set_debug_level },
+    { "led",         set_led },
+    { "idscope",     get_set_idscope }
 };
 
 void CLI_init(void)
@@ -312,6 +319,158 @@ static void get_firmware_version(char *pArg)
 {    
     (void)pArg;
     printf("v%s\r\n\4", firmware_version_number);
+}
+
+static void set_led(char *pArg)
+{
+    //   LED
+    //   1 = Blue
+    //   2 = Green
+    //   3 = Yellow
+    //   4 = Red
+    //
+    //   State
+    //   1 = On
+    //   2 = Off
+    //   3 = Blink
+    char *led_param[3];
+    char *pch;
+    uint8_t i;
+    uint8_t params = 0;
+    uint8_t led_num = 0;
+    uint8_t led_state = 0;
+
+    for(i=0;i<=2;i++)led_param[i]='\0';
+
+    pch = strtok (pArg, ",");
+    led_param[0]=pch;
+       
+    while (pch != NULL && params <= 2)
+    {
+        led_param[params] = pch;
+        params++;
+        pch = strtok (NULL, ",");
+    }
+
+    if (led_param[0] != NULL && led_param[1] != NULL)
+    {
+        led_num = atoi(led_param[0]);
+        led_state = atoi(led_param[1]);
+    }
+
+    switch (led_state)
+    {
+        case 1:
+            // turn on LED
+            switch (led_num)
+            {
+                case 1:
+                    printf("Hold Blue");
+                    LED_holdBlue(LED_ON);
+                    break;
+                case 2:
+                    LED_holdGreen(LED_ON);
+                    break;
+                case 3:
+                    LED_holdYellow(LED_ON);
+                    break;
+                case 4:
+                    LED_holdRed(LED_ON);
+                    break;
+            }
+            break;
+        case 2:
+            // turn on LED
+            switch (led_num)
+            {
+                case 1:
+                    LED_holdBlue(LED_OFF);
+                    break;
+                case 2:
+                    LED_holdGreen(LED_OFF);
+                    break;
+                case 3:
+                    LED_holdYellow(LED_OFF);
+                    break;
+                case 4:
+                    LED_holdRed(LED_OFF);
+                    break;
+            }
+            break;
+        case 3:
+            // turn on LED
+            switch (led_num)
+            {
+                case 1:
+                    LED_startBlinkingBlue(false);
+                    break;
+                case 2:
+                    LED_startBlinkingGreen(true);
+                    break;
+                case 3:
+                    LED_startBlinkingYellow();
+                    break;
+                case 4:
+                    LED_startBlinkingRed();
+                    break;
+            }
+            break;
+        case 4:
+            // turn on LED
+            switch (led_num)
+            {
+                case 1:
+                    LED_stopBlinkingAndSetBlue(LED_OFF);
+                    break;
+                case 2:
+                    LED_stopBlinkingAndSetGreen(LED_OFF);
+                    break;
+                case 3:
+                    LED_stopBlinkingAndSetYellow(LED_OFF);
+                    break;
+                case 4:
+                    LED_stopBlinkingAndSetRed(LED_OFF);
+                    break;
+            }
+            break;
+        default:
+            break;
+    }
+}
+
+static void get_set_idscope(char *pArg)
+{
+    char *dps_param[2];
+    char *pch;
+    uint8_t i;
+    uint8_t params = 0;
+    char atca_id_scope[12]; //idscope 0ne001825F3
+
+    for(i=0;i<=1;i++)dps_param[i]='\0';
+
+    pch = strtok (pArg, ",");
+    dps_param[0]=pch;
+       
+    while (pch != NULL && params <= 1)
+    {
+        dps_param[params] = pch;
+        params++;
+        pch = strtok (NULL, ",");
+    }
+
+    if (dps_param[0] == NULL)
+    {
+        // Read the ID Scope from the secure element (e.g. ATECC608A)
+        atcab_read_bytes_zone(ATCA_ZONE_DATA, ATCA_SLOT_IDSCOPE, 0, (uint8_t*)atca_id_scope, sizeof(atca_id_scope));
+        printf("ID Scope = %s\r\n", atca_id_scope);
+    }
+    else
+    {
+        atca_id_scope[11] = '\0';
+        // Can execute this once to write a default ID Scope to the secure element
+        printf("Setting ID Scope = %s\r\n", dps_param[0]);
+	    atcab_write_bytes_zone(ATCA_ZONE_DATA, ATCA_SLOT_IDSCOPE, 0, (uint8_t*)dps_param[0], sizeof(atca_id_scope));
+    }
 }
 
 static void command_received(char *command_text)

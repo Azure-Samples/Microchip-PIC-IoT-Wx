@@ -25,11 +25,14 @@
 #include "led.h"
 #include "debug_print.h"
 #include "drivers/timeout.h"
+#include "../main.h"
 
 #define MAIN_DATATASK_INTERVAL timeout_mSecToTicks(100L)
 #define SW0_Value   (PORTAbits.RA7 /* get SW0 value */)
 #define SW1_Value   (PORTAbits.RA10 /* get SW1 value */)
 #define SN_STRING "sn"
+
+uint32_t telemetry_interval = CFG_SEND_INTERVAL;
 
  // This will contain the device ID, before we have it this dummy value is the init value which is non-0
 char* attDeviceID;
@@ -49,23 +52,23 @@ void application_init() {
 	uint8_t mode = WIFI_DEFAULT;
 
 	LED_test();
-#if CFG_ENABLE_CLI     
+#if CFG_ENABLE_CLI
 	CLI_init();
 	CLI_setdeviceId(attDeviceID);
 #endif   
 	debug_init(attDeviceID);
-    //debug_setSeverity(SEVERITY_DEBUG);
-    
+	debug_setSeverity(SEVERITY_DEBUG);
+	
 	// Initialization of modules where the init needs interrupts to be enabled
 	cryptoauthlib_init();
 	if (cryptoDeviceInitialized == false)
 	{
 		debug_printError("APP: CryptoAuthInit failed");
 	}
-    
+	
 #ifdef HUB_DEVICE_ID
 	attDeviceID = HUB_DEVICE_ID;
-#else    
+#else	
 	// Get serial number from the ECC608 chip 
 	retValCryptoClientSerialNumber = CRYPTO_CLIENT_printSerialNumber(attDeviceID_buf);
 	if (retValCryptoClientSerialNumber != ATCA_SUCCESS)
@@ -82,18 +85,17 @@ void application_init() {
 			break;
 		}
 	}
-    else
-    {
-        // To use Azure provisioning service, attDeviceID should match with the device cert CN,
-        // which is the serial number of ECC608 prefixed with "sn" if you are using the 
-        // the microchip provisioning tool for PIC24.
-        strcat(buf, SN_STRING);
-        strcat(buf, attDeviceID_buf);
-        attDeviceID = buf;
-        debug_print("CRYPTO_CLIENT_printSerialNumber %s", attDeviceID);
-    }
-#endif    
-    
+	else
+	{
+		// To use Azure provisioning service, attDeviceID should match with the device cert CN,
+		// which is the serial number of ECC608 prefixed with "sn" if you are using the 
+		// the microchip provisioning tool for PIC24.
+		strcat(buf, SN_STRING);
+		strcat(buf, attDeviceID_buf);
+		attDeviceID = buf;
+	}
+#endif	
+	
 #if CFG_ENABLE_CLI   
 	CLI_setdeviceId(attDeviceID);
 #endif   
@@ -102,6 +104,7 @@ void application_init() {
 	if (!SW0_Value && SW1_Value)
 	{
 		//SW0 only
+		debug_print("WIFI_SOFT_AP");
 		mode = WIFI_SOFT_AP;
 	}
 	else if (SW0_Value && !SW1_Value)
@@ -111,14 +114,16 @@ void application_init() {
 	else if (!SW0_Value && !SW1_Value)
 	{
 		//SW0 and SW1
-		strcpy(ssid, CFG_MAIN_WLAN_SSID);
-		strcpy(pass, CFG_MAIN_WLAN_PSK);
+		// strcpy(ssid, CFG_MAIN_WLAN_SSID);
+		// strcpy(pass, CFG_MAIN_WLAN_PSK);
 		sprintf((char*)authType, "%d", CFG_MAIN_WLAN_AUTH);
-		LED_startBlinkingGreen();
 	}
+
 	strcpy(ssid, CFG_MAIN_WLAN_SSID);
 	strcpy(pass, CFG_MAIN_WLAN_PSK);
-	LED_startBlinkingGreen();
+
+	debug_print("WiFi: SSID : %s PSW %s", ssid, pass);
+
 	wifi_init(wifiConnectionStateChanged, mode);
 
 	if (mode == WIFI_DEFAULT) {
@@ -136,8 +141,8 @@ void application_post_provisioning(void)
 void application_cloud_mqtt_connect(char* host, pf_MQTT_CLIENT* pf_table, cloud_cb_t fpSendToCloud)
 {
 	CLOUD_init_host(host, attDeviceID, pf_table);
-    fpSendToCloudCallback = fpSendToCloud;
-    timeout_create(&MAIN_dataTasksTimer, MAIN_DATATASK_INTERVAL);    
+	fpSendToCloudCallback = fpSendToCloud;
+	timeout_create(&MAIN_dataTasksTimer, MAIN_DATATASK_INTERVAL);	
 }
 
 // React to the WIFI state change here. Status of 1 means connected, Status of 0 means disconnected
@@ -160,7 +165,7 @@ void runScheduler(void)
 
 
 // This could be better done with a function pointer (DI) but in the interest of simplicity 
-//     we avoided that. This is being called from MAIN_dataTask below  
+//	 we avoided that. This is being called from MAIN_dataTask below  
 void sendToCloud(void);
 
 // This gets called by the scheduler approximately every 100ms
@@ -176,37 +181,22 @@ uint32_t MAIN_dataTask(void* payload)
 	{
 		// How many seconds since the last time this loop ran?
 		int32_t delta = difftime(timeNow, previousTransmissionTime);
-		if (delta >= CFG_SEND_INTERVAL)
+		if (delta >= telemetry_interval)
 		{
 			previousTransmissionTime = timeNow;
 
 			// Call the data task in main.c
 			fpSendToCloudCallback();
 		}
+		check_led_status(NULL);
 	}
 
 	if (shared_networking_params.haveAPConnection)
 	{
-		LED_BLUE_SetLow();
-	}
-	else
-	{
-		LED_BLUE_SetHigh();
-	}
-
-	if (LED_isBlinkingGreen() == false)
-	{
-		if (CLOUD_isConnected())
-		{
-			LED_GREEN_SetLow();
-		}
-		else
-		{
-			LED_GREEN_SetHigh();
-		}
+		//check_led_status(NULL, false);
 	}
 
 	// This is milliseconds managed by the RTC and the scheduler, this return makes the
-	//      timer run another time, returning 0 will make it stop
+	//	  timer run another time, returning 0 will make it stop
 	return MAIN_DATATASK_INTERVAL;
 }

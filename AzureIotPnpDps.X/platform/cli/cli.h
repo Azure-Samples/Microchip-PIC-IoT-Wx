@@ -29,6 +29,7 @@
 #define CLI_H
 
 #include "../drivers/timeout.h"
+#include "../led.h"
 
 void CLI_init(void);
 void CLI_setdeviceId(char *);
