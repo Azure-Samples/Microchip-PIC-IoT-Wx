@@ -52,8 +52,8 @@
         "Property"
       ],
       "name": "led_blue",
-      "displayName" : "Blue LED State",
-      "description" : "Turn On/Off Blue LED",
+      "displayName" : "Blue LED state",
+      "description" : "Returns current state of Blue LED. If True, Blue LED is on and WiFi AP is connected.",
       "schema": {
         "@type": "Enum",
         "valueSchema": "integer",
@@ -61,24 +61,35 @@
           {
             "name": "On",
             "displayName": "Turn On",
-            "enumValue": 1
+            "enumValue": 1,
+            "description": "Yellow LED On",
+            "comment": "Yellow LED On"
+          },
+          {
+            "name": "Blink",
+            "displayName": "Blink Yellow LED",
+            "enumValue": 3,
+            "description": "Yellow LED Blink",
+            "comment": "Blink Yellow LED"
           },
           {
             "name": "Off",
             "displayName": "Turn Off",
-            "enumValue": 2
+            "enumValue": 2,
+            "description": "Yellow LED Off",
+            "comment": "Yellow LED Off"
           }
         ]
       },
-      "writable": true
+      "writable": false
     },
     {
       "@type": [
         "Property"
       ],
       "name": "led_green",
-      "displayName" : "Green LED State",
-      "description" : "Turn On/Off Green LED",
+      "displayName" : "Green LED state",
+      "description" : "Returns current state of Green LED. If True, Green LED is on and connected to cloud.",
       "schema": {
         "@type": "Enum",
         "valueSchema": "integer",
@@ -86,23 +97,34 @@
           {
             "name": "On",
             "displayName": "Turn On",
-            "enumValue": 1
+            "enumValue": 1,
+            "description": "Yellow LED On",
+            "comment": "Yellow LED On"
+          },
+          {
+            "name": "Blink",
+            "displayName": "Blink Yellow LED",
+            "enumValue": 3,
+            "description": "Yellow LED Blink",
+            "comment": "Blink Yellow LED"
           },
           {
             "name": "Off",
             "displayName": "Turn Off",
-            "enumValue": 2
+            "enumValue": 2,
+            "description": "Yellow LED Off",
+            "comment": "Yellow LED Off"
           }
         ]
       },
-      "writable": true
+      "writable": false
     },
     {
       "@type": [
         "Property"
       ],
       "name": "led_yellow",
-      "displayName" : "Yellow LED State",
+      "displayName" : "Yellow LED state",
       "description" : "Turn On/Off Yellow LED",
       "schema": {
         "@type": "Enum",
@@ -111,12 +133,23 @@
           {
             "name": "On",
             "displayName": "Turn On",
-            "enumValue": 1
+            "enumValue": 1,
+            "description": "Yellow LED On",
+            "comment": "Yellow LED On"
+          },
+          {
+            "name": "Blink",
+            "displayName": "Blink Yellow LED",
+            "enumValue": 3,
+            "description": "Yellow LED Blink",
+            "comment": "Blink Yellow LED"
           },
           {
             "name": "Off",
             "displayName": "Turn Off",
-            "enumValue": 2
+            "enumValue": 2,
+            "description": "Yellow LED Off",
+            "comment": "Yellow LED Off"
           }
         ]
       },
@@ -127,36 +160,47 @@
         "Property"
       ],
       "name": "led_red",
-      "displayName" : "Red LED State",
-      "description" : "Turn On/Off Red LED",
+      "displayName" : "Red LED state",
+      "description" : "Returns current state of Red LED, with string enum data type",
       "schema": {
         "@type": "Enum",
-        "valueSchema": "integer",
+        "valueSchema": "string",
         "enumValues": [
           {
             "name": "On",
-            "displayName": "Turn On",
-            "enumValue": 1
+            "displayName": "On",
+            "enumValue": "On",
+            "description": "Red LED On",
+            "comment": "Red LED On"
+          },
+          {
+            "name": "Blink",
+            "displayName": "Blink",
+            "enumValue": "Blink",
+            "description": "Red LED Blink",
+            "comment": "Blink Red LED"
           },
           {
             "name": "Off",
-            "displayName": "Turn Off",
-            "enumValue": 2
+            "displayName": "Off",
+            "enumValue": "Off",
+            "description": "Red LED Off",
+            "comment": "Red LED Off"
           }
         ]
       },
-      "writable": true
+      "writable": false
     },
     {
       "@type": [
         "Property",
-        "Temperature"
+        "TimeSpan"
       ],
-      "name": "targetTemperature",
-      "schema": "double",
-      "displayName": "Target Temperature",
-      "description": "Allows to remotely specify the desired target temperature",
-      "unit" : "degreeCelsius",
+      "name": "telemetryInterval",
+      "schema": "integer",
+      "unit": "second",
+      "displayName": "Telemetry Interval",
+      "description": "Sets interval to send telemetry in second",
       "writable": true
     },
     {
@@ -169,6 +213,24 @@
       "unit" : "degreeCelsius",
       "displayName": "Max temperature since last reboot",
       "description": "Returns the max temperature since last device reboot"
+    },
+    {
+      "@type": "Command",
+      "name": "reboot",
+      "displayName": {
+        "en": "Reboot"
+      },
+      "description": "Reboot PiC IoT with specified delay.  e.g. PT5S for 5 seconds.",
+      "request": {
+        "name": "delay",
+        "schema": "duration",
+        "displayName": "Reboot Delay",
+        "description": "Number of seconds to delay reboot. e.g. PT5S for 5 seconds."
+      },
+      "response": {
+        "name": "RebootResponse",
+        "schema": "string"
+      }
     },
     {
       "@type": "Command",
