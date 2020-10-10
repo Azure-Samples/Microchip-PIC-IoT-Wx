@@ -11,7 +11,9 @@
         "Temperature"
       ],
       "name": "temperature",
-      "displayName" : "Temperature",
+      "displayName": {
+        "en": "Temperature"
+      },
       "description" : "Temperature in degrees Celsius from Microchip MCP9808 high-accuracy temperature sensor",
       "schema": "integer",
       "unit": "degreeCelsius"
@@ -22,7 +24,9 @@
         "Illuminance"
       ],
       "name": "light",
-      "displayName" : "Brightness from light sensor",
+      "displayName": {
+        "en": "Brightness from light sensor"
+      },
       "description" : "Brightness in illuminance from Vishay TEMT6000X01 ambient light sensor",
       "schema": "integer",
       "unit": "lux"
@@ -33,7 +37,9 @@
         "Button_Presses_SW0"
       ],
       "name": "button_presses_sw0",
-      "displayName" : "Number of presses for user button SW0",
+      "displayName": {
+        "en": "Number of presses for user button SW0"
+      },
       "description" : "Number of times the SW0 user button has been pressed since device reset",
       "schema": "integer"
     },
@@ -43,7 +49,9 @@
         "Button_Presses_SW1"
       ],
       "name": "button_presses_sw1",
-      "displayName" : "Number of presses for user button SW1",
+      "displayName": {
+        "en": "Number of presses for user button SW1"
+      },
       "description" : "Number of times the SW1 user button has been pressed since device reset",
       "schema": "integer"
     },
@@ -51,8 +59,10 @@
       "@type": [
         "Property"
       ],
-      "name": "led_blue",
-      "displayName" : "Blue LED state",
+      "name": "led_Green",
+      "displayName": {
+        "en": "Blue LED state"
+      },
       "description" : "Returns current state of Blue LED. If True, Blue LED is on and WiFi AP is connected.",
       "schema": {
         "@type": "Enum",
@@ -60,24 +70,30 @@
         "enumValues": [
           {
             "name": "On",
-            "displayName": "Turn On",
+            "displayName": {
+              "en": "Turn On"
+            },
             "enumValue": 1,
-            "description": "Yellow LED On",
-            "comment": "Yellow LED On"
-          },
-          {
-            "name": "Blink",
-            "displayName": "Blink Yellow LED",
-            "enumValue": 3,
-            "description": "Yellow LED Blink",
-            "comment": "Blink Yellow LED"
+            "description": "Blue LED is turned on.",
+            "comment": "Blue LED is On state."
           },
           {
             "name": "Off",
-            "displayName": "Turn Off",
+            "displayName": {
+              "en": "Turn Off"
+            },
             "enumValue": 2,
-            "description": "Yellow LED Off",
-            "comment": "Yellow LED Off"
+            "description": "Blue LED is turned Off.",
+            "comment": "Blue LED is Off state."
+          },
+          {
+            "name": "Blink",
+            "displayName": {
+              "en": "Blink Blue LED"
+            },
+            "enumValue": 3,
+            "description": "Blue LED is blinking.",
+            "comment": "Blue LED is blinking."
           }
         ]
       },
@@ -88,7 +104,9 @@
         "Property"
       ],
       "name": "led_green",
-      "displayName" : "Green LED state",
+      "displayName": {
+        "en": "Green LED state"
+      },
       "description" : "Returns current state of Green LED. If True, Green LED is on and connected to cloud.",
       "schema": {
         "@type": "Enum",
@@ -96,24 +114,30 @@
         "enumValues": [
           {
             "name": "On",
-            "displayName": "Turn On",
+            "displayName": {
+              "en": "Turn On"
+            },
             "enumValue": 1,
-            "description": "Yellow LED On",
-            "comment": "Yellow LED On"
-          },
-          {
-            "name": "Blink",
-            "displayName": "Blink Yellow LED",
-            "enumValue": 3,
-            "description": "Yellow LED Blink",
-            "comment": "Blink Yellow LED"
+            "description": "Green LED is turned on.",
+            "comment": "Green LED is On state."
           },
           {
             "name": "Off",
-            "displayName": "Turn Off",
+            "displayName": {
+              "en": "Turn Off"
+            },
             "enumValue": 2,
-            "description": "Yellow LED Off",
-            "comment": "Yellow LED Off"
+            "description": "Green LED is turned Off.",
+            "comment": "Green LED is Off state."
+          },
+          {
+            "name": "Blink",
+            "displayName": {
+              "en": "Blink Green LED"
+            },
+            "enumValue": 3,
+            "description": "Green LED is blinking.",
+            "comment": "Green LED is blinking."
           }
         ]
       },
@@ -124,7 +148,9 @@
         "Property"
       ],
       "name": "led_yellow",
-      "displayName" : "Yellow LED state",
+      "displayName": {
+        "en": "Yellow LED state"
+      },
       "description" : "Turn On/Off Yellow LED",
       "schema": {
         "@type": "Enum",
@@ -132,24 +158,30 @@
         "enumValues": [
           {
             "name": "On",
-            "displayName": "Turn On",
+            "displayName": {
+              "en": "Turn On"
+            },
             "enumValue": 1,
-            "description": "Yellow LED On",
-            "comment": "Yellow LED On"
-          },
-          {
-            "name": "Blink",
-            "displayName": "Blink Yellow LED",
-            "enumValue": 3,
-            "description": "Yellow LED Blink",
-            "comment": "Blink Yellow LED"
+            "description": "Yellow LED is turned on.",
+            "comment": "Yellow LED is On state."
           },
           {
             "name": "Off",
-            "displayName": "Turn Off",
+            "displayName": {
+              "en": "Turn Off"
+            },
             "enumValue": 2,
-            "description": "Yellow LED Off",
-            "comment": "Yellow LED Off"
+            "description": "Yellow LED is turned Off.",
+            "comment": "Yellow LED is Off state."
+          },
+          {
+            "name": "Blink",
+            "displayName": {
+              "en": "Blink Yellow LED"
+            },
+            "enumValue": 3,
+            "description": "Yellow LED is blinking.",
+            "comment": "Yellow LED is blinking."
           }
         ]
       },
@@ -160,32 +192,40 @@
         "Property"
       ],
       "name": "led_red",
-      "displayName" : "Red LED state",
-      "description" : "Returns current state of Red LED, with string enum data type",
+      "displayName": {
+        "en": "Red LED state"
+      },
+      "description" : "Current state of Red LED, with string enum data type",
       "schema": {
         "@type": "Enum",
         "valueSchema": "string",
         "enumValues": [
           {
             "name": "On",
-            "displayName": "On",
+            "displayName": {
+              "en": "On"
+            },
             "enumValue": "On",
-            "description": "Red LED On",
-            "comment": "Red LED On"
-          },
-          {
-            "name": "Blink",
-            "displayName": "Blink",
-            "enumValue": "Blink",
-            "description": "Red LED Blink",
-            "comment": "Blink Red LED"
+            "description": "Red LED is turned on.",
+            "comment": "Red LED is On state."
           },
           {
             "name": "Off",
-            "displayName": "Off",
+            "displayName": {
+              "en": "Off"
+            },
             "enumValue": "Off",
-            "description": "Red LED Off",
-            "comment": "Red LED Off"
+            "description": "Red LED is turned Off.",
+            "comment": "Red LED is Off state."
+          },
+          {
+            "name": "Blink",
+            "displayName": {
+              "en": "Blink"
+            },
+            "enumValue": "Blink",
+            "description": "Red LED is blinking.",
+            "comment": "Red LED is blinking."
           }
         ]
       },
@@ -199,7 +239,9 @@
       "name": "telemetryInterval",
       "schema": "integer",
       "unit": "second",
-      "displayName": "Telemetry Interval",
+      "displayName": {
+        "en": "Set Telemetry Interval"
+      },
       "description": "Sets interval to send telemetry in second",
       "writable": true
     },
@@ -211,7 +253,9 @@
       "name": "maxTempSinceLastReboot",
       "schema": "double",
       "unit" : "degreeCelsius",
-      "displayName": "Max temperature since last reboot",
+      "displayName": {
+        "en": "Max temperature since last reboot"
+      },
       "description": "Returns the max temperature since last device reboot"
     },
     {
@@ -228,14 +272,31 @@
         "description": "Number of seconds to delay reboot. e.g. PT5S for 5 seconds."
       },
       "response": {
-        "name": "RebootResponse",
-        "schema": "string"
+        "name": "response",
+        "displayName": "Response for command",
+        "schema": {
+          "@type": "Object",
+          "fields": [
+            {
+              "name": "status",
+              "displayName": "Message from reboot handler.",
+              "schema": "string"
+            },
+            {
+              "name": "delay",
+              "displayName": "Number of seconds to delay the reboot.",
+              "schema": "integer"
+            }
+          ]
+        }
       }
     },
     {
       "@type": "Command",
       "name": "getMaxMinReport",
-      "displayName": "Get Max-Min report",
+      "displayName": {
+        "en": "Get Max-Min report"
+      },
       "description": "This command returns the max, min and average temperature from the specified time to the current time",
       "request": {
         "name": "since",
