@@ -28,5 +28,6 @@ typedef struct
 }twin_properties_t;
 
 void check_led_status(twin_properties_t* twin_properties);
+void check_button_status(void);
 
 #endif /* MAIN_H_ */

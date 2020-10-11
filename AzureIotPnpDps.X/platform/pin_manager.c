@@ -53,12 +53,6 @@
 #include <stdio.h>
 #include "pin_manager.h"
 
-uint8_t BUTTON_SW0_wasPushed = BUTTON_ENUM_FALSE;
-uint8_t BUTTON_SW1_wasPushed = BUTTON_ENUM_FALSE;
-
-uint32_t BUTTON_SW0_numPresses = 0;
-uint32_t BUTTON_SW1_numPresses = 0;
-
 /**
  Section: File specific functions
 */
@@ -66,11 +60,20 @@ void (*SW0_InterruptHandler)(void) = NULL;
 void (*SW1_InterruptHandler)(void) = NULL;
 void (*INT_InterruptHandler)(void) = NULL;
 
+button_press_data_t button_press_data = {0};
+uint32_t button_sw0_numPresses = 0;
+uint32_t button_sw1_numPresses = 0;
+
 /**
  Section: Driver Interface Function Definitions
 */
 void PIN_MANAGER_Initialize (void)
 {
+    // button_press.sw0_button_press = false;
+    // button_press.sw1_button_press = false;
+    // button_press.flag.AsUSHORT = 0;
+    // button_press.sw0_press_count = 0;
+    // button_press.sw1_press_count = 0;
     /****************************************************************************
      * Setting the Output Latch SFR(s)
      ***************************************************************************/
@@ -155,12 +158,12 @@ void PIN_MANAGER_Initialize (void)
 
 void __attribute__((weak)) SW0_CallBack(void)
 {
-    BUTTON_SW0_wasPushed = BUTTON_ENUM_TRUE;
+    button_press_data.flag.sw0_button_press = 1;
 }
 
 void __attribute__ ((weak)) SW1_CallBack(void)
 {
-    BUTTON_SW1_wasPushed = BUTTON_ENUM_TRUE;
+    button_press_data.flag.sw1_button_press = 1;
 }
 
 void __attribute__ ((weak)) INT_CallBack(void)

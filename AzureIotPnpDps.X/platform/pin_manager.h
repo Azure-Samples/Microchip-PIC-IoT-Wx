@@ -50,16 +50,28 @@
     Section: Includes
 */
 #include <xc.h>
+#include <stdint.h>
+#include <stdbool.h>
 
-#define BUTTON_ENUM_FALSE 0
-#define BUTTON_ENUM_TRUE  1
+typedef union
+{
+  struct {
+    unsigned sw0_button_press:1;
+    unsigned sw1_button_press:1;
+  };
+  unsigned AsUSHORT;
+} button_press_flag_t;
 
-extern uint8_t BUTTON_SW0_wasPushed;
-extern uint8_t BUTTON_SW1_wasPushed;
+typedef struct
+{
+  uint32_t sw0_press_count;
+  uint32_t sw1_press_count;
+  button_press_flag_t flag;
+} button_press_data_t;
 
-extern uint32_t BUTTON_SW0_numPresses;
-extern uint32_t BUTTON_SW1_numPresses;
-
+extern button_press_data_t button_press_data;
+extern uint32_t button_sw0_numPresses;
+extern uint32_t button_sw1_numPresses;
 /**
     Section: Device Pin Macros
 */
@@ -1984,7 +1996,7 @@ extern uint32_t BUTTON_SW1_numPresses;
     </code>
 
 */
-#define LED_GREEN_SetHigh()          (_LATC4 = 1)
+//#define LED_GREEN_SetHigh()          (_LATC4 = 1)
 /**
   @Summary
     Sets the GPIO pin, RC4, low using LATC4.
@@ -2008,7 +2020,7 @@ extern uint32_t BUTTON_SW1_numPresses;
     </code>
 
 */
-#define LED_GREEN_SetLow()           (_LATC4 = 0)
+// #define LED_GREEN_SetLow()           (_LATC4 = 0)
 /**
   @Summary
     Toggles the GPIO pin, RC4, using LATC4.
@@ -2154,7 +2166,7 @@ extern uint32_t BUTTON_SW1_numPresses;
     </code>
 
 */
-#define LED_BLUE_SetLow()           (_LATC5 = 0)
+//dn #define LED_BLUE_SetLow()           (_LATC5 = 0)
 /**
   @Summary
     Toggles the GPIO pin, RC5, using LATC5.
@@ -2178,7 +2190,7 @@ extern uint32_t BUTTON_SW1_numPresses;
     </code>
 
 */
-#define LED_BLUE_Toggle()           (_LATC5 ^= 1)
+//dn #define LED_BLUE_Toggle()           (_LATC5 ^= 1)
 /**
   @Summary
     Reads the value of the GPIO pin, RC5.
@@ -2471,6 +2483,5 @@ void INT_SetInterruptHandler(void (* InterruptHandler)(void));
     </code>
 */
 void __attribute__((deprecated("\nThis will be removed in future MCC releases. \nUse INT_SetInterruptHandler instead."))) INT_SetIOCInterruptHandler(void *handler);
-
 
 #endif

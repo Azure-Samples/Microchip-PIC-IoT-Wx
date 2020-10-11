@@ -36,6 +36,9 @@ static timerStruct_t reboot_timer = { reboot_task };
 
 static bool isGetReceived = false;
 extern uint32_t telemetry_interval;
+extern button_press_data_t button_press_data; 
+
+
 /*
 * LEDs
 *			   | On			              | Off			                 | Blink Slow 500ms	     | Blink Fast (200ms)
@@ -65,8 +68,14 @@ static char request_id_buf[8];
 char telemetry_topic[128];
 static const az_span telemetry_name_temperature = AZ_SPAN_LITERAL_FROM_STR("temperature");
 static const az_span telemetry_name_light = AZ_SPAN_LITERAL_FROM_STR("light");
-static const az_span telemetry_name_sw0 = AZ_SPAN_LITERAL_FROM_STR("button_presses_sw0");
-static const az_span telemetry_name_sw1 = AZ_SPAN_LITERAL_FROM_STR("button_presses_sw1");
+
+static const az_span telemetry_name_button_sw0 = AZ_SPAN_LITERAL_FROM_STR("SW0");
+static const az_span telemetry_name_button_sw1 = AZ_SPAN_LITERAL_FROM_STR("SW1");
+static const az_span telemetry_name_button_event = AZ_SPAN_LITERAL_FROM_STR("button_event");
+static const az_span telemetry_name_button_name = AZ_SPAN_LITERAL_FROM_STR("button_name");
+static const az_span telemetry_name_button_count  = AZ_SPAN_LITERAL_FROM_STR("press_count");
+
+static char button_event_payload[256];
 static char telemetry_payload[256];
 
 // IoT Hub Commands Values
@@ -84,8 +93,10 @@ static char commands_response_payload[256];
 static char incoming_since_value[32];
 
 static const az_span reboot_command_name_span = AZ_SPAN_LITERAL_FROM_STR("reboot");
-static const az_span reboot_command_response_span = AZ_SPAN_LITERAL_FROM_STR("RebootResponse");
-static const char reboot_command_response_msg_format[] = "Rebooting in %d seconds";
+static const az_span reboot_command_response_status_span = AZ_SPAN_LITERAL_FROM_STR("status");
+static const az_span reboot_command_response_success_span = AZ_SPAN_LITERAL_FROM_STR("success");
+static const az_span reboot_command_response_delay_span = AZ_SPAN_LITERAL_FROM_STR("delay");
+//static const char reboot_command_response_msg_format = "Rebooting device in %d seconds";
 
 // IoT Hub Twin Values
 //static char twin_get_topic[128];
@@ -236,6 +247,25 @@ void init_property_data(twin_properties_t* twin_properties)
   twin_properties->reported_led_green = LED_INIT;
 }
 
+/**********************************************
+*  Add Reported Property int32 element for desired property response
+**********************************************/
+static az_result append_button_press_telemetry(
+	az_json_writer* jw,
+  az_span button_name,
+	int32_t press_count)
+{
+  RETURN_IF_AZ_RESULT_FAILED(az_json_writer_append_property_name(jw, telemetry_name_button_event));
+  RETURN_IF_AZ_RESULT_FAILED(az_json_writer_append_begin_object(jw));
+  RETURN_IF_AZ_RESULT_FAILED(az_json_writer_append_property_name(jw, telemetry_name_button_name));
+  RETURN_IF_AZ_RESULT_FAILED(az_json_writer_append_string(jw, button_name));
+  RETURN_IF_AZ_RESULT_FAILED(az_json_writer_append_property_name(jw, telemetry_name_button_count));
+  RETURN_IF_AZ_RESULT_FAILED(az_json_writer_append_int32(jw, press_count));
+  RETURN_IF_AZ_RESULT_FAILED(az_json_writer_append_end_object(jw));
+
+  return AZ_OK;
+}
+
 // Create request id span which increments source int each call. Capable of holding 8 digit number.
 static az_span get_request_id(void)
 {
@@ -333,8 +363,6 @@ static az_result invoke_getMaxMinReport(az_span payload, az_span response, az_sp
 		return AZ_ERROR_ITEM_NOT_FOUND;
 	}
 
-  debug_printInfo("invoke_getMaxMinReport payload : %s", az_span_ptr(payload));
-
   // Parse the "since" field in the payload.
   az_span start_time_span = AZ_SPAN_EMPTY;
   az_json_reader jr;
@@ -373,8 +401,7 @@ static az_result invoke_reboot(az_span payload, az_span response, az_span* out_r
 {
   char reboot_delay[32];
   char buffer[32] = {0};
-  char responseMsg[32];
-
+  az_json_writer jw;
   az_json_reader jr;
 
 	if (az_span_size(payload) == 0)
@@ -398,7 +425,12 @@ static az_result invoke_reboot(az_span payload, az_span response, az_span* out_r
   buffer[strlen(reboot_delay) - 3] = '\0';
   rebootDelay = atoi((const char *)buffer);
 
-  sprintf(responseMsg, reboot_command_response_msg_format, rebootDelay);
+  start_json_document(&jw, response);
+  append_jason_data_string(&jw, reboot_command_response_status_span, reboot_command_response_success_span);
+  append_jason_data_int32(&jw, reboot_command_response_delay_span, rebootDelay);
+  end_json_document(&jw);
+
+  *out_response = az_json_writer_get_bytes_used_in_destination(&jw);
 
   return AZ_OK;
 }
@@ -492,29 +524,6 @@ void receivedFromCloud_methods(uint8_t* topic, uint8_t* payload)
 
   handle_command_message(az_span_create_from_str((char*)payload), &method_request);
 }
-
-/*****************************************************************************************
-
-Properties (Device Twin)
-
-*****************************************************************************************/
-/**********************************************
-*  Build single reported property JSON for int32 data type
-**********************************************/
-// static az_result build_reported_property(
-// 	az_json_writer* jw,
-// 	az_span property_name,
-// 	int32_t property_val)
-// {
-//   RETURN_IF_AZ_RESULT_FAILED(
-// 	  az_json_writer_init(jw, AZ_SPAN_FROM_BUFFER(reported_property_payload), NULL));
-//   RETURN_IF_AZ_RESULT_FAILED(az_json_writer_append_begin_object(jw));
-//   RETURN_IF_AZ_RESULT_FAILED(az_json_writer_append_property_name(jw, property_name));
-//   RETURN_IF_AZ_RESULT_FAILED(az_json_writer_append_int32(jw, property_val));
-//   RETURN_IF_AZ_RESULT_FAILED(az_json_writer_append_end_object(jw));
-
-//   return AZ_OK;
-// }
 
 /**********************************************
 *  Send Reported Property
@@ -696,6 +705,60 @@ static int send_reported_property(
 /**********************************************
 *  Send Reported Property
 **********************************************/
+void check_button_status(void)
+{
+  az_result result;
+  az_span button_event_span = AZ_SPAN_FROM_BUFFER(button_event_payload);
+  az_json_writer jw;
+
+  if (button_press_data.flag.AsUSHORT == 0)
+  {
+    return;
+  }
+
+  debug_printGOOD("check_button_status %x", button_press_data.flag.AsUSHORT);
+
+  start_json_document(&jw, button_event_span);
+
+  if (button_press_data.flag.sw0_button_press == 1)
+  {
+    button_press_data.sw0_press_count++;
+    button_sw0_numPresses++;
+    debug_printGOOD("Button 0 Pressed %d %d", button_press_data.sw0_press_count, button_sw0_numPresses);
+    button_press_data.flag.sw0_button_press = 0;
+    if (az_result_failed(result = append_button_press_telemetry(&jw, telemetry_name_button_sw0, button_sw1_numPresses)))
+    {
+      debug_printError("Could not build telemetry payload, az_result %d", result);
+      return;
+    }
+  }
+
+  if (button_press_data.flag.sw1_button_press == 1)
+  {
+    button_press_data.sw1_press_count++;
+    button_sw1_numPresses++;
+    debug_printGOOD("Button 1 Pressed %d %d", button_press_data.sw1_press_count, button_sw1_numPresses);
+    button_press_data.flag.sw1_button_press = 0;
+
+    if (az_result_failed(result = append_button_press_telemetry(&jw, telemetry_name_button_sw1, button_sw1_numPresses)))
+    {
+      debug_printError("Could not build telemetry payload, az_result %d", result);
+      return;
+    }
+  }
+
+  button_press_data.flag.AsUSHORT = 0;
+
+  end_json_document(&jw);
+
+  button_event_span = az_json_writer_get_bytes_used_in_destination(&jw);
+
+  result = mqtt_publish_message(telemetry_topic, button_event_span, 0);
+
+}
+/**********************************************
+*  Send Reported Property
+**********************************************/
 void check_led_status(twin_properties_t* twin_properties)
 {
   twin_properties_t* twin_properties_ptr;
@@ -851,8 +914,6 @@ static az_result parse_twin_desired_property(
   az_json_reader jr;
   bool desired_found = false;
 
-  debug_printInfo("%s()", __func__);
-
   RETURN_IF_AZ_RESULT_FAILED(az_json_reader_init(&jr, twin_payload_span, NULL));
   RETURN_IF_AZ_RESULT_FAILED(az_json_reader_next_token(&jr));
 
@@ -871,7 +932,6 @@ static az_result parse_twin_desired_property(
     {
       if (jr.token.kind != AZ_JSON_TOKEN_PROPERTY_NAME)
       {
-        debug_print("Token Kind %d", jr.token.kind);
         RETURN_IF_AZ_RESULT_FAILED(az_json_reader_skip_children(&jr));
       }
       else {
@@ -1000,9 +1060,6 @@ static void handle_twin_update(
 //
 void receivedFromCloud_twin(uint8_t* topic, uint8_t* payload)
 {
-
-  debug_printGOOD("%s()", __func__);
-
 	if (topic == NULL)
 	{
 		debug_printError("NULL topic");
@@ -1014,7 +1071,7 @@ void receivedFromCloud_twin(uint8_t* topic, uint8_t* payload)
 	az_result result = az_iot_hub_client_twin_parse_received_topic(&hub_client, twin_topic, &twin_response);
 	if (az_result_failed(result))
 	{
-		debug_printError("az_iot_hub_client_twin_parse_received_topic failed, return code %d\n", result);
+		debug_printError("az_iot_hub_client_twin_parse_received_topic() failed, return code %d\n", result);
 		return;
 	}
 
@@ -1140,6 +1197,9 @@ void iot_provisioning_completed(void)
  */
 int main(void)
 {
+  memset(&button_press_data, 0, sizeof(button_press_data_t));
+//  button_press_data = (button_press_data_t*)malloc(sizeof(button_press_data_t));
+
 	// Initialize the device
 	SYSTEM_Initialize();
 	application_init();
@@ -1154,19 +1214,14 @@ int main(void)
 	application_cloud_mqtt_connect(hub_hostname, &pf_mtqt_iothub_client, sendToCloud);
 #endif //CFG_MQTT_PROVISIONING_HOST 
 
+  debug_printGOOD("Size : %d", sizeof(button_press_data_t));
+  debug_printGOOD("Size : %d", sizeof(button_press_data.flag.AsUSHORT));
+  debug_printGOOD("Size : %d", sizeof(button_press_flag_t));
+  
+
 	while (true) {
 	  runScheduler();
 	  /*** Add your APPlication code below this line ***/
-	  if (BUTTON_SW0_wasPushed == BUTTON_ENUM_TRUE) {// Was SW0 button pressed?
-      BUTTON_SW0_numPresses++; // Increment button presses counter for SW0
-      DELAY_milliseconds(DEBOUNCE_DLY_MSEC); // Switch debounce delay
-      BUTTON_SW0_wasPushed = BUTTON_ENUM_FALSE; // End while (SW0 released)
-	  } // End (SW0 button was released)
-	  if (BUTTON_SW1_wasPushed == BUTTON_ENUM_TRUE) {// Was SW1 button pressed?
-      BUTTON_SW1_numPresses++; // Increment button presses counter for SW1
-      DELAY_milliseconds(DEBOUNCE_DLY_MSEC); // Switch debounce delay
-      BUTTON_SW1_wasPushed = BUTTON_ENUM_FALSE; // End while (SW1 released)
-	  } // End (SW1 button was released)
 	}
 
 	return true;

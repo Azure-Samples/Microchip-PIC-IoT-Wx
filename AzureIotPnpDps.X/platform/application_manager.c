@@ -189,6 +189,7 @@ uint32_t MAIN_dataTask(void* payload)
 			fpSendToCloudCallback();
 		}
 		check_led_status(NULL);
+		check_button_status();
 	}
 
 	if (shared_networking_params.haveAPConnection)

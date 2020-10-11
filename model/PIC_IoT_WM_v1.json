@@ -33,27 +33,26 @@
     },
     {
       "@type": [
-        "Telemetry",
-        "Button_Presses_SW0"
+        "Telemetry"
       ],
-      "name": "button_presses_sw0",
+      "name": "button_event",
       "displayName": {
-        "en": "Number of presses for user button SW0"
+        "en": "SW0/SW1 button push event"
       },
-      "description" : "Number of times the SW0 user button has been pressed since device reset",
-      "schema": "integer"
-    },
-    {
-      "@type": [
-        "Telemetry",
-        "Button_Presses_SW1"
-      ],
-      "name": "button_presses_sw1",
-      "displayName": {
-        "en": "Number of presses for user button SW1"
-      },
-      "description" : "Number of times the SW1 user button has been pressed since device reset",
-      "schema": "integer"
+      "description" : "Event triggered when button is pressed",
+      "schema": {
+        "@type": "Object",
+        "fields": [
+          {
+            "name": "button_name",
+            "schema": "string"
+          },
+          {
+            "name": "press_count",
+            "schema": "integer"
+          }
+        ]
+      }
     },
     {
       "@type": [
