@@ -703,7 +703,7 @@ static int send_reported_property(
 }
 
 /**********************************************
-*  Send Reported Property
+*  Check if button(s) interrupt happened or not.
 **********************************************/
 void check_button_status(void)
 {
@@ -711,7 +711,12 @@ void check_button_status(void)
   az_span button_event_span = AZ_SPAN_FROM_BUFFER(button_event_payload);
   az_json_writer jw;
 
-  if (button_press_data.flag.AsUSHORT == 0)
+  // save flags in case user pressed buttons very fast, and for error case.
+  bool sw0 = button_press_data.flag.sw0_button_press == 1 ? true : false;
+  bool sw1 = button_press_data.flag.sw1_button_press == 1 ? true : false;
+  button_press_data.flag.AsUSHORT = 0;
+
+  if (!sw0 && !sw1)
   {
     return;
   }
@@ -720,7 +725,7 @@ void check_button_status(void)
 
   start_json_document(&jw, button_event_span);
 
-  if (button_press_data.flag.sw0_button_press == 1)
+  if (sw0)
   {
     button_press_data.sw0_press_count++;
     button_sw0_numPresses++;
@@ -733,7 +738,7 @@ void check_button_status(void)
     }
   }
 
-  if (button_press_data.flag.sw1_button_press == 1)
+  if (sw1)
   {
     button_press_data.sw1_press_count++;
     button_sw1_numPresses++;
@@ -747,17 +752,12 @@ void check_button_status(void)
     }
   }
 
-  button_press_data.flag.AsUSHORT = 0;
-
   end_json_document(&jw);
-
   button_event_span = az_json_writer_get_bytes_used_in_destination(&jw);
-
   result = mqtt_publish_message(telemetry_topic, button_event_span, 0);
-
 }
 /**********************************************
-*  Send Reported Property
+*  Check if LED status has changed or not.
 **********************************************/
 void check_led_status(twin_properties_t* twin_properties)
 {
@@ -840,7 +840,8 @@ void check_led_status(twin_properties_t* twin_properties)
 }
 
 /**********************************************
-*  Update and track temperature data
+*  Update temperature and light sensor data.
+*  Track temperature data for getMaxMinReport command and Max Temperature report.
 **********************************************/
 static void update_sensor_data(twin_properties_t* twin_properties)
 {
