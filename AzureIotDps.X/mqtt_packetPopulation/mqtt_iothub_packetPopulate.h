@@ -9,6 +9,8 @@
 #include <stdint.h>
 #include "../platform/config/IoT_Sensor_Node_config.h"
 
+#define ATCA_SLOT_IDSCOPE 8 // Slot # in ATECC608A SE which stores the ID Scope
+
 void MQTT_CLIENT_iothub_publish(uint8_t *data, uint16_t len);
 void MQTT_CLIENT_iothub_receive(uint8_t *data, uint16_t len);
 void MQTT_CLIENT_iothub_connect(char* deviceID);
