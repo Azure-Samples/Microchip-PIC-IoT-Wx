@@ -51,7 +51,7 @@
 // <s> provisioning id scope
 // <i> provisioning id scope of the DPS service
 // <id> id
-#define PROVISIONING_ID_SCOPE "<INSERT PROVISIONING SCOPE>"
+// #define PROVISIONING_ID_SCOPE "<INSERT PROVISIONING SCOPE>"
 
 // </h>
 
