@@ -33,7 +33,9 @@ pf_MQTT_CLIENT pf_mqtt_iotprovisioning_client = {
 };
 
 extern uint8_t device_id_buf[100];
+extern uint8_t scope_id_buf[100];
 extern az_span device_id;
+uint8_t atca_id_scope[12];
 char hub_device_key_buf[64];
 char hub_hostname_buf[128];
 
@@ -161,7 +163,22 @@ void MQTT_CLIENT_iotprovisioning_connect(char* deviceID)
     device_id = az_span_slice(device_id, 0, az_span_size(deviceID_parm));
    
     const az_span global_device_endpoint = AZ_SPAN_LITERAL_FROM_STR(CFG_MQTT_PROVISIONING_HOST);
-    const az_span id_scope = AZ_SPAN_LITERAL_FROM_STR(PROVISIONING_ID_SCOPE);
+
+	// Read the ID Scope from the secure element (e.g. ATECC608A)
+	atcab_read_bytes_zone(ATCA_ZONE_DATA, ATCA_SLOT_IDSCOPE, 0, atca_id_scope, sizeof(atca_id_scope));
+	debug_printInfo("DPS: ID Scope = %s", atca_id_scope);
+
+	const az_span scopeID_parm = az_span_create_from_str((char*)atca_id_scope);
+	az_span id_scope = AZ_SPAN_FROM_BUFFER(scope_id_buf);
+	az_span_copy(id_scope, scopeID_parm);
+	id_scope = az_span_slice(id_scope, 0, az_span_size(scopeID_parm));
+
+	if (strlen((char*)atca_id_scope) < 11)
+	{
+		debug_printError("DPS: invalid ID Scope");
+        return;
+	}
+
     az_result result = az_iot_provisioning_client_init(&provisioning_client, global_device_endpoint, id_scope, device_id, NULL);
     if (az_result_failed(result))
     {

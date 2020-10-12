@@ -34,6 +34,7 @@ static const az_span twin_request_id = AZ_SPAN_LITERAL_FROM_STR("initial_get");
 char mqtt_telemetry_topic_buf[64];
 char mqtt_get_topic_twin_buf[64];
 uint8_t device_id_buf[100];
+uint8_t scope_id_buf[100];
 az_span device_id;
 az_iot_hub_client hub_client;
 

@@ -1199,13 +1199,12 @@ void iot_provisioning_completed(void)
 int main(void)
 {
   memset(&button_press_data, 0, sizeof(button_press_data_t));
-//  button_press_data = (button_press_data_t*)malloc(sizeof(button_press_data_t));
 
 	// Initialize the device
 	SYSTEM_Initialize();
 	application_init();
 
-	// Can execute this once to write a default ID Scope to the secure element
+	// Can execute this once to write a default ID Scope to the secure element or set it with CLI
 	// atcab_write_bytes_zone(ATCA_ZONE_DATA, ATCA_SLOT_IDSCOPE, 0, atca_id_scope, sizeof(atca_id_scope));
 
 #ifdef CFG_MQTT_PROVISIONING_HOST
@@ -1214,11 +1213,6 @@ int main(void)
 #else
 	application_cloud_mqtt_connect(hub_hostname, &pf_mtqt_iothub_client, sendToCloud);
 #endif //CFG_MQTT_PROVISIONING_HOST 
-
-  debug_printGOOD("Size : %d", sizeof(button_press_data_t));
-  debug_printGOOD("Size : %d", sizeof(button_press_data.flag.AsUSHORT));
-  debug_printGOOD("Size : %d", sizeof(button_press_flag_t));
-  
 
 	while (true) {
 	  runScheduler();

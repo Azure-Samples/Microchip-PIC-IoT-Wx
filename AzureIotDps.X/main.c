@@ -351,6 +351,9 @@ int main(void)
     SYSTEM_Initialize();
     application_init();
 
+	// Can execute this once to write a default ID Scope to the secure element or set it with CLI
+	// atcab_write_bytes_zone(ATCA_ZONE_DATA, ATCA_SLOT_IDSCOPE, 0, atca_id_scope, sizeof(atca_id_scope));
+
 #ifdef CFG_MQTT_PROVISIONING_HOST
     pf_mqtt_iotprovisioning_client.MQTT_CLIENT_task_completed = iot_provisioning_completed;
     application_cloud_mqtt_connect(CFG_MQTT_PROVISIONING_HOST, &pf_mqtt_iotprovisioning_client, NULL);
