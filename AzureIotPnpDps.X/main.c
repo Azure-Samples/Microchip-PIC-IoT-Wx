@@ -127,7 +127,7 @@ static int mqtt_publish_message(char* topic, az_span payload, int qos)
 
 // Send the response of the command invocation
 static int send_command_response(
-    az_iot_pnp_client_command_request *request,
+    az_iot_pnp_client_command_request* request,
     uint16_t status,
     az_span response)
 {
