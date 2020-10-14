@@ -285,33 +285,12 @@ void receivedFromCloud_commands(uint8_t* topic, uint8_t* payload)
   handle_command_message(az_span_create_from_str((char*)payload), &command_request);
 }
 
-static az_result build_reported_property(
-    az_json_writer* json_writer,
-    az_span property_name,
-    int32_t property_val)
-{
-  az_result rc;
-  if (az_result_failed(
-          rc = az_json_writer_init(json_writer, AZ_SPAN_FROM_BUFFER(reported_property_payload), NULL)) ||
-      az_result_failed(rc = az_json_writer_append_begin_object(json_writer)) ||
-      az_result_failed(rc = az_json_writer_append_property_name(json_writer, property_name)) ||
-      az_result_failed(
-          rc = az_json_writer_append_int32(json_writer, property_val)) ||
-      az_result_failed(rc = az_json_writer_append_end_object(json_writer)))
-  {
-    debug_printError("Could not build reported property");
-    return rc;
-  }
-
-  return AZ_OK;
-}
-
-static int send_reported_temperature_property(
+static az_result send_reported_temperature_property(
     int32_t temp_value,
     int32_t version,
     bool is_max_reported_prop)
 {
-  int rc;
+  az_result rc;
   debug_printInfo("Sending reported property");
 
   // Get the topic used to send a reported property update
@@ -334,10 +313,11 @@ static int send_reported_temperature_property(
 
   if (is_max_reported_prop)
   {
-    if (az_result_failed(
-            rc
-            = build_reported_property(&json_writer, max_temp_reported_property_name, temp_value)))
+    if (az_result_failed(rc = az_json_writer_append_property_name(&json_writer, max_temp_reported_property_name)) ||
+        az_result_failed(
+            rc = az_json_writer_append_double(&json_writer, (double)device_max_temp, 2)))
     {
+      debug_printError("Could not append max device temperature");
       return rc;
     }
   }
@@ -358,7 +338,10 @@ static int send_reported_temperature_property(
   az_span json_payload = az_json_writer_get_bytes_used_in_destination(&json_writer);
 
   // Publish the reported property payload to IoT Hub
-  rc = mqtt_publish_message(reported_property_topic, json_payload, 0);
+  if(mqtt_publish_message(reported_property_topic, json_payload, 0) == 0)
+  {
+    debug_printInfo("Published reported property message");
+  }
 
   max_temp_changed = false;
 
@@ -591,8 +574,14 @@ int main(void)
 
     while (true)
     {
-        // Add your application code
-        runScheduler();
+      // Add your application code
+      if (max_temp_changed)
+      {
+        az_result rc = send_reported_temperature_property(device_max_temp, 0, max_temp_changed);
+        RETURN_ERR_WITH_MESSAGE_IF_FAILED(rc, "Could not send maxTempSinceLastReboot");
+      }
+
+      runScheduler();
     }
 
     return true;
