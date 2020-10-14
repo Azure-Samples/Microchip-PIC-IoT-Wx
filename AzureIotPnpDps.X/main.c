@@ -401,7 +401,7 @@ static az_result parse_desired_temperature_property(
       &pnp_client, &jr, response_type, version_num);
   RETURN_ERR_WITH_MESSAGE_IF_FAILED(rc, "Could not get the property version");
 
-  az_result rc = az_json_reader_init(&jr, payload, NULL);
+  rc = az_json_reader_init(&jr, payload, NULL);
   RETURN_ERR_WITH_MESSAGE_IF_FAILED(rc, "Could not get initialize the json reader");
 
   az_span component_name;
