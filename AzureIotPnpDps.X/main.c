@@ -398,8 +398,11 @@ static az_result parse_desired_temperature_property(
   RETURN_ERR_WITH_MESSAGE_IF_FAILED(rc, "Could not get initialize the json reader");
 
   rc = az_iot_pnp_client_property_get_property_version(
-      &pnp_client, jr, response_type, version_num);
+      &pnp_client, &jr, response_type, version_num);
   RETURN_ERR_WITH_MESSAGE_IF_FAILED(rc, "Could not get the property version");
+
+  az_result rc = az_json_reader_init(&jr, payload, NULL);
+  RETURN_ERR_WITH_MESSAGE_IF_FAILED(rc, "Could not get initialize the json reader");
 
   az_span component_name;
   az_json_reader property_name_and_value;
@@ -408,6 +411,7 @@ static az_result parse_desired_temperature_property(
   {
     if (az_json_token_is_text_equal(&property_name_and_value.token, desired_temp_property_name))
     {
+      debug_printInfo("Found the desired temperature property");
       rc = az_result_failed(az_json_reader_next_token(&property_name_and_value));
       RETURN_ERR_WITH_MESSAGE_IF_FAILED(rc, "Could not advance to the property value");
 
