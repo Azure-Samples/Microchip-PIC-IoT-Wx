@@ -20,7 +20,7 @@
 
 #define RETURN_ERR_WITH_MESSAGE_IF_FAILED(ret, msg)   \
   do {                                                \
-    if(az_result_failed(ret)) {                       \
+    if (az_result_failed(ret)) {                       \
         debug_printError(msg);                        \
         return rc;                                    \
     }                                                 \
@@ -28,7 +28,7 @@
 
 #define RETURN_WITH_MESSAGE_IF_FAILED(ret, msg)     \
   do {                                              \
-    if(az_result_failed(ret)) {                     \
+    if (az_result_failed(ret)) {                     \
         debug_printError(msg);                      \
         return;                                     \
     }                                               \
@@ -135,7 +135,7 @@ static int send_command_response(
   int rc = az_iot_pnp_client_commands_response_get_publish_topic(
       &pnp_client, request->request_id, status, commands_response_topic,
       sizeof(commands_response_topic), NULL);
-  RETURN_ERR_WITH_MESSAGE_IF_FAILED(rc, "Unable to get commands document publish topic");
+  RETURN_ERR_WITH_MESSAGE_IF_FAILED(rc, "Unable to get command response publish topic");
 
   debug_printInfo("Command Status: %u", status);
 
@@ -173,7 +173,7 @@ static az_result build_command_response_payload(
       az_result_failed(rc = az_json_writer_append_string(json_writer, end_time_span)) ||
       az_result_failed(rc = az_json_writer_append_end_object(json_writer)))
   {
-    debug_printError("Could not build command response");
+    debug_printError("Could not build command response document");
     return rc;
   }
 
@@ -338,7 +338,7 @@ static az_result send_reported_temperature_property(
   az_span json_payload = az_json_writer_get_bytes_used_in_destination(&json_writer);
 
   // Publish the reported property payload to IoT Hub
-  if(mqtt_publish_message(reported_property_topic, json_payload, 0) == 0)
+  if (mqtt_publish_message(reported_property_topic, json_payload, 0) == 0)
   {
     debug_printInfo("Published reported property message");
   }
@@ -432,7 +432,7 @@ static void handle_property_message(
       break;
     // An update to the desired properties with the properties as a JSON payload.
     case AZ_IOT_PNP_CLIENT_PROPERTY_RESPONSE_TYPE_DESIRED_PROPERTIES:
-      debug_printInfo("A property desired properties message was received");
+      debug_printInfo("A desired properties message was received");
 
       rc = parse_desired_temperature_property(payload, property_response->response_type, &desired_temp, &version_num);
       RETURN_WITH_MESSAGE_IF_FAILED(rc, "Could not parse desired temperature property");
@@ -442,7 +442,7 @@ static void handle_property_message(
     // A response from a reported properties publish message. With a successful update of
     // the reported properties, the payload will be empty and the status will be 204.
     case AZ_IOT_PNP_CLIENT_PROPERTY_RESPONSE_TYPE_REPORTED_PROPERTIES:
-      debug_printInfo("A property reported properties response message was received");
+      debug_printInfo("A reported properties response message was received");
       break;
   }
 }
@@ -493,7 +493,7 @@ void receivedFromCloud_patch(uint8_t* topic, uint8_t* payload)
 
   if (payload)
   {
-    debug_printGOOD("Payload: %s", payload);
+    debug_printInfo("Payload: %s", payload);
   }
   else
   {
@@ -586,4 +586,3 @@ int main(void)
 
     return true;
 }
-
