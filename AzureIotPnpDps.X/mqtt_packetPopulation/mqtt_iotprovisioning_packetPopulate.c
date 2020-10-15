@@ -67,7 +67,6 @@ void dps_client_register(uint8_t* topic, uint8_t* payload)
       debug_printError("az_iot_provisioning_client_parse_received_topic_and_payload failed, return code %d\n", rc);
       return;
     }
-    
     switch (dps_register_response.operation_status)
     {       
         case AZ_IOT_PROVISIONING_STATUS_ASSIGNING:
@@ -95,14 +94,14 @@ void dps_client_register(uint8_t* topic, uint8_t* payload)
 
 static uint32_t dps_assigning_task(void* payload)
 {
-    int rc; 
-    if (az_result_failed(
-            rc = az_iot_provisioning_client_query_status_get_publish_topic(&provisioning_client, dps_register_response.operation_id, mqtt_dsp_topic_buf, sizeof(mqtt_dsp_topic_buf), NULL)))
-    {   
+    int rc = az_iot_provisioning_client_query_status_get_publish_topic(
+        &provisioning_client, dps_register_response.operation_id, mqtt_dsp_topic_buf, sizeof(mqtt_dsp_topic_buf), NULL);
+    if (az_result_failed(rc))
+    {
         debug_printError("az_iot_provisioning_client_query_status_get_publish_topic failed");
         return 0L;
     }
-    
+
     mqttPublishPacket cloudPublishPacket;
     // Fixed header
     cloudPublishPacket.publishHeaderFlags.duplicate = 0;

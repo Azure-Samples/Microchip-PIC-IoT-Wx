@@ -20,6 +20,11 @@
         <itemPath>azure-sdk-for-c/sdk/src/azure/iot/az_iot_hub_client_twin.c</itemPath>
         <itemPath>azure-sdk-for-c/sdk/src/azure/iot/az_iot_provisioning_client.c</itemPath>
         <itemPath>azure-sdk-for-c/sdk/src/azure/iot/az_iot_provisioning_client_sas.c</itemPath>
+        <itemPath>azure-sdk-for-c/sdk/src/azure/iot/az_iot_pnp_client.c</itemPath>
+        <itemPath>azure-sdk-for-c/sdk/src/azure/iot/az_iot_pnp_client_commands.c</itemPath>
+        <itemPath>azure-sdk-for-c/sdk/src/azure/iot/az_iot_pnp_client_property.c</itemPath>
+        <itemPath>azure-sdk-for-c/sdk/src/azure/iot/az_iot_pnp_client_sas.c</itemPath>
+        <itemPath>azure-sdk-for-c/sdk/src/azure/iot/az_iot_pnp_client_telemetry.c</itemPath>
       </logicalFolder>
     </logicalFolder>
     <logicalFolder name="HeaderFiles"
@@ -444,12 +449,7 @@
   <sourceRootList>
     <Elem>platform</Elem>
     <Elem>mqtt_packetPopulation</Elem>
-    <Elem>azure-c-sdk/azure-sdk-for-c/sdk/src/azure/iot</Elem>
-    <Elem>azure-c-sdk/azure-sdk-for-c/sdk/src/azure/core</Elem>
-    <Elem>azure-c-sdk/azure-sdk-for-c/sdk/inc</Elem>
     <Elem>azure-sdk-for-c/sdk/inc</Elem>
-    <Elem>azure-sdk-for-c/sdk/src/azure/core</Elem>
-    <Elem>azure-sdk-for-c/sdk/src/azure/iot</Elem>
   </sourceRootList>
   <projectmakefile>Makefile</projectmakefile>
   <confs>
@@ -459,7 +459,7 @@
         <targetDevice>PIC24FJ128GA705</targetDevice>
         <targetHeader></targetHeader>
         <targetPluginBoard></targetPluginBoard>
-        <platformTool>nEdbgTool</platformTool>
+        <platformTool>noID</platformTool>
         <languageToolchain>XC16</languageToolchain>
         <languageToolchainVersion>1.50</languageToolchainVersion>
         <platform>3</platform>

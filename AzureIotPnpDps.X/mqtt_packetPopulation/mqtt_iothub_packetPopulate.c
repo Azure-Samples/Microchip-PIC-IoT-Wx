@@ -13,20 +13,21 @@
 #include "../platform/config/IoT_Sensor_Node_config.h"
 #include "../platform/debug_print.h"
 #include "../platform/cryptoauthlib/lib/basic/atca_basic.h"
-#include <azure/iot/az_iot_hub_client.h>
+#include <azure/iot/az_iot_common.h>
+#include <azure/iot/az_iot_pnp_client.h>
 
-pf_MQTT_CLIENT pf_mqtt_iothub_client = {
-  MQTT_CLIENT_iothub_publish,
-  MQTT_CLIENT_iothub_receive,
-  MQTT_CLIENT_iothub_connect,
-  MQTT_CLIENT_iothub_subscribe,
-  MQTT_CLIENT_iothub_connected,  
+pf_MQTT_CLIENT pf_mqtt_pnp_client = {
+  MQTT_CLIENT_pnp_publish,
+  MQTT_CLIENT_pnp_receive,
+  MQTT_CLIENT_pnp_connect,
+  MQTT_CLIENT_pnp_subscribe,
+  MQTT_CLIENT_pnp_connected,
   NULL
 };
 
 extern const az_span device_model_id;
-extern void receivedFromCloud_methods(uint8_t* topic, uint8_t* payload);
-extern void receivedFromCloud_twin(uint8_t* topic, uint8_t* payload);
+extern void receivedFromCloud_commands(uint8_t* topic, uint8_t* payload);
+extern void receivedFromCloud_property(uint8_t* topic, uint8_t* payload);
 extern void receivedFromCloud_patch(uint8_t* topic, uint8_t* payload);
 static const az_span twin_request_id = AZ_SPAN_LITERAL_FROM_STR("initial_get");
 
@@ -34,7 +35,7 @@ char mqtt_telemetry_topic_buf[64];
 char mqtt_get_topic_twin_buf[64];
 uint8_t device_id_buf[100];
 az_span device_id;
-az_iot_hub_client hub_client;
+az_iot_pnp_client pnp_client;
 
 /** \brief MQTT publish handler call back table.
  *
@@ -48,7 +49,7 @@ az_iot_hub_client hub_client;
  */
 publishReceptionHandler_t imqtt_publishReceiveCallBackTable[MAX_NUM_TOPICS_SUBSCRIBE];
 
-void MQTT_CLIENT_iothub_publish(uint8_t* data, uint16_t len)
+void MQTT_CLIENT_pnp_publish(uint8_t* data, uint16_t len)
 {
     uint8_t properties_buf[256];
     az_span properties = AZ_SPAN_FROM_BUFFER(properties_buf);
@@ -56,23 +57,23 @@ void MQTT_CLIENT_iothub_publish(uint8_t* data, uint16_t len)
     az_result result = az_iot_message_properties_init(&properties_topic, properties, 0);
     if (az_result_failed(result))
     {
-        debug_printError("az_iot_hub_client_properties_init failed");
+        debug_printError("az_iot_message_properties_init failed");
         return;
     }
 
     result = az_iot_message_properties_append(&properties_topic, AZ_SPAN_FROM_STR("foo"), AZ_SPAN_FROM_STR("bar"));
     if (az_result_failed(result))
     {
-        debug_printError("az_iot_hub_client_properties_append failed");
+        debug_printError("az_iot_message_properties_append failed");
         return;
     }
 
-    result = az_iot_hub_client_telemetry_get_publish_topic(
-        &hub_client, &properties_topic, mqtt_telemetry_topic_buf, sizeof(mqtt_telemetry_topic_buf), NULL);
+    result = az_iot_pnp_client_telemetry_get_publish_topic(
+        &pnp_client, AZ_SPAN_EMPTY, &properties_topic, mqtt_telemetry_topic_buf, sizeof(mqtt_telemetry_topic_buf), NULL);
 
     if (az_result_failed(result))
     {
-        debug_printError("az_iot_hub_client_telemetry_get_publish_topic failed");
+        debug_printError("az_iot_pnp_client_telemetry_get_publish_topic failed");
         return;
     }
 
@@ -98,12 +99,12 @@ void MQTT_CLIENT_iothub_publish(uint8_t* data, uint16_t len)
     }
 }
 
-void MQTT_CLIENT_iothub_receive(uint8_t* data, uint16_t len)
+void MQTT_CLIENT_pnp_receive(uint8_t* data, uint16_t len)
 {
     MQTT_GetReceivedData(data, len);
 }
 
-void MQTT_CLIENT_iothub_connect(char* deviceID)
+void MQTT_CLIENT_pnp_connect(char* deviceID)
 {
     const az_span iothub_hostname = az_span_create_from_str(hub_hostname);
     const az_span deviceID_parm = az_span_create_from_str(deviceID);
@@ -111,31 +112,28 @@ void MQTT_CLIENT_iothub_connect(char* deviceID)
     az_span_copy(device_id, deviceID_parm);
     device_id = az_span_slice(device_id, 0, az_span_size(deviceID_parm));
 
-    az_iot_hub_client_options options = az_iot_hub_client_options_default();
-    options.model_id = device_model_id;
-    az_result result = az_iot_hub_client_init(&hub_client, iothub_hostname, device_id, &options);
+    az_result result = az_iot_pnp_client_init(&pnp_client, iothub_hostname, device_id, device_model_id, NULL);
     if (az_result_failed(result))
     {
-        debug_printError("az_iot_hub_client_init failed");
+        debug_printError("az_iot_pnp_client_init failed");
         return;
     }
 
     size_t mqtt_username_buf_len;
-    result = az_iot_hub_client_get_user_name(&hub_client, mqtt_username_buf, sizeof(mqtt_username_buf), &mqtt_username_buf_len);
+    result = az_iot_pnp_client_get_user_name(&pnp_client, mqtt_username_buf, sizeof(mqtt_username_buf), &mqtt_username_buf_len);
     if (az_result_failed(result))
     {
-        debug_printError("az_iot_hub_client_get_user_name failed");
-        return;
+      debug_printError("az_iot_pnp_client_sas_get_signature failed");
+      return;
     }
-
 #ifdef SAS
     time_t expire_time = time(NULL) + 60 * 60; // token expires in 1 hour
     uint8_t signature_buf[256];
     az_span signature = AZ_SPAN_FROM_BUFFER(signature_buf);
-    result = az_iot_hub_client_sas_get_signature(&hub_client, expire_time, signature, &signature); 
-    if (az_failed(result))
+    result = az_iot_pnp_client_sas_get_signature(&pnp_client, expire_time, signature, &signature); 
+    if (az_result_failed(result))
     {
-        debug_printError("az_iot_hub_client_sas_get_signature failed");
+        debug_printError("az_iot_pnp_client_sas_get_signature failed");
         return;
     }
 
@@ -157,10 +155,10 @@ void MQTT_CLIENT_iothub_connect(char* deviceID)
 
     size_t mqtt_password_buf_len;
     az_span signature_hash = az_span_create_from_str(signature_hash_buf);
-    result = az_iot_hub_client_sas_get_password(&hub_client, signature_hash, expire_time, AZ_SPAN_NULL, mqtt_password_buf, sizeof(mqtt_password_buf), &mqtt_password_buf_len);
-    if (az_failed(result))
+    result = az_iot_pnp_client_sas_get_password(&pnp_client, signature_hash, expire_time, AZ_SPAN_NULL, mqtt_password_buf, sizeof(mqtt_password_buf), &mqtt_password_buf_len);
+    if (az_result_failed(result))
     {
-        debug_printError("az_iot_hub_client_sas_get_password failed");
+        debug_printError("az_iot_pnp_client_sas_get_password failed");
         return;
     }   
 #endif
@@ -186,30 +184,30 @@ void MQTT_CLIENT_iothub_connect(char* deviceID)
     MQTT_CreateConnectPacket(&cloudConnectPacket);
 }
 
-bool MQTT_CLIENT_iothub_subscribe()
+bool MQTT_CLIENT_pnp_subscribe()
 {
     mqttSubscribePacket cloudSubscribePacket = { 0 };
     // Variable header   
     cloudSubscribePacket.packetIdentifierLSB = 1;
     cloudSubscribePacket.packetIdentifierMSB = 0;
 
-    cloudSubscribePacket.subscribePayload[0].topic = (uint8_t*) AZ_IOT_HUB_CLIENT_METHODS_SUBSCRIBE_TOPIC;
-    cloudSubscribePacket.subscribePayload[0].topicLength = sizeof(AZ_IOT_HUB_CLIENT_METHODS_SUBSCRIBE_TOPIC) - 1;
+    cloudSubscribePacket.subscribePayload[0].topic = (uint8_t*) AZ_IOT_PNP_CLIENT_COMMANDS_SUBSCRIBE_TOPIC;
+    cloudSubscribePacket.subscribePayload[0].topicLength = sizeof(AZ_IOT_PNP_CLIENT_COMMANDS_SUBSCRIBE_TOPIC) - 1;
     cloudSubscribePacket.subscribePayload[0].requestedQoS = 0;
-    cloudSubscribePacket.subscribePayload[1].topic = (uint8_t*) AZ_IOT_HUB_CLIENT_TWIN_PATCH_SUBSCRIBE_TOPIC;
-    cloudSubscribePacket.subscribePayload[1].topicLength = sizeof(AZ_IOT_HUB_CLIENT_TWIN_PATCH_SUBSCRIBE_TOPIC) - 1;
+    cloudSubscribePacket.subscribePayload[1].topic = (uint8_t*) AZ_IOT_PNP_CLIENT_PROPERTY_PATCH_SUBSCRIBE_TOPIC;
+    cloudSubscribePacket.subscribePayload[1].topicLength = sizeof(AZ_IOT_PNP_CLIENT_PROPERTY_PATCH_SUBSCRIBE_TOPIC) - 1;
     cloudSubscribePacket.subscribePayload[1].requestedQoS = 0;
-    cloudSubscribePacket.subscribePayload[2].topic = (uint8_t*) AZ_IOT_HUB_CLIENT_TWIN_RESPONSE_SUBSCRIBE_TOPIC;
-    cloudSubscribePacket.subscribePayload[2].topicLength = sizeof(AZ_IOT_HUB_CLIENT_TWIN_RESPONSE_SUBSCRIBE_TOPIC) - 1;
+    cloudSubscribePacket.subscribePayload[2].topic = (uint8_t*) AZ_IOT_PNP_CLIENT_PROPERTY_RESPONSE_SUBSCRIBE_TOPIC;
+    cloudSubscribePacket.subscribePayload[2].topicLength = sizeof(AZ_IOT_PNP_CLIENT_PROPERTY_RESPONSE_SUBSCRIBE_TOPIC) - 1;
     cloudSubscribePacket.subscribePayload[2].requestedQoS = 0;
 
     memset(imqtt_publishReceiveCallBackTable, 0, sizeof(imqtt_publishReceiveCallBackTable));
-    imqtt_publishReceiveCallBackTable[0].topic = (uint8_t*) AZ_IOT_HUB_CLIENT_METHODS_SUBSCRIBE_TOPIC;
-    imqtt_publishReceiveCallBackTable[0].mqttHandlePublishDataCallBack = receivedFromCloud_methods;
-    imqtt_publishReceiveCallBackTable[1].topic = (uint8_t*) AZ_IOT_HUB_CLIENT_TWIN_PATCH_SUBSCRIBE_TOPIC;
+    imqtt_publishReceiveCallBackTable[0].topic = (uint8_t*) AZ_IOT_PNP_CLIENT_COMMANDS_SUBSCRIBE_TOPIC;
+    imqtt_publishReceiveCallBackTable[0].mqttHandlePublishDataCallBack = receivedFromCloud_commands;
+    imqtt_publishReceiveCallBackTable[1].topic = (uint8_t*) AZ_IOT_PNP_CLIENT_PROPERTY_PATCH_SUBSCRIBE_TOPIC;
     imqtt_publishReceiveCallBackTable[1].mqttHandlePublishDataCallBack = receivedFromCloud_patch;
-    imqtt_publishReceiveCallBackTable[2].topic = (uint8_t*) AZ_IOT_HUB_CLIENT_TWIN_RESPONSE_SUBSCRIBE_TOPIC;
-    imqtt_publishReceiveCallBackTable[2].mqttHandlePublishDataCallBack = receivedFromCloud_twin;
+    imqtt_publishReceiveCallBackTable[2].topic = (uint8_t*) AZ_IOT_PNP_CLIENT_PROPERTY_RESPONSE_SUBSCRIBE_TOPIC;
+    imqtt_publishReceiveCallBackTable[2].mqttHandlePublishDataCallBack = receivedFromCloud_property;
     MQTT_SetPublishReceptionHandlerTable(imqtt_publishReceiveCallBackTable);
 
     bool ret = MQTT_CreateSubscribePacket(&cloudSubscribePacket);
@@ -221,14 +219,14 @@ bool MQTT_CLIENT_iothub_subscribe()
     return ret;
 }
 
-void MQTT_CLIENT_iothub_connected()
+void MQTT_CLIENT_pnp_connected()
 {
-    // get the current state of the device twin
+    // get the current state of the device properties
 
-    az_result result = az_iot_hub_client_twin_document_get_publish_topic(&hub_client, twin_request_id, mqtt_get_topic_twin_buf, sizeof(mqtt_get_topic_twin_buf), NULL);
+    az_result result = az_iot_pnp_client_property_document_get_publish_topic(&pnp_client, twin_request_id, mqtt_get_topic_twin_buf, sizeof(mqtt_get_topic_twin_buf), NULL);
     if (az_result_failed(result))
     {
-        debug_printError("az_iot_hub_client_twin_document_get_publish_topic failed");
+        debug_printError("az_iot_pnp_client_twin_document_get_publish_topic failed");
         return;
     }
 
