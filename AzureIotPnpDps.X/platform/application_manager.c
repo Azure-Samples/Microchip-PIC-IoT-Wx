@@ -99,6 +99,7 @@ void application_init() {
 #if CFG_ENABLE_CLI   
 	CLI_setdeviceId(attDeviceID);
 #endif   
+	debug_setPrefix(attDeviceID);
 
 	if (!SW0_Value && SW1_Value)
 	{
