@@ -101,7 +101,7 @@ void NETWORK_wifiSslCallback(uint8_t u8MsgType, void *pvMsg)
         case M2M_SSL_RESP_SET_CS_LIST:
         {
             tstrSslSetActiveCsList *pstrCsList = (tstrSslSetActiveCsList *)pvMsg;
-            debug_printInfo("ActiveCS bitmap:%04x", pstrCsList->u32CsBMP);
+            debug_printInfo("CLOUD : ActiveCS bitmap:%04x", pstrCsList->u32CsBMP);
             
             break;
         }
@@ -113,13 +113,13 @@ void NETWORK_wifiSslCallback(uint8_t u8MsgType, void *pvMsg)
 
 void CLOUD_reset(void)
 {
-	debug_printError("CLOUD: Cloud Reset");
+	debug_printWarn("CLOUD : Cloud Reset");
 	cloudInitialized = false;
     CLOUD_disconnect();
 }
 
 uint32_t mqttTimeoutTask(void* payload) {
-	debug_printError("CLOUD: MQTT Connection Timeout");
+	debug_printError("CLOUD : MQTT Connection Timeout");
 	LED_holdRed(LED_ON);
 	CLOUD_reset();
 	waitingForMQTT = false;
@@ -127,14 +127,14 @@ uint32_t mqttTimeoutTask(void* payload) {
 }
 
 uint32_t cloudResetTask(void* payload) {
-	debug_printError("CLOUD: Reset task");
+	debug_printWarn("CLOUD : Re-initializing....");
 	cloudInitialized = reInit();
 	return 0;
 }
 
 void CLOUD_init(char* attDeviceID)
 {
-    debug_print("CLOUD_init %s", attDeviceID);
+    debug_print("CLOUD : CLOUD_init() %s", attDeviceID);
 	// Create timers for the application scheduler
 	timeout_create(&CLOUD_taskTimer, CLOUD_TASK_INTERVAL);
     deviceId = attDeviceID;
@@ -151,7 +151,7 @@ void CLOUD_init_host(char* host, char* attDeviceID, pf_MQTT_CLIENT* pf_table)
 
 static void connectMQTT()
 {
-	debug_print("CLOUD: MQTT Connect %s", mqtt_host);
+	debug_print("CLOUD : MQTT Connect %s", mqtt_host);
 
 	uint32_t currentTime = time(NULL);
 	if (currentTime > 0)
@@ -165,7 +165,7 @@ static void connectMQTT()
 
 void CLOUD_subscribe(void)
 {
-	debug_printInfo("CLOUD: Subscribe()");
+	debug_printInfo("CLOUD : Subscribe()");
     if (pf_mqtt_client->MQTT_CLIENT_subscribe() == true)
     {
         sendSubscribe = false;
@@ -174,7 +174,7 @@ void CLOUD_subscribe(void)
 
 // This forces a disconnect, which forces a reconnect...
 void CLOUD_disconnect(void) {
-	debug_printError("CLOUD: Disconnect");
+	debug_printWarn("CLOUD : Disconnect");
 	if (MQTT_GetConnectionState() == CONNECTED)
 	{
 		MQTT_Disconnect(MQTT_GetClientConnectionInfo());
@@ -222,7 +222,7 @@ static int8_t connectMQTTSocket(void)
 
 		socketState = BSD_GetSocketState(*context->tcpClientSocket);
 		if (socketState == SOCKET_CLOSED) {
-			debug_print("CLOUD: Connect socket");
+			debug_print("CLOUD : Connect socket");
 			ret = BSD_connect(*context->tcpClientSocket, (struct bsd_sockaddr*) & addr, sizeof(struct bsd_sockaddr_in));
 
 			if (ret != BSD_SUCCESS) {
@@ -244,7 +244,7 @@ uint32_t CLOUD_task(void* param)
 		if (!isResetting)
 		{
 			isResetting = true;
-			debug_printError("CLOUD: Cloud reset timer is set");
+			debug_printError("CLOUD : Cloud reset timer is set");
 			timeout_delete(&mqttTimeoutTaskTimer);
 			timeout_create(&cloudResetTaskTimer, CLOUD_RESET_TIMEOUT);
 			cloudResetTimerFlag = true;
@@ -257,7 +257,7 @@ uint32_t CLOUD_task(void* param)
 			if ((MQTT_GetConnectionState() != CONNECTED) && (cloudResetTimerFlag == false))
 			{
 				// Start the MQTT connection timeout
-				debug_printError("MQTT: MQTT reset timer is created");
+				debug_printError("MQTT  : MQTT reset timer is created");
 				timeout_create(&mqttTimeoutTaskTimer, CLOUD_MQTT_TIMEOUT_COUNT);
 				waitingForMQTT = true;
 			}
@@ -283,7 +283,7 @@ uint32_t CLOUD_task(void* param)
 		time_t theTime = time(NULL);
 		if (theTime <= 0)
 		{
-			debug_printError("CLOUD: time not ready");
+			debug_printWarn("CLOUD : time not ready");
 		}
 		else
 		{
@@ -291,7 +291,7 @@ uint32_t CLOUD_task(void* param)
 			{
 				if (lastAge != thisAge)
 				{
-					//debug_printInfo("CLOUD: Uptime %lus SocketState (%d) MQTT (%d)", thisAge, socketState, MQTT_GetConnectionState());
+					//debug_printInfo("CLOUD : Uptime %lus SocketState (%d) MQTT (%d)", thisAge, socketState, MQTT_GetConnectionState());
 					lastAge = thisAge;
 				}
 			}
@@ -349,7 +349,7 @@ uint32_t CLOUD_task(void* param)
 					// The Authorization timeout is set to 3600, so we need to re-connect that often
 					// ericwol: todo remove this
 					if (MQTT_getConnectionAge() > MQTT_CONN_AGE_TIMEOUT) {
-						debug_printError("MQTT: Connection aged, Uptime %lus SocketState (%d) MQTT (%d)", thisAge, socketState, MQTT_GetConnectionState());
+						debug_printError("MQTT  : Connection aged, Uptime %lus SocketState (%d) MQTT (%d)", thisAge, socketState, MQTT_GetConnectionState());
 						MQTT_Disconnect(mqttConnnectionInfo);
 						BSD_close(*mqttConnnectionInfo->tcpClientSocket);
 					}
@@ -384,13 +384,13 @@ static void dnsHandler(uint8_t* domainName, uint32_t serverIP)
 	{
 		dnsRetryDelay = 0;
 		mqttHostIP = serverIP;
-		debug_printInfo("CLOUD: mqttHostIP %s = (%lu.%lu.%lu.%lu)", domainName, (0x0FF & (serverIP)), (0x0FF & (serverIP >> 8)), (0x0FF & (serverIP >> 16)), (0x0FF & (serverIP >> 24)));
+		debug_printGood("CLOUD : mqttHostIP %s = (%lu.%lu.%lu.%lu)", domainName, (0x0FF & (serverIP)), (0x0FF & (serverIP >> 8)), (0x0FF & (serverIP >> 16)), (0x0FF & (serverIP >> 24)));
 	}
 }
 
 static uint8_t reInit(void)
 {
-	debug_printInfo("CLOUD: reinit");
+	debug_printInfo("CLOUD : reinit() : Enter");
 
 	shared_networking_params.haveAPConnection = 0;
 	waitingForMQTT = false;
@@ -413,13 +413,13 @@ static uint8_t reInit(void)
 	if ((strcmp(ssid, "") != 0) && (strcmp(authType, "") != 0))
 	{
 		wifi_creds = NEW_CREDENTIALS;
-		debug_printInfo("Connecting to AP with new credentials");
+		debug_printInfo("WiFi  : Connecting to %s with new credentials", ssid);
 	}
 	// This works provided the board had connected to the AP successfully	
 	else
 	{
 		wifi_creds = DEFAULT_CREDENTIALS;
-		debug_printInfo("Connecting to AP with the last used credentials");
+		debug_printInfo("WiFi  : Connecting to AP with the last used credentials");
 	}
 
 	if (!wifi_connectToAp(wifi_creds))
@@ -428,7 +428,7 @@ static uint8_t reInit(void)
 	}
 
 	timeout_delete(&cloudResetTaskTimer);
-	debug_printInfo("CLOUD: Cloud reset timer is deleted");
+	debug_printInfo("CLOUD : Cloud reset timer is deleted");
 	timeout_create(&mqttTimeoutTaskTimer, CLOUD_MQTT_TIMEOUT_COUNT);
 	cloudResetTimerFlag = false;
 	waitingForMQTT = true;

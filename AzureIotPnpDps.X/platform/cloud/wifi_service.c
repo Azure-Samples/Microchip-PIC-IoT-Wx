@@ -63,7 +63,7 @@ void wifi_reinit()
 {
     tstrWifiInitParam param;
 
-	debug_printInfo("WiFi: reinit()");
+	debug_printInfo("WiFi  : reinit() : Enter");
 
 	LED_stopBlinkingAndSetBlue(LED_OFF);
 
@@ -71,7 +71,7 @@ void wifi_reinit()
 	{
 		LED_startBlinkingBlue(LED_SOFT_AP);
 		enable_provision_ap();
-		debug_printInfo("ACCESS POINT MODE for provisioning");
+		debug_printInfo("WiFi  : ACCESS POINT MODE for provisioning");
 	}
 	else
 	{
@@ -110,7 +110,7 @@ void wifi_init(void (*funcPtr)(uint8_t), uint8_t mode) {
 	if (isSoftAP)
 	{
 		enable_provision_ap();
-		debug_printInfo("ACCESS POINT MODE for provisioning");
+		debug_printInfo("WiFi  : ACCESS POINT MODE for provisioning");
 	}
 	else
 	{
@@ -123,8 +123,6 @@ void wifi_init(void (*funcPtr)(uint8_t), uint8_t mode) {
 bool wifi_connectToAp(uint8_t passed_wifi_creds)
 {
 	int8_t e = 0;
-
-//	debug_printInfo("WiFi: %s", __func__);
 
 	m2m_wifi_configure_sntp((char*)"time.nist.gov", 18, SNTP_ENABLE_DHCP);
 	//e = m2m_wifi_set_device_name((uint8*)"01233EAD58E86797FE", strlen("01233EAD58E86797FE"));
@@ -140,7 +138,7 @@ bool wifi_connectToAp(uint8_t passed_wifi_creds)
 
 	if (M2M_SUCCESS != e)
 	{
-		debug_printError("WIFI: wifi error = %d", e);
+		debug_printError("WiFi  : WIFI: wifi error = %d", e);
 		shared_networking_params.haveERROR = 1;
         LED_holdBlue(LED_OFF);
 		return false;
@@ -153,11 +151,11 @@ uint32_t softApConnectTask(void* param)
 {
 	if (!wifi_connectToAp((uint8_t)NEW_CREDENTIALS))
 	{
-		debug_printError("WIFI: Soft AP Connect Failure");
+		debug_printError("WiFi  : SoftAP : Connect Failure");
 	}
 	else
 	{
-		debug_printInfo("SOFT AP: New Connect credentials sent WINC");
+		debug_printInfo("WiFi  : SoftAP : New Connect credentials sent WINC");
 	}
 	return SOFT_AP_CONNECT_RETRY_INTERVAL;
 }
@@ -166,13 +164,11 @@ bool wifi_disconnectFromAp(void)
 {
 	int8_t m2mDisconnectError;
 
-//	debug_printInfo("\r\n==========================\r\n%s()\r\n==========================\r\n", __func__);
-
 	if (shared_networking_params.haveAPConnection == 1)
 	{
 		if (M2M_SUCCESS != (m2mDisconnectError = m2m_wifi_disconnect()))
 		{
-			debug_printError("WIFI: Disconnect from AP error = %d", m2mDisconnectError);
+			debug_printError("WIFI  : Disconnect from AP error = %d", m2mDisconnectError);
 			return false;
 		}
 	}
@@ -197,7 +193,7 @@ uint32_t wifiHandlerTask(void* param)
 
 uint32_t checkBackTask(void* param)
 {
-	debug_printError("wifi_cb: M2M_WIFI_RESP_CON_STATE_CHANGED: DISCONNECTED");
+	debug_printError("WiFi  : wifi_cb: M2M_WIFI_RESP_CON_STATE_CHANGED: DISCONNECTED");
 	shared_networking_params.haveAPConnection = 0;
 	shared_networking_params.haveERROR = 1;
 	shared_networking_params.amDisconnecting = 0;
@@ -225,7 +221,7 @@ static void wifiCallback(uint8_t msgType, void* pMsg)
 				application_post_provisioning();
 			}
 			shared_networking_params.haveAPConnection = 1;
-			debug_printGOOD("wifi_cb: M2M_WIFI_RESP_CON_STATE_CHANGED: CONNECTED");
+			debug_printGood("WiFi  : wifi_cb: M2M_WIFI_RESP_CON_STATE_CHANGED: CONNECTED");
 			CREDENTIALS_STORAGE_clearWifiCredentials();
 			// We need more than AP to have an APConnection, we also need a DHCP IP address!
 			if (LED_isBlinkingBlue() == true)
@@ -239,7 +235,7 @@ static void wifiCallback(uint8_t msgType, void* pMsg)
 			//if (pstrWifiState->u8ErrCode != M2M_ERR_NONE)
 			{
 				// To Do : Blink Red LED
-				debug_printError("wifi_cb: M2M_WIFI_RESP_CON_STATE_CHANGED: DISCONNECTED: Err %d", pstrWifiState->u8ErrCode);
+				debug_printError("WiFi  : wifi_cb: M2M_WIFI_RESP_CON_STATE_CHANGED: DISCONNECTED: Err %d", pstrWifiState->u8ErrCode);
 			}
 			LED_stopBlinkingAndSetBlue(LED_OFF);
 			timeout_create(&checkBackTimer, CLOUD_WIFI_TASK_INTERVAL);
@@ -278,7 +274,6 @@ static void wifiCallback(uint8_t msgType, void* pMsg)
 	case M2M_WIFI_RESP_PROVISION_INFO:
 	{
 		tstrM2MProvisionInfo* pstrProvInfo = (tstrM2MProvisionInfo*)pMsg;
-		//debug_printInfo("==> Message Type M2M_WIFI_RESP_PROVISION_INFO");
 
 		if (pstrProvInfo->u8Status == M2M_SUCCESS)
 		{
@@ -295,7 +290,6 @@ static void wifiCallback(uint8_t msgType, void* pMsg)
 
 	case M2M_WIFI_REQ_DHCP_CONF:
 	{
-		//debug_printInfo("==> Message Type M2M_WIFI_REQ_DHCP_CONF");
 		break;
 	}
 
@@ -305,17 +299,17 @@ static void wifiCallback(uint8_t msgType, void* pMsg)
 
 		if (connResp->s8ErrorCode == M2M_DEFAULT_CONN_EMPTY_LIST)
 		{
-			debug_printError("WiFi: Network List Empty");
+			debug_printError("WiFi  : Network List Empty");
 			LED_holdRed(LED_ON);
 		}
 		else if (connResp->s8ErrorCode == M2M_DEFAULT_CONN_SCAN_MISMATCH)
 		{
-			debug_printError("WiFi: Network not found");
+			debug_printError("WiFi  : Network not found");
 			LED_holdRed(LED_ON);
 		}
 		else
 		{
-			debug_printInfo("WiFi: %d", connResp->s8ErrorCode);
+			debug_printInfo("WiFi  : %d", connResp->s8ErrorCode);
 		}
 		break;
 	}

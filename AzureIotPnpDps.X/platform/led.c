@@ -101,7 +101,7 @@ void LED_holdBlue(bool setLed)
 	// if blinking, WiFi is in AP mode
 	if (isSoftAp != true)
 	{
-//		debug_printGOOD("LED (B): Hold LED On? %d", !setLed);
+		debug_printInfo("LED(B): Turn %s", setLed == LED_ON?"On":"Off");
 		if (setLed == LED_ON)
 		{
 			LATCbits.LATC5 = 0; /* set LED_GREEN output low */
@@ -114,7 +114,7 @@ void LED_holdBlue(bool setLed)
 	}
 	else
 	{
-//		debug_printGOOD("LED (B): IsBlinking");
+		debug_printInfo("LED(B): IsBlinking");
 	}
 	
 }
@@ -132,7 +132,7 @@ bool LED_isBlinkingBlue(void)
 
 void LED_startBlinkingBlue(bool softAp)
 {
-//	debug_printGOOD("LED (B): Start Blink : Soft AP? %d", softAp);
+	debug_printInfo("LED(B): Start Blink : WiFi SoftAP? %s", softAp == true? "True":"False");
 
 	if (isLedBlinking_blue)
 	{
@@ -155,7 +155,7 @@ void LED_startBlinkingBlue(bool softAp)
 
 void LED_stopBlinkingAndSetBlue(bool setLed)
 {
-//	debug_printGOOD("LED (B): Stop Blink isBlinking? %x Soft AP? %x LED ON? %x", isLedBlinking_blue, isSoftAp, !setLed);
+	debug_printInfo("LED(B): Stop Blink isBlinking? %s", isLedBlinking_blue == true ? "True":"False");
 	if (isLedBlinking_blue && !isSoftAp)
 	{
 		// don't stop blink if the device is in Soft AP mode
@@ -170,7 +170,7 @@ void LED_stopBlinkingAndSetBlue(bool setLed)
 *************************************************/
 void LED_holdGreen(bool setLed)
 {
-//	debug_printGOOD("LED (G): Hold LED On? %d", !setLed);
+	debug_printInfo("LED(G): Turn %s", setLed == LED_ON?"On":"Off");
 
 	if (setLed == LED_ON)
 	{
@@ -196,7 +196,7 @@ bool LED_isBlinkingGreen(void)
 
 void LED_startBlinkingGreen(bool provisioning)
 {
-//	debug_printGOOD("LED (G): Start Blink Provisioning? %x", provisioning);
+	debug_printInfo("LED(G): Start Blink Provisioning? %s", provisioning == true?"True":"False");
 
 	if (isLedBlinking_green)
 	{
@@ -219,7 +219,7 @@ void LED_startBlinkingGreen(bool provisioning)
 
 void LED_stopBlinkingAndSetGreen(bool setLed)
 {
-//	debug_printGOOD("LED (G): Stop Blink isBlinking? %x LED ON? %x", isLedBlinking_green, !setLed);
+	debug_printInfo("LED(G): Stop Blink isBlinking? %s", isLedBlinking_green == true ? "True":"False");
 	if (isLedBlinking_green == true)
 	{
 		timeout_delete(&blinkTimer_green);
@@ -233,7 +233,7 @@ void LED_stopBlinkingAndSetGreen(bool setLed)
 *************************************************/
 void LED_holdRed(bool setLed)
 {
-//	debug_printGOOD("LED (R): Hold LED On? %d", !setLed);
+	debug_printInfo("LED(R): Turn %s", setLed == LED_ON?"On":"Off");
 
 	if (setLed == LED_ON)
 	{
@@ -259,7 +259,7 @@ bool LED_isBlinkingRed(void)
 
 void LED_startBlinkingRed(void)
 {
-//	debug_printGOOD("LED (R): Start Blink");
+	debug_printInfo("LED(R): Start Blink");
 	timeout_create(&blinkTimer_red, LED_100ms_INTERVAL);
 	isLedBlinking_red = true;
 	led_change.red = 1;
@@ -267,7 +267,7 @@ void LED_startBlinkingRed(void)
 
 void LED_stopBlinkingAndSetRed(bool setLed)
 {
-//	debug_printGOOD("LED (R): Stop Blink isBlinking? %x %x LED ON? %x", isLedBlinking_blue, !setLed);
+	debug_printInfo("LED(R): Stop Blink isBlinking? %s", isLedBlinking_blue== true ? "True":"False");
 
 	timeout_delete(&blinkTimer_red);
 	isLedBlinking_red = false;
@@ -279,7 +279,7 @@ void LED_stopBlinkingAndSetRed(bool setLed)
 *************************************************/
 void LED_holdYellow(bool setLed)
 {
-//	debug_printGOOD("LED (Y): Hold LED On? %d", !setLed);
+	debug_printInfo("LED(Y): Turn %s", setLed == LED_ON?"On":"Off");
 	if (setLed == LED_ON)
 	{
 		LATCbits.LATC3 = 0; /* set LED_RED output low */
@@ -304,7 +304,7 @@ bool LED_isBlinkingYellow(void)
 
 void LED_startBlinkingYellow(void)
 {
-//	debug_printGOOD("LED (Y): Start Blink");
+	debug_printInfo("LED(Y): Start Blink");
 	timeout_create(&blinkTimer_yellow, LED_200ms_INTERVAL);
 	isLedBlinking_yellow = true;
 	led_change.yellow = 1;
@@ -312,7 +312,7 @@ void LED_startBlinkingYellow(void)
 
 void LED_stopBlinkingAndSetYellow(bool setLed)
 {
-//	debug_printGOOD("LED (Y): Stop Blink isBlinking? %x %x LED ON? %x", isLedBlinking_yellow, !setLed);
+	debug_printInfo("LED(Y): Stop Blink isBlinking? %s", isLedBlinking_yellow == true ? "True":"False");
 
 	timeout_delete(&blinkTimer_yellow);
 	isLedBlinking_yellow = false;

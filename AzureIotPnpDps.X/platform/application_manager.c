@@ -57,13 +57,13 @@ void application_init() {
 	CLI_setdeviceId(attDeviceID);
 #endif   
 	debug_init(attDeviceID);
-	//debug_setSeverity(SEVERITY_DEBUG);
+	debug_setSeverity(SEVERITY_DEBUG);
 	
 	// Initialization of modules where the init needs interrupts to be enabled
 	cryptoauthlib_init();
 	if (cryptoDeviceInitialized == false)
 	{
-		debug_printError("APP: CryptoAuthInit failed");
+		debug_printError("APP   : CryptoAuthInit failed");
 	}
 	
 #ifdef HUB_DEVICE_ID
@@ -76,12 +76,12 @@ void application_init() {
 		switch (retValCryptoClientSerialNumber)
 		{
 		case ATCA_GEN_FAIL:
-			debug_printError("APP: DeviceID generation failed, unspecified error");
+			debug_printError("APP   : DeviceID generation failed, unspecified error");
 			break;
 		case ATCA_BAD_PARAM:
-			debug_printError("APP: DeviceID generation failed, bad argument");
+			debug_printError("APP   : DeviceID generation failed, bad argument");
 		default:
-			debug_printError("APP: DeviceID generation failed");
+			debug_printError("APP   : DeviceID generation failed");
 			break;
 		}
 	}
@@ -99,12 +99,11 @@ void application_init() {
 #if CFG_ENABLE_CLI   
 	CLI_setdeviceId(attDeviceID);
 #endif   
-	debug_setPrefix(attDeviceID);
 
 	if (!SW0_Value && SW1_Value)
 	{
 		//SW0 only
-		debug_print("WIFI_SOFT_AP");
+		debug_printGood("APP   : Starting WIFI_SOFT_AP");
 		mode = WIFI_SOFT_AP;
 	}
 	else if (SW0_Value && !SW1_Value)
@@ -122,7 +121,7 @@ void application_init() {
 	strcpy(ssid, CFG_MAIN_WLAN_SSID);
 	strcpy(pass, CFG_MAIN_WLAN_PSK);
 
-	debug_print("WiFi: SSID : %s PSW %s", ssid, pass);
+	debug_printGood("APP   : WiFi  : SSID : %s PSW %s", ssid, pass);
 
 	wifi_init(wifiConnectionStateChanged, mode);
 

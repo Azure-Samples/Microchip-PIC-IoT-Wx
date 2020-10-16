@@ -29,7 +29,7 @@
 #include <stdint.h>
 #include <string.h>
 #include <stdio.h>
-
+#include <ctype.h>
 #include "../drivers/timeout.h"
 #include "../delay.h"
 #include "../drivers/uart.h"
@@ -47,7 +47,7 @@
 #define WIFI_PARAMS_WEP     3
 #define MAX_COMMAND_SIZE        100
 #define MAX_PUB_KEY_LEN         200
-#define NEWLINE "\r\n"
+#define NEWLINE "\r\n\4"
 
 #define UNKNOWN_CMD_MSG "--------------------------------------------" NEWLINE\
                         "Unknown command. List of available commands:" NEWLINE\
@@ -58,10 +58,10 @@
                         "version" NEWLINE\
                         "cli_version" NEWLINE\
                         "wifi <ssid>[,<pass>,[authType]]" NEWLINE\
-                        "debug" NEWLINE\
-                        "led <led>,<state>" NEWLINE\
-                        "idscope <idscope>" NEWLINE\
-                        "--------------------------------------------"NEWLINE"\4"
+                        "debug <Debug Level : 0 ~ 4>" NEWLINE\
+                        "led <led : 1 ~ 4>,<state : 1 ~ 4> [-? for help]" NEWLINE\
+                        "idscope <DPS ID Scope>" NEWLINE\
+                        "--------------------------------------------" NEWLINE
 
 static char command[MAX_COMMAND_SIZE];
 static bool isCommandReceived = false;
@@ -109,6 +109,23 @@ const struct cmd commands[] =
     { "debug",       set_debug_level },
     { "led",         set_led },
     { "idscope",     get_set_idscope }
+};
+
+const char* led_string[] = 
+{
+    "Blue",
+    "Green",
+    "Yellow",
+    "Red"
+};
+
+const char* debug_level[] = 
+{
+   "SEVERITY_NONE",
+   "SEVERITY_ERROR",
+   "SEVERITY_WARN",
+   "SEVERITY_DEBUG",
+   "SEVERITY_INFO"
 };
 
 void CLI_init(void)
@@ -249,7 +266,7 @@ static void reconnect_cmd(char *pArg)
     (void)pArg;
 
     MQTT_Disconnect(MQTT_GetClientConnectionInfo());
-    printf("OK\r\n");
+    printf("OK\r\n\4");
 }
 
 static void reset_cmd(char *pArg)
@@ -262,17 +279,23 @@ static void reset_cmd(char *pArg)
 
 static void set_debug_level(char *pArg)
 {
-   debug_severity_t level = SEVERITY_NONE;
-   if(*pArg >= '0' && *pArg <= '4')
-   {
-      level = *pArg - '0';
-      debug_setSeverity(level);
-      printf("OK\r\n");
-   }
-   else
-   {
-      printf("debug parameter must be between 0 (Least) and 4 (Most) \r\n");
-   }
+    debug_severity_t level = SEVERITY_NONE;
+
+    if (pArg == NULL)
+    {
+        level = debug_getSeverity();
+        printf("Current Debug Level = %s (%d)"NEWLINE, debug_level[level], level);
+    }
+    else if(*pArg >= '0' && *pArg <= '4')
+    {
+        level = *pArg - '0';
+        debug_setSeverity(level);
+        printf("OK\r\n\4");
+    }
+    else
+    {
+        printf("debug parameter must be between 0 (Least) and 4 (Most) \r\n\4");
+    }
 }
 
 static void get_public_key(char *pArg)
@@ -321,9 +344,22 @@ static void get_firmware_version(char *pArg)
     printf("v%s\r\n\4", firmware_version_number);
 }
 
-static void set_led(char *pArg)
+static void print_led_help(char* msg)
 {
-    //   LED
+    if (msg)
+    {
+        printf(msg);
+    }
+    printf("led <LED Number>,<LED State>"NEWLINE);
+    printf("|1\t|2\t|3\t|4"NEWLINE);
+    printf("|Blue\t|Greent\t|Yellow\tRed"NEWLINE);
+    printf("|On\t|Off\t|Blink\t|Stop Blink"NEWLINE);
+    return;
+}
+
+static void set_led(char *pArg)
+    {
+    //   LED number
     //   1 = Blue
     //   2 = Green
     //   3 = Yellow
@@ -340,7 +376,10 @@ static void set_led(char *pArg)
     uint8_t led_num = 0;
     uint8_t led_state = 0;
 
-    for(i=0;i<=2;i++)led_param[i]='\0';
+    for(i = 0 ; i <= 2 ; i++)
+    {
+        led_param[i]='\0';
+    }
 
     pch = strtok (pArg, ",");
     led_param[0]=pch;
@@ -349,12 +388,37 @@ static void set_led(char *pArg)
     {
         led_param[params] = pch;
         params++;
-        pch = strtok (NULL, ",");
+        pch = strtok(NULL, ",");
     }
 
-    if (led_param[0] != NULL && led_param[1] != NULL)
+    if (params == 1)
     {
+        if (led_param[0][0] == '-' && (led_param[0][1] == 'h' || led_param[0][1] == 'H' || led_param[0][1] == '?'))
+        {
+            return print_led_help(NULL);
+        }
+    }
+
+    if (led_param[0] != NULL)
+    {
+        printf("%s" NEWLINE, led_param[0]);
+        if (led_param[0][0] == '-' && (led_param[0][1] == 'h' || led_param[0][1] == 'H' || led_param[0][1] == '?'))
+        {
+            return print_led_help(NULL);
+        }
+        else if (!isDigit((int)led_param[0])) {
+            printf("param 0 -%x-"NEWLINE, (int)led_param[0]);
+            return print_led_help("Please provide LED Number" NEWLINE);
+        }
         led_num = atoi(led_param[0]);
+    }
+
+    if (led_param[1] != NULL)
+    {
+        printf("%s" NEWLINE, led_param[1]);
+        if (!isDigit((int)led_param[1])) {
+            return print_led_help("Please provide LED State Number" NEWLINE);
+        }
         led_state = atoi(led_param[1]);
     }
 
@@ -362,10 +426,10 @@ static void set_led(char *pArg)
     {
         case 1:
             // turn on LED
+            printf("%s On" NEWLINE, led_string[led_num]);
             switch (led_num)
             {
                 case 1:
-                    printf("Hold Blue");
                     LED_holdBlue(LED_ON);
                     break;
                 case 2:
@@ -379,8 +443,10 @@ static void set_led(char *pArg)
                     break;
             }
             break;
+
         case 2:
-            // turn on LED
+            // turn off LED
+            printf("%s Off" NEWLINE, led_string[led_num]);
             switch (led_num)
             {
                 case 1:
@@ -397,8 +463,10 @@ static void set_led(char *pArg)
                     break;
             }
             break;
+
         case 3:
-            // turn on LED
+            // Start blink
+            printf("%s start blinking" NEWLINE, led_string[led_num]);
             switch (led_num)
             {
                 case 1:
@@ -415,8 +483,10 @@ static void set_led(char *pArg)
                     break;
             }
             break;
+
         case 4:
-            // turn on LED
+            // Stop blink
+            printf("%s stop blinking" NEWLINE, led_string[led_num]);
             switch (led_num)
             {
                 case 1:
@@ -440,37 +510,48 @@ static void set_led(char *pArg)
 
 static void get_set_idscope(char *pArg)
 {
-    char *dps_param[2];
-    char *pch;
+    char *dps_param;
     uint8_t i;
-    uint8_t params = 0;
     char atca_id_scope[12]; //idscope 0ne001825F3
 
-    for(i=0;i<=1;i++)dps_param[i]='\0';
+    dps_param = pArg;
 
-    pch = strtok (pArg, ",");
-    dps_param[0]=pch;
-       
-    while (pch != NULL && params <= 1)
+    if (dps_param == NULL)
     {
-        dps_param[params] = pch;
-        params++;
-        pch = strtok (NULL, ",");
-    }
-
-    if (dps_param[0] == NULL)
-    {
-        // Read the ID Scope from the secure element (e.g. ATECC608A)
         atcab_read_bytes_zone(ATCA_ZONE_DATA, ATCA_SLOT_IDSCOPE, 0, (uint8_t*)atca_id_scope, sizeof(atca_id_scope));
-        printf("ID Scope = %s\r\n", atca_id_scope);
+        printf("Current ID Scope : %s" NEWLINE, atca_id_scope);
     }
     else
     {
-        atca_id_scope[11] = '\0';
-        // Can execute this once to write a default ID Scope to the secure element
-        printf("Setting ID Scope = %s\r\n", dps_param[0]);
-	    atcab_write_bytes_zone(ATCA_ZONE_DATA, ATCA_SLOT_IDSCOPE, 0, (uint8_t*)dps_param[0], sizeof(atca_id_scope));
+        if (strlen(dps_param) != 11)
+        {
+            printf("ID Scope entered : %s. Wrong ID Scope length.  Should be 0neXXXXXXXX format" NEWLINE, dps_param);
+            return;
+        }
+
+        if (dps_param[0] != '0' || dps_param[1] != 'n' || dps_param[2] != 'e')
+        {
+            printf("ID Scope entered : %s. ID Scope should start with 0ne" NEWLINE, dps_param);
+            return;
+        }
+
+        for (i = 3 ; i < 10 ; i++)
+        {
+            if (!isalnum(dps_param[i]))
+            {
+                printf("ID Scope entered : %s. Non-alpha numberic letter detected.  Should be 0neXXXXXXXX format" NEWLINE, dps_param);
+                return;
+            }
+        }
+
+        printf("Writing ID Scope %s to ATCA" NEWLINE, dps_param);
+        atcab_write_bytes_zone(ATCA_ZONE_DATA, ATCA_SLOT_IDSCOPE, 0, (uint8_t*)dps_param, sizeof(atca_id_scope));
+        DELAY_milliseconds(500);
+        atcab_read_bytes_zone(ATCA_ZONE_DATA, ATCA_SLOT_IDSCOPE, 0, (uint8_t*)atca_id_scope, sizeof(atca_id_scope));
+        printf("New ID Scope : %s" NEWLINE, atca_id_scope);
     }
+
+    return;
 }
 
 static void command_received(char *command_text)

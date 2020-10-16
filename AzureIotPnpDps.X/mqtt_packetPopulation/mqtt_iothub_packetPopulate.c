@@ -98,6 +98,7 @@ void MQTT_CLIENT_iothub_publish(uint8_t* data, uint16_t len)
 
 	if (!bRet)
 	{
+		debug_printError("IOTHUB: Publish failed");
     	LED_holdRed(LED_ON);
 	}
 }
@@ -121,7 +122,7 @@ void MQTT_CLIENT_iothub_connect(char* deviceID)
 	az_iot_hub_client_options options = az_iot_hub_client_options_default();
 	options.model_id = device_model_id;
 
-	debug_printInfo("IOTHUB: CONNECT");
+	debug_printGood("IOTHUB: Connecting to %s", hub_hostname);
 	LED_startBlinkingGreen(false);
 
 	if (az_result_failed(rc = az_iot_hub_client_init(&hub_client, iothub_hostname, device_id, &options)))
@@ -146,7 +147,7 @@ void MQTT_CLIENT_iothub_connect(char* deviceID)
         result = az_iot_hub_client_sas_get_signature(&hub_client, expire_time, signature, &signature); 
         if (az_failed(result))
         {
-            debug_printError("az_iot_hub_client_sas_get_signature failed");
+            debug_printError("IOTHUB: az_iot_hub_client_sas_get_signature failed");
             return;
         }
 
@@ -158,7 +159,7 @@ void MQTT_CLIENT_iothub_connect(char* deviceID)
         ATCA_STATUS atca_status = atcab_sha_hmac(signature_buf, az_span_size(signature), ATCA_TEMPKEY_KEYID, hash, SHA_MODE_TARGET_OUT_ONLY);
         if (atca_status != ATCA_SUCCESS)
         {
-            debug_printError("atcab_sha_hmac failed");
+            debug_printError("IOTHUB: atcab_sha_hmac failed");
             return;
         }
 
@@ -171,7 +172,7 @@ void MQTT_CLIENT_iothub_connect(char* deviceID)
         result = az_iot_hub_client_sas_get_password(&hub_client, signature_hash, expire_time, AZ_SPAN_NULL, mqtt_password_buf, sizeof(mqtt_password_buf), &mqtt_password_buf_len);
         if (az_failed(result))
         {
-            debug_printError("az_iot_hub_client_sas_get_password failed");
+            debug_printError("IOTHUB: az_iot_hub_client_sas_get_password failed");
             return;
         }	 
         cloudConnectPacket.password = (uint8_t*)mqtt_password_buf;
@@ -192,6 +193,7 @@ void MQTT_CLIENT_iothub_connect(char* deviceID)
 
 	if (!bRet)
 	{
+		debug_printError("IOTHUB: Connect failed");
     	LED_holdRed(LED_ON);
 	}
 }
@@ -201,7 +203,7 @@ bool MQTT_CLIENT_iothub_subscribe()
 	bool bRet = false; // assume failure
 	mqttSubscribePacket cloudSubscribePacket = { 0 };
 
-	debug_printInfo("IOTHUB: SUBSCRIBE");
+	debug_printInfo("IOTHUB: Subscribe");
 	// Variable header	 
 	cloudSubscribePacket.packetIdentifierLSB = 1;
 	cloudSubscribePacket.packetIdentifierMSB = 0;
@@ -226,11 +228,10 @@ bool MQTT_CLIENT_iothub_subscribe()
 	MQTT_SetPublishReceptionHandlerTable(imqtt_publishReceiveCallBackTable);
 
 	bRet = MQTT_CreateSubscribePacket(&cloudSubscribePacket);
+
 	if (bRet == true)
 	{
-    	debug_printInfo("IOTHUB: SUBSCRIBE packet created");
-	}
-	else {
+    	debug_printError("IOTHUB: Subscribe failed");
 	    LED_holdRed(LED_ON);
 	}
 
@@ -242,7 +243,7 @@ void MQTT_CLIENT_iothub_connected()
 	az_result rc;
 	bool bRet = false; // assume failure
 
-	debug_printInfo("IOTHUB: CONNECTED");
+	debug_printGood("IOTHUB: Connected");
 
 	// get the current state of the device twin
 	if (az_result_failed(rc = az_iot_hub_client_twin_document_get_publish_topic(&hub_client, twin_request_id, mqtt_get_topic_twin_buf, sizeof(mqtt_get_topic_twin_buf), NULL)))
@@ -278,6 +279,7 @@ void MQTT_CLIENT_iothub_connected()
         LED_stopBlinkingAndSetGreen(LED_ON);
 	}
 	else {
+		debug_printError("IOTHUB: Get Twin failed");
     	LED_holdRed(LED_ON);
 	}
 	
