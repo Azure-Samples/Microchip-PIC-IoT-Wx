@@ -1285,14 +1285,6 @@ int main(void)
 
 	// Initialize the device
 	SYSTEM_Initialize();
-
-	printf("======================================================================\r\n\4");
-	printf("\r\n\4");
-	printf("                       Microchip PiC IOT\r\n\4");
-	printf("                            Booting...\r\n\4");
-	printf("\r\n\4");
-	printf("======================================================================\r\n\4");
-
 	application_init();
 
 	// Can execute this once to write a default ID Scope to the secure element or set it with CLI
