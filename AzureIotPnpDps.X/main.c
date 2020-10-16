@@ -22,15 +22,12 @@
 #include "azure/iot/az_iot_hub_client.h"
 #include "main.h"
 
-#define DEFAULT_START_TEMP_CELSIUS 22
-#define DEBOUNCE_DLY_MSEC 50 // Delay to prevent switch debouncing on release
-
 extern az_iot_hub_client hub_client;
 extern pf_MQTT_CLIENT pf_mqtt_iotprovisioning_client;
 extern pf_MQTT_CLIENT pf_mqtt_iothub_client;
 extern led_change_t led_change;
 
-static int rebootDelay = 5; // default = 5 sec
+static int rebootDelay = 0;
 static uint32_t reboot_task(void* payload);
 static timerStruct_t reboot_timer = { reboot_task };
 
@@ -532,7 +529,6 @@ static void handle_command_message(
     az_result response = process_getMaxMinReport(payload, command_response_span, &command_response_span);
     if (response != AZ_OK)
     {
-      printf("Error %x\r\n\4", response);
       return_code = 404;
     }
     else

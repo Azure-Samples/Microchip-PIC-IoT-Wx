@@ -350,6 +350,7 @@ static void print_led_help(char* msg)
     {
         printf(msg);
     }
+    printf("==============================================="NEWLINE);
     printf("led <LED Number>,<LED State>"NEWLINE);
     printf("|1\t|2\t|3\t|4"NEWLINE);
     printf("|Blue\t|Greent\t|Yellow\tRed"NEWLINE);
@@ -401,25 +402,31 @@ static void set_led(char *pArg)
 
     if (led_param[0] != NULL)
     {
-        printf("%s" NEWLINE, led_param[0]);
         if (led_param[0][0] == '-' && (led_param[0][1] == 'h' || led_param[0][1] == 'H' || led_param[0][1] == '?'))
         {
             return print_led_help(NULL);
         }
-        else if (!isDigit((int)led_param[0])) {
-            printf("param 0 -%x-"NEWLINE, (int)led_param[0]);
+        else if (!isDigit((int)led_param[0][0])) {
             return print_led_help("Please provide LED Number" NEWLINE);
         }
-        led_num = atoi(led_param[0]);
+        led_num = atoi(&led_param[0][0]);
     }
+    else
+    {
+        return print_led_help("Please provide LED Number" NEWLINE);
+    }
+    
 
     if (led_param[1] != NULL)
     {
-        printf("%s" NEWLINE, led_param[1]);
-        if (!isDigit((int)led_param[1])) {
+        if (!isDigit((int)led_param[1][0])) {
             return print_led_help("Please provide LED State Number" NEWLINE);
         }
-        led_state = atoi(led_param[1]);
+        led_state = atoi(&led_param[1][0]);
+    }
+    else
+    {
+        return print_led_help("Please provide LED State Number" NEWLINE);
     }
 
     switch (led_state)
