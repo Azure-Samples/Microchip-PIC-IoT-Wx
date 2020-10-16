@@ -58,7 +58,7 @@
       "@type": [
         "Property"
       ],
-      "name": "led_Green",
+      "name": "led_blue",
       "displayName": {
         "en": "Blue LED state"
       },
