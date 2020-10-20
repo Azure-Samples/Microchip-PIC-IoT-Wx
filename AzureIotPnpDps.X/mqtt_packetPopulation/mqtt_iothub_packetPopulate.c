@@ -231,7 +231,7 @@ bool MQTT_CLIENT_iothub_subscribe()
 
 	bRet = MQTT_CreateSubscribePacket(&cloudSubscribePacket);
 
-	if (bRet == true)
+	if (bRet == false)
 	{
 		debug_printError("IOTHUB: Subscribe failed");
 		LED_holdRed(LED_ON);

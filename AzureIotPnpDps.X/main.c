@@ -824,11 +824,11 @@ void check_button_status(void)
 	{
 		button_press_data.sw0_press_count++;
 		button_sw0_numPresses++;
-		debug_printGood("MAIN  : Button 0 Pressed %d %d", button_press_data.sw0_press_count, button_sw0_numPresses);
+		debug_printGood("MAIN  : Button SW0 Press Count %d Cumulative %d", button_press_data.sw0_press_count, button_sw0_numPresses);
 		button_press_data.flag.sw0_button_press = 0;
 
 		if (az_result_failed(
-			result = append_button_press_telemetry(&jw, telemetry_name_button_sw0, button_sw1_numPresses)))
+			result = append_button_press_telemetry(&jw, telemetry_name_button_sw0, button_sw0_numPresses)))
 		{
 			debug_printError("MAIN  : Could not build telemetry payload, az_result %d", result);
 			return;
@@ -839,7 +839,7 @@ void check_button_status(void)
 	{
 	button_press_data.sw1_press_count++;
 	button_sw1_numPresses++;
-	debug_printGood("MAIN  : Button 1 Pressed %d %d", button_press_data.sw1_press_count, button_sw1_numPresses);
+	debug_printGood("MAIN  : Button SW1 Press Count %d Cumulative %d", button_press_data.sw1_press_count, button_sw1_numPresses);
 	button_press_data.flag.sw1_button_press = 0;
 
 	if (az_result_failed(

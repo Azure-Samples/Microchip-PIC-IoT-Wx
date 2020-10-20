@@ -118,7 +118,7 @@ static uint32_t dps_assigning_task(void* payload)
 	az_result rc;
 	bool bRet = false;
 
-	debug_printInfo("DPS   : %s() : Enter", __func__);
+	debug_printInfo("DPS   : %s()", __func__);
 
 	if (az_result_failed(
 			rc = az_iot_provisioning_client_query_status_get_publish_topic(&provisioning_client, dps_register_response.operation_id, mqtt_dsp_topic_buf, sizeof(mqtt_dsp_topic_buf), NULL)))
@@ -194,7 +194,7 @@ void MQTT_CLIENT_iotprovisioning_connect(char* deviceID)
 	bool bRet = false; // assume failure
 	size_t mqtt_username_buf_len;
 
-	debug_printGood("DPS   : CONNECT : Enter");
+	debug_printGood("DPS   : Connect");
 
 	const az_span deviceID_parm = az_span_create_from_str(deviceID);
 	az_span device_id = AZ_SPAN_FROM_BUFFER(device_id_buf);
@@ -207,7 +207,7 @@ void MQTT_CLIENT_iotprovisioning_connect(char* deviceID)
 
 	// Read the ID Scope from the secure element (e.g. ATECC608A)
 	atcab_read_bytes_zone(ATCA_ZONE_DATA, ATCA_SLOT_DPS_IDSCOPE, 0, atca_id_scope, sizeof(atca_id_scope));
-	debug_printInfo("DPS   : ID Scope = %s", atca_id_scope);
+	debug_printGood("DPS   : ID Scope = %s", atca_id_scope);
 
 	const az_span scopeID_parm = az_span_create_from_str((char*)atca_id_scope);
 
@@ -252,7 +252,7 @@ bool MQTT_CLIENT_iotprovisioning_subscribe()
 {
 	bool bRet;
 
-	debug_printGood("DPS   : Subscribe : Enter");
+	debug_printGood("DPS   : Subscribe");
 
 	mqttSubscribePacket cloudSubscribePacket = { 0 };
 
@@ -289,7 +289,7 @@ void MQTT_CLIENT_iotprovisioning_connected()
 	az_result rc;
 	bool bRet = false; // assume failure
 
-	debug_printGood("DPS   : CONNECTED : Enter");
+	debug_printGood("DPS   : Connect");
 
 	if (az_result_failed(rc = az_iot_provisioning_client_register_get_publish_topic(&provisioning_client, mqtt_dsp_topic_buf, sizeof(mqtt_dsp_topic_buf), NULL)))
 	{
