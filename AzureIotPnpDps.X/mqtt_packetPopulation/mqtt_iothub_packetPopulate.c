@@ -57,7 +57,7 @@ void MQTT_CLIENT_iothub_publish(uint8_t* data, uint16_t len)
 	az_span properties = AZ_SPAN_FROM_BUFFER(properties_buf);
 	az_iot_message_properties properties_topic;
 
-	debug_printInfo("IOTHUB: Publish");
+	debug_printInfo("IOTHUB: %s() : Enter", __func__);
 
 	rc = az_iot_message_properties_init(&properties_topic, properties, 0);
 	if (az_result_failed(rc = az_iot_message_properties_init(&properties_topic, properties, 0)))
@@ -123,7 +123,8 @@ void MQTT_CLIENT_iothub_connect(char* deviceID)
 	az_iot_hub_client_options options = az_iot_hub_client_options_default();
 	options.model_id = device_model_id;
 
-	debug_printGood("IOTHUB: Connecting to %s", hub_hostname);
+	debug_printGood("IOTHUB: %s() : Enter : IoT Hub %s", __func__, hub_hostname);
+
 	LED_startBlinkingGreen(false);
 
 	if (az_result_failed(rc = az_iot_hub_client_init(&hub_client, iothub_hostname, device_id, &options)))
@@ -205,7 +206,7 @@ bool MQTT_CLIENT_iothub_subscribe()
 	bool bRet = false; // assume failure
 	mqttSubscribePacket cloudSubscribePacket = { 0 };
 
-	debug_printInfo("IOTHUB: Subscribe");
+	debug_printInfo("IOTHUB: %s() : Enter", __func__);
 	// Variable header
 	cloudSubscribePacket.packetIdentifierLSB = 1;
 	cloudSubscribePacket.packetIdentifierMSB = 0;
@@ -231,7 +232,7 @@ bool MQTT_CLIENT_iothub_subscribe()
 
 	bRet = MQTT_CreateSubscribePacket(&cloudSubscribePacket);
 
-	if (bRet == true)
+	if (bRet == false)
 	{
 		debug_printError("IOTHUB: Subscribe failed");
 		LED_holdRed(LED_ON);
@@ -245,7 +246,7 @@ void MQTT_CLIENT_iothub_connected()
 	az_result rc;
 	bool bRet = false; // assume failure
 
-	debug_printGood("IOTHUB: Connected");
+	debug_printGood("IOTHUB: %s() : Enter", __func__);
 
 	// get the current state of the device twin
 	if (az_result_failed(rc = az_iot_hub_client_twin_document_get_publish_topic(&hub_client, twin_request_id, mqtt_get_topic_twin_buf, sizeof(mqtt_get_topic_twin_buf), NULL)))
