@@ -177,7 +177,7 @@ int BSD_socket(int domain, int type, int protocol)
    wincSocketReturn = socket((uint16_t)wincDomain, (uint8_t)wincType, (uint8_t)wincProtocol);
    if (wincSocketReturn < 0)			   // WINC Socket Access Denied always returns -1 for failure to get socket
 	{
-      debug_printError("BSD: wincSocketReturn (%d)", wincSocketReturn);
+      debug_printError("BSD   : wincSocketReturn (%d)", wincSocketReturn);
 		bsd_setErrNo(EACCES);
 		return BSD_ERROR;
 	}       
@@ -194,7 +194,7 @@ int BSD_connect(int socket, const struct bsd_sockaddr *name, socklen_t namelen)
     packetReceptionHandler_t *bsdSocket = getSocketInfo(socket);
     if(!bsdSocket)
     {
-        debug_printError("BSD: connect error unknown socket number");
+        debug_printError("BSD   : connect error unknown socket number");
     }
     else
     {
@@ -207,7 +207,7 @@ int BSD_connect(int socket, const struct bsd_sockaddr *name, socklen_t namelen)
             wincConnectReturn = connect(socket, (struct sockaddr*)&winc_sockaddr, (uint8_t)namelen);	
             if(wincConnectReturn != WINC_SOCK_ERR_NO_ERROR)
             {
-               debug_printError("BSD: connect error %d",wincConnectReturn);
+               debug_printError("BSD   : connect error %d",wincConnectReturn);
                switch(wincConnectReturn)
                {
                   case WINC_SOCK_ERR_INVALID_ARG:
@@ -236,7 +236,7 @@ int BSD_connect(int socket, const struct bsd_sockaddr *name, socklen_t namelen)
             }
             else
             {
-               debug_printGOOD("BSD: socket (%d) in progress",*bsdSocket->socket);
+               debug_printInfo("BSD   : SOCKET (%d) IN PROGRESS",*bsdSocket->socket);
                bsdSocket->socketState = SOCKET_IN_PROGRESS;
                returnValue = BSD_SUCCESS;
             }
@@ -277,31 +277,31 @@ int BSD_recv(int socket, const void *buf, size_t len, int flags)
 			case WINC_SOCK_ERR_INVALID_ARG:
 				if(socket < 0)
 				{
-					debug_printError("BSD: ENOTSOCK");
+					debug_printError("BSD   : ENOTSOCK");
 					bsd_setErrNo(ENOTSOCK);
 				}
 				else if(buf == NULL)
 				{
-					debug_printError("BSD: EFAULT");
+					debug_printError("BSD   : EFAULT");
 					bsd_setErrNo(EFAULT);
 				}
 				else if(len == 0)
 				{
-					debug_printError("BSD: EMSGSIZE");
+					debug_printError("BSD   : EMSGSIZE");
 					bsd_setErrNo(EMSGSIZE);
 				}
 				else
 				{
-					debug_printError("BSD: EINVAL");
+					debug_printError("BSD   : EINVAL");
 					bsd_setErrNo(EINVAL);
 				}
 			break;
 			case WINC_SOCK_ERR_BUFFER_FULL:
-			    debug_printError("BSD: BSD: ERR_BUFFER_FULL");
+			    debug_printError("BSD   : BSD   : ERR_BUFFER_FULL");
 				bsd_setErrNo(ENOBUFS);
 			break;
             default:
-				debug_printError("BSD: BSD: (%d)", wincRecvReturn);
+				debug_printError("BSD   : BSD   : (%d)", wincRecvReturn);
             break;
 		}
 		return BSD_ERROR;
@@ -310,7 +310,7 @@ int BSD_recv(int socket, const void *buf, size_t len, int flags)
 	{
 		// The socket.c send() API only returns (0) to indicate No Error
 		// Current WINC implementation doesn't use returned value per BSD.
-		// debug_printGOOD("BSD: Recv Success");
+		// debug_printGood("BSD   : Recv Success");
 		 
 		// TODO: Number of Bytes received should be returned in correct implementation.
 		return BSD_SUCCESS;
@@ -321,7 +321,7 @@ int BSD_close(int socket)
 {
    wincSocketResponses_t wincCloseReturn;
    
-   debug_printGOOD("BSD: BSD_close (%d) ",socket);
+   debug_printGood("BSD   : BSD_close (%d) ",socket);
    packetReceptionHandler_t* sock = getSocketInfo(socket);
    if (sock != NULL)
    {
@@ -673,7 +673,7 @@ int BSD_send(int socket, const void *msg, size_t len, int flags)
    wincSendReturn = send((SOCKET)socket, (void*)msg, (uint16_t)len, (uint16_t)flags);
    if(wincSendReturn != WINC_SOCK_ERR_NO_ERROR)
    {
-      debug_printError("BSD: wincSendReturn (%d)",wincSendReturn);
+      debug_printError("BSD   : wincSendReturn (%d)",wincSendReturn);
       // Most likely in this case we HAVE to update the socket state, especially if we get ENOTSOCK !!!
       switch(wincSendReturn)
       {
@@ -734,7 +734,7 @@ int BSD_sendto(int socket, const void *msg, size_t len,	int flags, const struct 
 			winc_sockaddr.sa_family = AF_INET;
 
 			wincSendToResponse = sendto((SOCKET)socket, (void *)msg, (uint16_t)(len), (uint16_t)flags, (struct sockaddr *)&winc_sockaddr, (uint8_t)tolen);
-         debug_print("BSD: wincSendToResponse (%d)", wincSendToResponse);
+         debug_printInfo("BSD   : wincSendToResponse (%d)", wincSendToResponse);
 		break;
 		default:		//Address family not supported by WINC
 			bsd_setErrNo(EAFNOSUPPORT);
@@ -788,24 +788,24 @@ void BSD_SocketHandler(int8_t sock, uint8_t msgType, void *pMsg)
 
 	bsdSocketInfo = getSocketInfo(sock);
    if(bsdSocketInfo == NULL) {
-      debug_printError("BSD: SH->socket not found");
+      debug_printError("BSD   : SH->socket not found");
       return;
    }   
 	switch (msgType)
 	{
 		case SOCKET_MSG_CONNECT:
-         debug_print("BSD: SOCKET_MSG_CONNECT");
+         debug_printGood("BSD   : SOCKET_MSG_CONNECT");
          if(pMsg)
          {
             	tstrSocketConnectMsg *pstrConnect = (tstrSocketConnectMsg *)pMsg;
             if (pstrConnect->s8Error >= 0)
             {
-               debug_printGOOD("BSD: MSG_CONNECT successful");
+               debug_printGood("BSD   : MSG_CONNECT successful");
                bsdSocketInfo->socketState = SOCKET_CONNECTED;
             }
             else
             {
-               debug_printError("BSD: Closing Socket in MSG_CONNECT error (%d)",pstrConnect->s8Error);
+               debug_printError("BSD   : Closing Socket in MSG_CONNECT error (%d)",pstrConnect->s8Error);
                BSD_close(sock);
             }
          }
@@ -825,7 +825,7 @@ void BSD_SocketHandler(int8_t sock, uint8_t msgType, void *pMsg)
 	            bsdSocketInfo->socketState = SOCKET_CONNECTED;
 							   
             } else {
-               debug_printError("BSD: SOCKET (%d) CLOSED", sock);
+               debug_printError("BSD   : SOCKET (%d) CLOSED", sock);
                BSD_close(sock);  
             }                                
          }
@@ -841,7 +841,7 @@ void BSD_SocketHandler(int8_t sock, uint8_t msgType, void *pMsg)
 				   bsdSocketInfo->recvCallBack(pstrRecv->pu8Buffer, pstrRecv->s16BufferSize);
 				   bsdSocketInfo->socketState = SOCKET_CONNECTED;
 			   }  else {
-               debug_printError("BSD: SOCKET (%d) CLOSED", sock);
+               debug_printError("BSD   : SOCKET (%d) CLOSED", sock);
 			      BSD_close(sock);
             }
          }
@@ -849,7 +849,7 @@ void BSD_SocketHandler(int8_t sock, uint8_t msgType, void *pMsg)
 		break;
 		
 		default:
-         debug_printError("BSD: msgType (%d) default",msgType);
+         debug_printError("BSD   : msgType (%d) default",msgType);
 		break;
 	}
 

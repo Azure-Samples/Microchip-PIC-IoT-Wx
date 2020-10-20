@@ -223,7 +223,7 @@ int8_t ecdsa_process_sign_verify_request(uint32_t number_of_signatures)
 
         if (status != M2M_SUCCESS)
         {
-            debug_printInfo("m2m_ssl_retrieve_cert() failed with ret=%d", status);
+            debug_printInfo("CRYPTO : m2m_ssl_retrieve_cert() failed with ret=%d", status);
             return status;
         }
 
@@ -237,7 +237,7 @@ int8_t ecdsa_process_sign_verify_request(uint32_t number_of_signatures)
                 status = (is_verified == true) ? M2M_SUCCESS : M2M_ERR_FAIL;
                 if(is_verified == false)
                 {
-                    debug_printInfo("ECDSA SigVerif FAILED");
+                    debug_printInfo("CRYPTO : ECDSA SigVerif FAILED");
                 }
             }
             else
@@ -264,7 +264,7 @@ int8_t ecdsa_process_sign_gen_request(tstrEcdsaSignReqInfo *sign_request, uint8_
     status = m2m_ssl_retrieve_hash(hash, sign_request->u16HashSz);
     if (status != M2M_SUCCESS)
     {
-        debug_printInfo("m2m_ssl_retrieve_hash() failed with ret=%d", status);
+        debug_printInfo("CRYPTO : m2m_ssl_retrieve_hash() failed with ret=%d", status);
         return status;
     }
 
@@ -290,7 +290,7 @@ int8_t ecdh_derive_server_shared_secret(uint16_t private_key_id, tstrECPoint *cl
     }
     else
     {
-        debug_printInfo("__SLOT = %u, Err = %X", key_slot, atca_status);
+        debug_printInfo("CRYPTO : __SLOT = %u, Err = %X", key_slot, atca_status);
     }
     
     return status;
