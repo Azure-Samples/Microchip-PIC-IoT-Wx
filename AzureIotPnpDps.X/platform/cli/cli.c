@@ -1,606 +1,318 @@
 /*
-	 \file	cli.c
+	\file   led.c
 
-	 \brief  Command Line Interpreter source file.
+	\brief  Manage board LED's
 
-	 (c) 2018 Microchip Technology Inc. and its subsidiaries.
+	(c) 2018 Microchip Technology Inc. and its subsidiaries.
 
-	 Subject to your compliance with these terms, you may use Microchip software and any
-	 derivatives exclusively with Microchip products. It is your responsibility to comply with third party
-	 license terms applicable to your use of third party software (including open source software) that
-	 may accompany Microchip software.
+	Subject to your compliance with these terms, you may use Microchip software and any
+	derivatives exclusively with Microchip products. It is your responsibility to comply with third party
+	license terms applicable to your use of third party software (including open source software) that
+	may accompany Microchip software.
 
-	 THIS SOFTWARE IS SUPPLIED BY MICROCHIP "AS IS". NO WARRANTIES, WHETHER
-	 EXPRESS, IMPLIED OR STATUTORY, APPLY TO THIS SOFTWARE, INCLUDING ANY
-	 IMPLIED WARRANTIES OF NON-INFRINGEMENT, MERCHANTABILITY, AND FITNESS
-	 FOR A PARTICULAR PURPOSE.
+	THIS SOFTWARE IS SUPPLIED BY MICROCHIP "AS IS". NO WARRANTIES, WHETHER
+	EXPRESS, IMPLIED OR STATUTORY, APPLY TO THIS SOFTWARE, INCLUDING ANY
+	IMPLIED WARRANTIES OF NON-INFRINGEMENT, MERCHANTABILITY, AND FITNESS
+	FOR A PARTICULAR PURPOSE.
 
-	 IN NO EVENT WILL MICROCHIP BE LIABLE FOR ANY INDIRECT, SPECIAL, PUNITIVE,
-	 INCIDENTAL OR CONSEQUENTIAL LOSS, DAMAGE, COST OR EXPENSE OF ANY KIND
-	 WHATSOEVER RELATED TO THE SOFTWARE, HOWEVER CAUSED, EVEN IF MICROCHIP
-	 HAS BEEN ADVISED OF THE POSSIBILITY OR THE DAMAGES ARE FORESEEABLE. TO
-	 THE FULLEST EXTENT ALLOWED BY LAW, MICROCHIP'S TOTAL LIABILITY ON ALL
-	 CLAIMS IN ANY WAY RELATED TO THIS SOFTWARE WILL NOT EXCEED THE AMOUNT
-	 OF FEES, IF ANY, THAT YOU HAVE PAID DIRECTLY TO MICROCHIP FOR THIS
-	 SOFTWARE.
+	IN NO EVENT WILL MICROCHIP BE LIABLE FOR ANY INDIRECT, SPECIAL, PUNITIVE,
+	INCIDENTAL OR CONSEQUENTIAL LOSS, DAMAGE, COST OR EXPENSE OF ANY KIND
+	WHATSOEVER RELATED TO THE SOFTWARE, HOWEVER CAUSED, EVEN IF MICROCHIP
+	HAS BEEN ADVISED OF THE POSSIBILITY OR THE DAMAGES ARE FORESEEABLE. TO
+	THE FULLEST EXTENT ALLOWED BY LAW, MICROCHIP'S TOTAL LIABILITY ON ALL
+	CLAIMS IN ANY WAY RELATED TO THIS SOFTWARE WILL NOT EXCEED THE AMOUNT
+	OF FEES, IF ANY, THAT YOU HAVE PAID DIRECTLY TO MICROCHIP FOR THIS
+	SOFTWARE.
 */
+#include <xc.h>
+#include <stdbool.h>
+#include <stddef.h>
+#include "led.h"
+#include "drivers/timeout.h"
+#include "delay.h"
+#include "debug_print.h"
+#include "../main.h"
 
-#include <stdlib.h>
-#include <stdint.h>
-#include <string.h>
-#include <stdio.h>
-#include <ctype.h>
-#include "../drivers/timeout.h"
-#include "../delay.h"
-#include "../drivers/uart.h"
-#include "cli.h"
-#include "../cloud/crypto_client/crypto_client.h"
-#include "../credentials_storage/credentials_storage.h"
-#include "../mqtt/mqtt_core/mqtt_core.h"
-#include "../debug_print.h"
-#include "../cloud/wifi_service.h"
-#include "../cloud/cloud_service.h"
-#include "../../mqtt_packetPopulation/mqtt_iotprovisioning_packetPopulate.h"
+led_change_t led_change;
 
-#define WIFI_PARAMS_OPEN	 1
-#define WIFI_PARAMS_PSK	  2
-#define WIFI_PARAMS_WEP	  3
-#define MAX_COMMAND_SIZE		  100
-#define MAX_PUB_KEY_LEN			200
-#define NEWLINE "\r\n\4"
+#define LEDS_TEST_INTERVAL  50L
+#define LED_100ms_INTERVAL	timeout_mSecToTicks(100L)
+#define LED_200ms_INTERVAL	timeout_mSecToTicks(200L)
+#define LED_500ms_INTERVAL	timeout_mSecToTicks(500L)
 
-#define UNKNOWN_CMD_MSG "--------------------------------------------" NEWLINE\
-                        "Unknown command. List of available commands:" NEWLINE\
-                        "reset"NEWLINE\
-                        "device"NEWLINE\
-                        "key"NEWLINE\
-                        "reconnect" NEWLINE\
-                        "version" NEWLINE\
-                        "cli_version" NEWLINE\
-                        "wifi <ssid>[,<pass>,[authType]]" NEWLINE\
-                        "debug <Debug Level : 0 ~ 4>" NEWLINE\
-                        "led <led : 1 ~ 4>,<state : 1 ~ 4> [-? for help]" NEWLINE\
-                        "idscope [DPS ID Scope]" NEWLINE\
-                        "--------------------------------------------" NEWLINE
+static bool isSoftAp = false;
+static bool isLedBlinking_blue = false;
+static uint32_t blink_task_blue(void* payload);
+static timerStruct_t blinkTimer_blue = { blink_task_blue };
 
-static char command[MAX_COMMAND_SIZE];
-static bool isCommandReceived = false;
-static uint8_t index = 0;
-static bool commandTooLongFlag = false;
+static bool isProvisioning = false;
+static bool isLedBlinking_green = false;
+static uint32_t blink_task_green(void* payload);
+static timerStruct_t blinkTimer_green = { blink_task_green };
 
-const char * const cli_version_number				 = "2.1";
-const char * const firmware_version_number		  = "1.1.1";
+static bool isLedBlinking_red = false;
+static uint32_t blink_task_red(void* payload);
+static timerStruct_t blinkTimer_red = { blink_task_red };
 
-static void command_received(char *command_text);
-static void reset_cmd(char *pArg);
-static void reconnect_cmd(char *pArg);
-static void set_wifi_auth(char *ssid_pwd_auth);
-static void get_public_key(char *pArg);
-static void get_device_id(char *pArg);
-static void get_cli_version(char *pArg);
-static void get_firmware_version(char *pArg);
-static void set_debug_level(char *pArg);
-static void set_led(char *pArg);
-static void get_set_dps_idscope(char *pArg);
+static bool isLedBlinking_yellow = false;
+static uint32_t blink_task_yellow(void* payload);
+static timerStruct_t blinkTimer_yellow = { blink_task_yellow };
 
-static bool endOfLineTest(char c);
-static void enableUsartRxInterrupts(void);
-
-#define CLI_TASK_INTERVAL		 timeout_mSecToTicks(50)
-
-uint32_t CLI_task(void*);
-timerStruct_t CLI_task_timer				 = {CLI_task};
-
-struct cmd
+static void testSequence(uint8_t ledState)
 {
-	 const char * const command;
-	 void (* const handler)(char *argument);
-};
-
-const struct cmd commands[] =
-{
-	{ "reset",		 reset_cmd},
-	{ "reconnect",	reconnect_cmd },
-	{ "wifi",		  set_wifi_auth },
-	{ "key",			get_public_key },
-	{ "device",		get_device_id },
-	{ "cli_version", get_cli_version },
-	{ "version",	  get_firmware_version },
-	{ "debug",		 set_debug_level },
-	{ "led",			set_led },
-	{ "idscope",	  get_set_dps_idscope }
-};
-
-const char* led_string[] =
-{
-	"Blue",
-	"Green",
-	"Yellow",
-	"Red"
-};
-
-const char* debug_level[] =
-{
-	"SEVERITY_NONE",
-	"SEVERITY_ERROR",
-	"SEVERITY_WARN",
-	"SEVERITY_DEBUG",
-	"SEVERITY_INFO"
-};
-
-void CLI_init(void)
-{
-	enableUsartRxInterrupts();
-	timeout_create(&CLI_task_timer, CLI_TASK_INTERVAL);
-}
-
-static bool endOfLineTest(char c)
-{
-	static char test = 0;
-	bool retvalue = true;
-
-	if(c == '\n')
+	if (ledState == LED_ON)
 	{
-		if(test == '\r')
-		{
-			retvalue = false;
-		}
-	}
-	test = c;
-	return retvalue;
-}
-
-uint32_t CLI_task(void* param)
-{
-	 bool cmd_rcvd = false;
-	 char c = 0;
-	// read all the EUSART bytes in the queue
-	while(uart[CLI].DataReady() && !isCommandReceived)
-	{
-		c = uart[CLI].Read();
-		// read until we get a newline
-		if(c == '\r' || c == '\n')
-		{
-			command[index] = 0;
-
-			if(!commandTooLongFlag)
-			{
-				if( endOfLineTest(c) && !cmd_rcvd )
-				{
-					command_received((char*)command);
-				cmd_rcvd = true;
-				}
-			}
-			if(commandTooLongFlag)
-			{
-				printf(NEWLINE"Command too long"NEWLINE);
-			}
-			index = 0;
-			commandTooLongFlag = false;
-		}
-		else // otherwise store the character
-		{
-			if(index < MAX_COMMAND_SIZE)
-			{
-				command[index++] = c;
-			}
-			else
-			{
-				commandTooLongFlag = true;
-			}
-		}
-	}
-
-	return CLI_TASK_INTERVAL;
-}
-
-static void set_wifi_auth(char *ssid_pwd_auth)
-{
-	 char *credentials[3];
-	 char *pch;
-	 uint8_t params = 0;
-	uint8_t i;
-
-	 for(i=0;i<=2;i++)credentials[i]='\0';
-
-	 pch = strtok (ssid_pwd_auth, ",");
-	 credentials[0]=pch;
-
-	 while (pch != NULL && params <= 2)
-	 {
-		  credentials[params] = pch;
-		  params++;
-		  pch = strtok (NULL, ",");
-
-	 }
-
-	 if(credentials[0]!=NULL)
-	 {
-		  if(credentials[1]==NULL && credentials[2]==NULL) params=1;
-		  else if(credentials[1]!= NULL && credentials[2]== NULL)
-		  {
-				params=atoi(credentials[1]);//Resuse the same variable to store the auth type
-				if (params==2 || params==3)params=5;
-				else if(params==1);
-				else params=2;
-		  }
-		  else params = atoi(credentials[2]);
-	 }
-
-	 switch (params)
-	 {
-		  case WIFI_PARAMS_OPEN:
-				strncpy(ssid, credentials[0],MAX_WIFI_CREDENTIALS_LENGTH-1);
-				strcpy(pass, "\0");
-				strncpy(authType, "1", 2);
-		  break;
-
-		  case WIFI_PARAMS_PSK:
-				case WIFI_PARAMS_WEP:
-				strncpy(ssid, credentials[0],MAX_WIFI_CREDENTIALS_LENGTH-1);
-				strncpy(pass, credentials[1],MAX_WIFI_CREDENTIALS_LENGTH-1);
-				sprintf(authType, "%d", params);
-		  break;
-
-		  default:
-				params = 0;
-		  break;
-	 }
-	if (params)
-	{
-				printf("OK\r\n\4");
-		  if(CLOUD_isConnected())
-		  {
-				MQTT_Close(MQTT_GetClientConnectionInfo());
-		  }
-				wifi_disconnectFromAp();
+		LATCbits.LATC5 = 0; /* set LED_BLUE output low */
+		DELAY_milliseconds(LEDS_TEST_INTERVAL);
+		LATCbits.LATC4 = 0; /* set LED_GREEN output low */
+		DELAY_milliseconds(LEDS_TEST_INTERVAL);
+		LATCbits.LATC3 = 0; /* set LED_YELLOW output low */
+		DELAY_milliseconds(LEDS_TEST_INTERVAL);
+		LATBbits.LATB4 = 0; /* set LED_RED output low */
+		DELAY_milliseconds(LEDS_TEST_INTERVAL);
 	}
 	else
 	{
-				printf("Error. Wi-Fi command format is wifi <ssid>[,<pass>,[authType]]\r\n\4");
+		LATCbits.LATC5 = 1; /* set LED_BLUE output high */
+		DELAY_milliseconds(LEDS_TEST_INTERVAL);
+		LATCbits.LATC4 = 1; /* set LED_GREEN output high */
+		DELAY_milliseconds(LEDS_TEST_INTERVAL);
+		LATCbits.LATC3 = 1; /* set LED_YELLOW output high */
+		DELAY_milliseconds(LEDS_TEST_INTERVAL);
+		LATBbits.LATB4 = 1; /* set LED_RED output high */
+		DELAY_milliseconds(LEDS_TEST_INTERVAL);
 	}
 }
 
-static void reconnect_cmd(char *pArg)
+void LED_test(void)
 {
-	 (void)pArg;
-
-	 MQTT_Disconnect(MQTT_GetClientConnectionInfo());
-	 printf("OK\r\n\4");
+	led_change.AsUSHORT = 0;
+	testSequence(LED_ON);
+	testSequence(LED_OFF);
 }
 
-static void reset_cmd(char *pArg)
+/*************************************************
+* Blue LED
+*************************************************/
+void LED_holdBlue(bool setLed)
 {
-	 (void)pArg;
+	// if blinking, WiFi is in AP mode
+	if (isSoftAp != true)
+	{
+		debug_printInfo("LED(B): Turn %s", setLed == LED_ON?"On":"Off");
+		if (setLed == LED_ON)
+		{
+			LATCbits.LATC5 = 0; /* set LED_GREEN output low */
+		}
+		else
+		{
+			LATCbits.LATC5 = 1; /* set LED_GREEN output high */
+		}
+		led_change.blue = 1;
+	}
+	else
+	{
+		debug_printInfo("LED(B): IsBlinking");
+	}
 
-	 DELAY_milliseconds(30);
-	 asm("RESET");
 }
 
-static void set_debug_level(char *pArg)
+static uint32_t blink_task_blue(void* payload)
 {
-	 debug_severity_t level = SEVERITY_NONE;
-
-	 if (pArg == NULL)
-	 {
-		  level = debug_getSeverity();
-		  printf("Current Debug Level = %s (%d)"NEWLINE, debug_level[level], level);
-	 }
-	 else if(*pArg >= '0' && *pArg <= '4')
-	 {
-		  level = *pArg - '0';
-		  debug_setSeverity(level);
-		  printf("OK\r\n\4");
-	 }
-	 else
-	 {
-		  printf("debug parameter must be between 0 (Least) and 4 (Most) \r\n\4");
-	 }
+	LATCbits.LATC5 ^= 1; /* toggle LED_GREEN output */
+	return isSoftAp?LED_500ms_INTERVAL:LED_200ms_INTERVAL;
 }
 
-static void get_public_key(char *pArg)
+bool LED_isBlinkingBlue(void)
 {
-	 char key_pem_format[MAX_PUB_KEY_LEN];
-	 (void)pArg;
-
-	 if (CRYPTO_CLIENT_printPublicKey(key_pem_format) == NO_ERROR)
-	 {
-		  printf(key_pem_format);
-	 }
-	 else
-	 {
-		  printf("Error getting key.\r\n\4");
-	 }
+	return (isLedBlinking_blue || isSoftAp);
 }
 
-static char *ateccsn = NULL;
-void CLI_setdeviceId(char *id)
+void LED_startBlinkingBlue(bool softAp)
 {
-	ateccsn = id;
+	debug_printInfo("LED(B): Start Blink : WiFi SoftAP? %s", softAp == true? "True":"False");
+
+	if (isLedBlinking_blue)
+	{
+		timeout_delete(&blinkTimer_blue);
+	}
+
+	isLedBlinking_blue = true;
+	isSoftAp = softAp;
+
+	if (isSoftAp)
+	{
+		timeout_create(&blinkTimer_blue, LED_500ms_INTERVAL);
+	}
+	else
+	{
+		timeout_create(&blinkTimer_blue, LED_200ms_INTERVAL);
+	}
+	led_change.blue = 1;
 }
 
-static void get_device_id(char *pArg)
+void LED_stopBlinkingAndSetBlue(bool setLed)
 {
-	(void) pArg;
-	 if (ateccsn)
-	 {
-		  printf("%s\r\n\4", ateccsn);
-	 }
-	 else
-	 {
-		  printf("Unknown.\r\n\4");
-	 }
+	debug_printInfo("LED(B): Stop Blink isBlinking? %s", isLedBlinking_blue == true ? "True":"False");
+	if (isLedBlinking_blue && !isSoftAp)
+	{
+		// don't stop blink if the device is in Soft AP mode
+		timeout_delete(&blinkTimer_blue);
+		isLedBlinking_blue = false;
+	}
+	LED_holdBlue(setLed);
 }
 
-static void get_cli_version(char *pArg)
+/*************************************************
+* Green LED (DPS and IoTHub)
+*************************************************/
+void LED_holdGreen(bool setLed)
 {
-	 (void)pArg;
-	 printf("v%s\r\n\4", cli_version_number);
+	debug_printInfo("LED(G): Turn %s", setLed == LED_ON?"On":"Off");
+
+	if (setLed == LED_ON)
+	{
+		LATCbits.LATC4 = 0; /* set LED_GREEN output low */
+	}
+	else
+	{
+		LATCbits.LATC4 = 1; /* set LED_GREEN output high */
+	}
+	led_change.green = 1;
 }
 
-static void get_firmware_version(char *pArg)
+static uint32_t blink_task_green(void* payload)
 {
-	 (void)pArg;
-	 printf("v%s\r\n\4", firmware_version_number);
+	LATCbits.LATC4 ^= 1; /* toggle LED_GREEN output */
+	return isProvisioning ? LED_200ms_INTERVAL : LED_500ms_INTERVAL;
 }
 
-static void print_led_help(char* msg)
+bool LED_isBlinkingGreen(void)
 {
-	 if (msg)
-	 {
-		  printf(msg);
-	 }
-	 printf("==============================================="NEWLINE);
-	 printf("led <LED Number>,<LED State>"NEWLINE);
-	 printf("|1\t|2\t|3\t|4"NEWLINE);
-	 printf("|Blue\t|Greent\t|Yellow\tRed"NEWLINE);
-	 printf("|On\t|Off\t|Blink\t|Stop Blink"NEWLINE);
-	 return;
+	return isLedBlinking_green;
 }
 
-static void set_led(char *pArg)
-	 {
-	 //	LED number
-	 //	1 = Blue
-	 //	2 = Green
-	 //	3 = Yellow
-	 //	4 = Red
-	 //
-	 //	State
-	 //	1 = On
-	 //	2 = Off
-	 //	3 = Blink
-	 char *led_param[3];
-	 char *pch;
-	 uint8_t i;
-	 uint8_t params = 0;
-	 uint8_t led_num = 0;
-	 uint8_t led_state = 0;
+void LED_startBlinkingGreen(bool provisioning)
+{
+	debug_printInfo("LED(G): Start Blink Provisioning? %s", provisioning == true?"True":"False");
 
-	 for(i = 0 ; i <= 2 ; i++)
-	 {
-		  led_param[i]='\0';
-	 }
+	if (isLedBlinking_green)
+	{
+		timeout_delete(&blinkTimer_green);
+	}
 
-	 pch = strtok (pArg, ",");
-	 led_param[0]=pch;
+	isLedBlinking_green = true;
+	isProvisioning = provisioning;
+	if (isProvisioning)
+	{
+		timeout_create(&blinkTimer_green, LED_200ms_INTERVAL);
+	}
+	else
+	{
+		timeout_create(&blinkTimer_green, LED_500ms_INTERVAL);
+	}
 
-	 while (pch != NULL && params <= 2)
-	 {
-		  led_param[params] = pch;
-		  params++;
-		  pch = strtok(NULL, ",");
-	 }
-
-	 if (params == 1)
-	 {
-		  if (led_param[0][0] == '-' && (led_param[0][1] == 'h' || led_param[0][1] == 'H' || led_param[0][1] == '?'))
-		  {
-				return print_led_help(NULL);
-		  }
-	 }
-
-	 if (led_param[0] != NULL)
-	 {
-		  if (led_param[0][0] == '-' && (led_param[0][1] == 'h' || led_param[0][1] == 'H' || led_param[0][1] == '?'))
-		  {
-				return print_led_help(NULL);
-		  }
-		  else if (!isDigit((int)led_param[0][0])) {
-				return print_led_help("Please provide LED Number" NEWLINE);
-		  }
-		  led_num = atoi(&led_param[0][0]);
-	 }
-	 else
-	 {
-		  return print_led_help("Please provide LED Number" NEWLINE);
-	 }
-
-
-	 if (led_param[1] != NULL)
-	 {
-		  if (!isDigit((int)led_param[1][0])) {
-				return print_led_help("Please provide LED State Number" NEWLINE);
-		  }
-		  led_state = atoi(&led_param[1][0]);
-	 }
-	 else
-	 {
-		  return print_led_help("Please provide LED State Number" NEWLINE);
-	 }
-
-	 switch (led_state)
-	 {
-		  case 1:
-				// turn on LED
-				printf("%s On" NEWLINE, led_string[led_num - 1]);
-				switch (led_num)
-				{
-					 case 1:
-						  LED_holdBlue(LED_ON);
-						  break;
-					 case 2:
-						  LED_holdGreen(LED_ON);
-						  break;
-					 case 3:
-						  LED_holdYellow(LED_ON);
-						  break;
-					 case 4:
-						  LED_holdRed(LED_ON);
-						  break;
-				}
-				break;
-
-		  case 2:
-				// turn off LED
-				printf("%s Off" NEWLINE, led_string[led_num - 1]);
-				switch (led_num)
-				{
-					 case 1:
-						  LED_holdBlue(LED_OFF);
-						  break;
-					 case 2:
-						  LED_holdGreen(LED_OFF);
-						  break;
-					 case 3:
-						  LED_holdYellow(LED_OFF);
-						  break;
-					 case 4:
-						  LED_holdRed(LED_OFF);
-						  break;
-				}
-				break;
-
-		  case 3:
-				// Start blink
-				printf("%s start blinking" NEWLINE, led_string[led_num - 1]);
-				switch (led_num)
-				{
-					 case 1:
-						  LED_startBlinkingBlue(false);
-						  break;
-					 case 2:
-						  LED_startBlinkingGreen(true);
-						  break;
-					 case 3:
-						  LED_startBlinkingYellow();
-						  break;
-					 case 4:
-						  LED_startBlinkingRed();
-						  break;
-				}
-				break;
-
-		  case 4:
-				// Stop blink
-				printf("%s stop blinking" NEWLINE, led_string[led_num - 1]);
-				switch (led_num)
-				{
-					 case 1:
-						  LED_stopBlinkingAndSetBlue(LED_OFF);
-						  break;
-					 case 2:
-						  LED_stopBlinkingAndSetGreen(LED_OFF);
-						  break;
-					 case 3:
-						  LED_stopBlinkingAndSetYellow(LED_OFF);
-						  break;
-					 case 4:
-						  LED_stopBlinkingAndSetRed(LED_OFF);
-						  break;
-				}
-				break;
-		  default:
-				break;
-	 }
+	led_change.green = 1;
 }
 
-static void get_set_dps_idscope(char *pArg)
+void LED_stopBlinkingAndSetGreen(bool setLed)
 {
-	 char *dps_param;
-	 uint8_t i;
-	 char atca_id_scope[12]; //idscope 0ne001825F3
-
-	 dps_param = pArg;
-
-	 if (dps_param == NULL)
-	 {
-		  atcab_read_bytes_zone(ATCA_ZONE_DATA, ATCA_SLOT_IDSCOPE, 0, (uint8_t*)atca_id_scope, sizeof(atca_id_scope));
-		  printf("Current ID Scope : %s" NEWLINE, atca_id_scope);
-	 }
-	 else
-	 {
-		  if (strlen(dps_param) != 11)
-		  {
-				printf("ID Scope entered : %s. Wrong ID Scope length.  Should be 0neXXXXXXXX format" NEWLINE, dps_param);
-				return;
-		  }
-
-		  if (dps_param[0] != '0' || dps_param[1] != 'n' || dps_param[2] != 'e')
-		  {
-				printf("ID Scope entered : %s. ID Scope should start with 0ne" NEWLINE, dps_param);
-				return;
-		  }
-
-		  for (i = 3 ; i < 10 ; i++)
-		  {
-				if (!isalnum(dps_param[i]))
-				{
-					 printf("ID Scope entered : %s. Non-alpha numberic letter detected.  Should be 0neXXXXXXXX format" NEWLINE, dps_param);
-					 return;
-				}
-		  }
-
-		  printf("Writing ID Scope %s to ATCA" NEWLINE, dps_param);
-		  atcab_write_bytes_zone(ATCA_ZONE_DATA, ATCA_SLOT_IDSCOPE, 0, (uint8_t*)dps_param, sizeof(atca_id_scope));
-		  DELAY_milliseconds(500);
-		  atcab_read_bytes_zone(ATCA_ZONE_DATA, ATCA_SLOT_IDSCOPE, 0, (uint8_t*)atca_id_scope, sizeof(atca_id_scope));
-		  printf("New ID Scope : %s" NEWLINE, atca_id_scope);
-	 }
-
-	 return;
+	debug_printInfo("LED(G): Stop Blink isBlinking? %s", isLedBlinking_green == true ? "True":"False");
+	if (isLedBlinking_green == true)
+	{
+		timeout_delete(&blinkTimer_green);
+		isLedBlinking_green = false;
+	}
+	LED_holdGreen(setLed);
 }
 
-static void command_received(char *command_text)
+/*************************************************
+* Red LED (Error)
+*************************************************/
+void LED_holdRed(bool setLed)
 {
-	 char *argument = strstr(command_text, " ");
-	 uint8_t cmp;
-	 uint8_t ct_len;
-	 uint8_t cc_len;
-	 uint8_t i = 0;
+	debug_printInfo("LED(R): Turn %s", setLed == LED_ON?"On":"Off");
 
-	 if (argument != NULL)
-	 {
-		  /* Replace the delimiter with string terminator */
-		  *argument = '\0';
-		  /* Point after the string terminator, to the actual string */
-		  argument++;
-	 }
-
-	 for (i = 0; i < sizeof(commands)/sizeof(*commands); i++)
-	 {
-		  cmp = strcmp(command_text, commands[i].command);
-		  ct_len = strlen(command_text);
-		  cc_len = strlen(commands[i].command);
-
-		  if (cmp == 0 && ct_len == cc_len)
-		  {
-				if (commands[i].handler != NULL)
-				{
-					 commands[i].handler(argument);
-					 return;
-				}
-		  }
-	 }
-
-	 printf(UNKNOWN_CMD_MSG);
+	if (setLed == LED_ON)
+	{
+		LATBbits.LATB4 = 0; /* set LED_RED output low */
+	}
+	else
+	{
+		LATBbits.LATB4 = 1; /* set LED_RED output high */
+	}
+	led_change.red = 1;
 }
 
-static void enableUsartRxInterrupts(void)
+static uint32_t blink_task_red(void* payload)
 {
-	 // Empty RX buffer
-	 while(uart[CLI].DataReady())
-	 {
-		  uart[CLI].Read();
-	 }
+	LATBbits.LATB4 ^= 1; /* toggle LED_RED output */
+	return isLedBlinking_red ? LED_100ms_INTERVAL : 0;
+}
+
+bool LED_isBlinkingRed(void)
+{
+	return isLedBlinking_red;
+}
+
+void LED_startBlinkingRed(void)
+{
+	debug_printInfo("LED(R): Start Blink");
+	timeout_create(&blinkTimer_red, LED_100ms_INTERVAL);
+	isLedBlinking_red = true;
+	led_change.red = 1;
+}
+
+void LED_stopBlinkingAndSetRed(bool setLed)
+{
+	debug_printInfo("LED(R): Stop Blink isBlinking? %s", isLedBlinking_blue== true ? "True":"False");
+
+	timeout_delete(&blinkTimer_red);
+	isLedBlinking_red = false;
+	LED_holdRed(setLed);
+}
+
+/*************************************************
+* Yellow LED (User LED)
+*************************************************/
+void LED_holdYellow(bool setLed)
+{
+	debug_printInfo("LED(Y): Turn %s", setLed == LED_ON?"On":"Off");
+	if (setLed == LED_ON)
+	{
+		LATCbits.LATC3 = 0; /* set LED_RED output low */
+	}
+	else
+	{
+		LATCbits.LATC3 = 1; /* set LED_RED output high */
+	}
+	led_change.yellow = 1;
+}
+
+static uint32_t blink_task_yellow(void* payload)
+{
+	LATCbits.LATC3 ^= 1; /* toggle LED_RED output */
+	return isLedBlinking_yellow ? LED_200ms_INTERVAL : 0;
+}
+
+bool LED_isBlinkingYellow(void)
+{
+	return isLedBlinking_yellow;
+}
+
+void LED_startBlinkingYellow(void)
+{
+	debug_printInfo("LED(Y): Start Blink");
+	timeout_create(&blinkTimer_yellow, LED_200ms_INTERVAL);
+	isLedBlinking_yellow = true;
+	led_change.yellow = 1;
+}
+
+void LED_stopBlinkingAndSetYellow(bool setLed)
+{
+	debug_printInfo("LED(Y): Stop Blink isBlinking? %s", isLedBlinking_yellow == true ? "True":"False");
+
+	timeout_delete(&blinkTimer_yellow);
+	isLedBlinking_yellow = false;
+	LED_holdYellow(setLed);
 }
