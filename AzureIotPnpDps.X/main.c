@@ -214,20 +214,6 @@ static az_result append_jason_data_string(
 }
 
 /**********************************************
-*  Add a json key-value pair with bool data
-*  e.g. "property_name" : true
-**********************************************/
-// static az_result add_reported_property_bool(
-//	 az_json_writer* jw,
-//	 az_span property_name,
-//	 bool property_val)
-// {
-//   RETURN_IF_AZ_RESULT_FAILED(az_json_writer_append_property_name(jw, property_name));
-//   RETURN_IF_AZ_RESULT_FAILED(az_json_writer_append_bool(jw, property_val));
-//   return AZ_OK;
-// }
-
-/**********************************************
 *  Add JSON for writable property response with int32 data
 *  e.g. 
 **********************************************/
