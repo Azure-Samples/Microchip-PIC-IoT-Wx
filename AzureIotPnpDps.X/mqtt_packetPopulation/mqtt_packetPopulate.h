@@ -16,13 +16,13 @@ static const uint8_t az_iot_b64rules[4] = { '+', '/', '=', 0 };
 
 typedef struct
 {
-  void (*MQTT_CLIENT_publish)(uint8_t *data, uint16_t len);
-  void (*MQTT_CLIENT_receive)(uint8_t *data, uint16_t len);
-  void (*MQTT_CLIENT_connect)(char* deviceID);
-  bool (*MQTT_CLIENT_subscribe)();
-  void (*MQTT_CLIENT_connected)();  
-  void (*MQTT_CLIENT_task_completed)();  
-}  pf_MQTT_CLIENT;
+	void (*MQTT_CLIENT_publish)(uint8_t *data, uint16_t len);
+	void (*MQTT_CLIENT_receive)(uint8_t *data, uint16_t len);
+	void (*MQTT_CLIENT_connect)(char* deviceID);
+	bool (*MQTT_CLIENT_subscribe)();
+	void (*MQTT_CLIENT_connected)();
+	void (*MQTT_CLIENT_task_completed)();
+} pf_MQTT_CLIENT;
 
 char* url_encode_rfc3986(char* s, char* dest, size_t dest_len);
 
