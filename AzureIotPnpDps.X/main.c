@@ -89,7 +89,7 @@ static const az_span maxmin_avg_temp_name_span = AZ_SPAN_LITERAL_FROM_STR("avgTe
 static const az_span maxmin_start_time_name_span = AZ_SPAN_LITERAL_FROM_STR("startTime");
 static const az_span maxmin_end_time_name_span = AZ_SPAN_LITERAL_FROM_STR("endTime");
 static const az_span command_empty_payload_maxmin_span = AZ_SPAN_LITERAL_FROM_STR("Payload Empty. Please specify parameter since");
-static const az_span maxmin_start_time_not_found_span = AZ_SPAN_LITERAL_FROM_STR("Start Time not round");
+static const az_span maxmin_start_time_not_found_span = AZ_SPAN_LITERAL_FROM_STR("Start Time not found");
 
 static char commands_response_payload[256];
 
