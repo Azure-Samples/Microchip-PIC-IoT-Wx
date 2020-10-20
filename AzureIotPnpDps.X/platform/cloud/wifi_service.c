@@ -24,9 +24,9 @@
 #include "../led.h"
 #include "../winc/driver/include/m2m_ssl.h"
 
-#define CLOUD_WIFI_TASK_INTERVAL        timeout_mSecToTicks(50L)
-#define CLOUD_NTP_TASK_INTERVAL         timeout_mSecToTicks(500L)
-#define SOFT_AP_CONNECT_RETRY_INTERVAL  timeout_mSecToTicks(1000L)
+#define CLOUD_WIFI_TASK_INTERVAL       timeout_mSecToTicks(50L)
+#define CLOUD_NTP_TASK_INTERVAL        timeout_mSecToTicks(500L)
+#define SOFT_AP_CONNECT_RETRY_INTERVAL timeout_mSecToTicks(1000L)
 
 #define LED_SOFT_AP true
 #define LED_STANDARD false
@@ -61,7 +61,7 @@ int8_t hif_deinit(void* arg);
 
 void wifi_reinit()
 {
-    tstrWifiInitParam param;
+	tstrWifiInitParam param;
 
 	debug_printInfo("WiFi  : reinit() : Enter");
 
@@ -90,15 +90,15 @@ void wifi_reinit()
 	wifiConnectionStateChangedCallback = callback_funcPtr;
 
 	nm_bsp_init();
-    m2m_wifi_init(&param);
+	m2m_wifi_init(&param);
 
-	socketInit();    
+	socketInit();
 }
 
 // funcPtr passed in here will be called indicating AP state changes with the following values
-// Wi-Fi state is disconnected   == 0
-// Wi-Fi state is connected      == 1
-// Wi-Fi state is undefined      == 0xff
+// Wi-Fi state is disconnected == 0
+// Wi-Fi state is connected    == 1
+// Wi-Fi state is undefined    == 0xff
 void wifi_init(void (*funcPtr)(uint8_t), uint8_t mode) {
 
 	callback_funcPtr = funcPtr;
@@ -126,7 +126,7 @@ bool wifi_connectToAp(uint8_t passed_wifi_creds)
 
 	m2m_wifi_configure_sntp((char*)"time.nist.gov", 18, SNTP_ENABLE_DHCP);
 	//e = m2m_wifi_set_device_name((uint8*)"01233EAD58E86797FE", strlen("01233EAD58E86797FE"));
-    
+
 	if (passed_wifi_creds == NEW_CREDENTIALS)
 	{
 		e = m2m_wifi_connect((char*)ssid, sizeof(ssid), atoi((char*)authType), (char*)pass, M2M_WIFI_CH_ALL);
@@ -140,7 +140,7 @@ bool wifi_connectToAp(uint8_t passed_wifi_creds)
 	{
 		debug_printError("WiFi  : WIFI: wifi error = %d", e);
 		shared_networking_params.haveERROR = 1;
-        LED_holdBlue(LED_OFF);
+		LED_holdBlue(LED_OFF);
 		return false;
 	}
 
@@ -208,7 +208,7 @@ static void wifiCallback(uint8_t msgType, void* pMsg)
 	{
 		tstrM2mWifiStateChanged* pstrWifiState = (tstrM2mWifiStateChanged*)pMsg;
 
-		//debug_printInfo("==> Message Type M2M_WIFI_RESP_CON_STATE_CHANGED");
+		debug_printInfo("WIFI  : Message Type M2M_WIFI_RESP_CON_STATE_CHANGED");
 
 		if (pstrWifiState->u8CurrState == M2M_WIFI_CONNECTED)
 		{
@@ -234,7 +234,6 @@ static void wifiCallback(uint8_t msgType, void* pMsg)
 		{
 			//if (pstrWifiState->u8ErrCode != M2M_ERR_NONE)
 			{
-				// To Do : Blink Red LED
 				debug_printError("WiFi  : wifi_cb: M2M_WIFI_RESP_CON_STATE_CHANGED: DISCONNECTED: Err %d", pstrWifiState->u8ErrCode);
 			}
 			LED_stopBlinkingAndSetBlue(LED_OFF);
@@ -255,7 +254,7 @@ static void wifiCallback(uint8_t msgType, void* pMsg)
 		struct tm theTime;
 
 		// Convert to UNIX_EPOCH, this mktime uses years since 1900 and months are 0 based so we
-		//    are doing a couple of adjustments here.
+		// are doing a couple of adjustments here.
 		if (WINCTime->u16Year > 0)
 		{
 			theTime.tm_hour = WINCTime->u8Hour;
@@ -278,10 +277,9 @@ static void wifiCallback(uint8_t msgType, void* pMsg)
 		if (pstrProvInfo->u8Status == M2M_SUCCESS)
 		{
 			sprintf((char*)authType, "%d", pstrProvInfo->u8SecType);
-			debug_printInfo("ddddd %s", pstrProvInfo->au8SSID);
 			strcpy(ssid, (char*)pstrProvInfo->au8SSID);
 			strcpy(pass, (char*)pstrProvInfo->au8Password);
-			debug_printInfo("SOFT AP: Connect Credentials sent to WINC");
+			debug_printInfo("WiFi  : SoftAP Connect Credentials sent to WINC");
 			responseFromProvisionConnect = true;
 			timeout_create(&softApConnectTimer, 0);
 		}
@@ -316,7 +314,7 @@ static void wifiCallback(uint8_t msgType, void* pMsg)
 
 	default:
 	{
-		//debug_printInfo("==> Message Type %d", msgType);
+		debug_printInfo("WiFi  : Message Type %d", msgType);
 		break;
 	}
 	}
@@ -341,6 +339,6 @@ void enable_provision_ap(void)
 
 bool wifi_getIpAddressByHostName(uint8_t* host_name)
 {
-    return gethostbyname(host_name) == M2M_SUCCESS;
+	return gethostbyname(host_name) == M2M_SUCCESS;
 }
 

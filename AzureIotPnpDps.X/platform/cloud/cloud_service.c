@@ -40,7 +40,7 @@
 #include "../debug_print.h"
 #include "../drivers/timeout.h"
 #include "../mqtt/mqtt_core/mqtt_core.h"
-#include "wifi_service.h" 
+#include "wifi_service.h"
 #include "../led.h"
 
 #include "../application_manager.h"
@@ -70,10 +70,10 @@ bool isResetting = false;
 bool cloudResetTimerFlag = false;
 bool sendSubscribe = true;
 
-#define CLOUD_TASK_INTERVAL	          timeout_mSecToTicks(500L)
-#define CLOUD_MQTT_TIMEOUT_COUNT       timeout_mSecToTicks(10000L)  // 10 seconds max allowed to establish a connection
-#define MQTT_CONN_AGE_TIMEOUT          3600L                        // 3600 seconds = 60minutes
-#define CLOUD_RESET_TIMEOUT            timeout_mSecToTicks(2000L)   // 2 seconds
+#define CLOUD_TASK_INTERVAL       timeout_mSecToTicks(500L)
+#define CLOUD_MQTT_TIMEOUT_COUNT  timeout_mSecToTicks(10000L) // 10 seconds max allowed to establish a connection
+#define MQTT_CONN_AGE_TIMEOUT     3600L                       // 3600 seconds = 60minutes
+#define CLOUD_RESET_TIMEOUT       timeout_mSecToTicks(2000L)  // 2 seconds
 
 
 // Create the timers for scheduler_timeout which runs these tasks
@@ -88,34 +88,34 @@ packetReceptionHandler_t cloud_packetReceiveCallBackTable[CLOUD_PACKET_RECV_TABL
 
 void NETWORK_wifiSslCallback(uint8_t u8MsgType, void *pvMsg)
 {
-    switch (u8MsgType)
-    {
-        case M2M_SSL_REQ_ECC:
-        {
-            tstrEccReqInfo *ecc_request = (tstrEccReqInfo*)pvMsg;
-            CRYPTO_CLIENT_processEccRequest(ecc_request);
-            
-            break;
-        }
-        
-        case M2M_SSL_RESP_SET_CS_LIST:
-        {
-            tstrSslSetActiveCsList *pstrCsList = (tstrSslSetActiveCsList *)pvMsg;
-            debug_printInfo("CLOUD : ActiveCS bitmap:%04x", pstrCsList->u32CsBMP);
-            
-            break;
-        }
-        
-        default:
-            break;
-    }
+	switch (u8MsgType)
+	{
+		case M2M_SSL_REQ_ECC:
+		{
+			tstrEccReqInfo *ecc_request = (tstrEccReqInfo*)pvMsg;
+			CRYPTO_CLIENT_processEccRequest(ecc_request);
+
+			break;
+		}
+
+		case M2M_SSL_RESP_SET_CS_LIST:
+		{
+			tstrSslSetActiveCsList *pstrCsList = (tstrSslSetActiveCsList *)pvMsg;
+			debug_printInfo("CLOUD : ActiveCS bitmap:%04x", pstrCsList->u32CsBMP);
+
+			break;
+		}
+
+		default:
+			break;
+	}
 }
 
 void CLOUD_reset(void)
 {
 	debug_printWarn("CLOUD : Cloud Reset");
 	cloudInitialized = false;
-    CLOUD_disconnect();
+	CLOUD_disconnect();
 }
 
 uint32_t mqttTimeoutTask(void* payload) {
@@ -134,31 +134,31 @@ uint32_t cloudResetTask(void* payload) {
 
 void CLOUD_init(char* attDeviceID)
 {
-    debug_print("CLOUD : CLOUD_init() %s", attDeviceID);
+	debug_printInfo("CLOUD : CLOUD_init() %s", attDeviceID);
 	// Create timers for the application scheduler
 	timeout_create(&CLOUD_taskTimer, CLOUD_TASK_INTERVAL);
-    deviceId = attDeviceID;
-    CLOUD_reset();
+	deviceId = attDeviceID;
+	CLOUD_reset();
 }
 
 void CLOUD_init_host(char* host, char* attDeviceID, pf_MQTT_CLIENT* pf_table)
 {
-    mqtt_host = host;
-    mqttHostIP = 0;
-    pf_mqtt_client = pf_table;
+	mqtt_host = host;
+	mqttHostIP = 0;
+	pf_mqtt_client = pf_table;
 	CLOUD_init(attDeviceID);
 }
 
 static void connectMQTT()
 {
-	debug_print("CLOUD : MQTT Connect %s", mqtt_host);
+	debug_printInfo("CLOUD : MQTT Connect %s", mqtt_host);
 
 	uint32_t currentTime = time(NULL);
 	if (currentTime > 0)
 	{
-        pf_mqtt_client->MQTT_CLIENT_connect(deviceId);
+		pf_mqtt_client->MQTT_CLIENT_connect(deviceId);
 	}
-    
+
 	// MQTT SUBSCRIBE packet will be sent after the MQTT connection is established.
 	sendSubscribe = true;
 }
@@ -166,10 +166,10 @@ static void connectMQTT()
 void CLOUD_subscribe(void)
 {
 	debug_printInfo("CLOUD : Subscribe()");
-    if (pf_mqtt_client->MQTT_CLIENT_subscribe() == true)
-    {
-        sendSubscribe = false;
-    }
+	if (pf_mqtt_client->MQTT_CLIENT_subscribe() == true)
+	{
+		sendSubscribe = false;
+	}
 }
 
 // This forces a disconnect, which forces a reconnect...
@@ -185,16 +185,16 @@ packetReceptionHandler_t* getSocketInfo(uint8_t sock);
 static int8_t connectMQTTSocket(void)
 {
 	int8_t ret = false;
-    
-    // Abstract the SSL section into a separate function
-    int8_t sslInit;
-    
-    sslInit = m2m_ssl_init(NETWORK_wifiSslCallback);
-    if(sslInit != M2M_SUCCESS)
-    {
-        debug_printInfo("WiFi SSL Initialization failed");
-    }
-      
+
+	// Abstract the SSL section into a separate function
+	int8_t sslInit;
+
+	sslInit = m2m_ssl_init(NETWORK_wifiSslCallback);
+	if(sslInit != M2M_SUCCESS)
+	{
+		debug_printInfo("WiFi SSL Initialization failed");
+	}
+
 	if (mqttHostIP > 0)
 	{
 		struct bsd_sockaddr_in addr;
@@ -222,7 +222,7 @@ static int8_t connectMQTTSocket(void)
 
 		socketState = BSD_GetSocketState(*context->tcpClientSocket);
 		if (socketState == SOCKET_CLOSED) {
-			debug_print("CLOUD : Connect socket");
+			debug_printInfo("CLOUD : Connect socket");
 			ret = BSD_connect(*context->tcpClientSocket, (struct bsd_sockaddr*) & addr, sizeof(struct bsd_sockaddr_in));
 
 			if (ret != BSD_SUCCESS) {
@@ -244,14 +244,14 @@ uint32_t CLOUD_task(void* param)
 		if (!isResetting)
 		{
 			isResetting = true;
-			debug_printError("CLOUD : Cloud reset timer is set");
+			debug_printWarn("CLOUD : Cloud reset timer is set");
 			timeout_delete(&mqttTimeoutTaskTimer);
 			timeout_create(&cloudResetTaskTimer, CLOUD_RESET_TIMEOUT);
 			cloudResetTimerFlag = true;
 		}
 	}
-	else 
-    {
+	else
+	{
 		if (!waitingForMQTT)
 		{
 			if ((MQTT_GetConnectionState() != CONNECTED) && (cloudResetTimerFlag == false))
@@ -291,7 +291,7 @@ uint32_t CLOUD_task(void* param)
 			{
 				if (lastAge != thisAge)
 				{
-					//debug_printInfo("CLOUD : Uptime %lus SocketState (%d) MQTT (%d)", thisAge, socketState, MQTT_GetConnectionState());
+					debug_printInfo("CLOUD : Uptime %lus SocketState (%d) MQTT (%d)", thisAge, socketState, MQTT_GetConnectionState());
 					lastAge = thisAge;
 				}
 			}
@@ -302,21 +302,21 @@ uint32_t CLOUD_task(void* param)
 		case NOT_A_SOCKET:
 		case SOCKET_CLOSED:
 			if (dnsRetryDelay)
-            {
-                dnsRetryDelay--;
-                // still waiting for DNS look up
-            }
-            else if (mqttHostIP == 0)
-            {
-                dnsRetryDelay = 30;
-                wifi_getIpAddressByHostName((uint8_t*)mqtt_host);
-            }
-            else
-            {
-                // Reinitialize MQTT
-                MQTT_ClientInitialise();
-                connectMQTTSocket();
-            }
+			{
+				dnsRetryDelay--;
+				// still waiting for DNS look up
+			}
+			else if (mqttHostIP == 0)
+			{
+				dnsRetryDelay = 30;
+				wifi_getIpAddressByHostName((uint8_t*)mqtt_host);
+			}
+			else
+			{
+				// Reinitialize MQTT
+				MQTT_ClientInitialise();
+				connectMQTTSocket();
+			}
 			break;
 
 		case SOCKET_CONNECTED:
@@ -415,7 +415,7 @@ static uint8_t reInit(void)
 		wifi_creds = NEW_CREDENTIALS;
 		debug_printInfo("WiFi  : Connecting to %s with new credentials", ssid);
 	}
-	// This works provided the board had connected to the AP successfully	
+	// This works provided the board had connected to the AP successfully
 	else
 	{
 		wifi_creds = DEFAULT_CREDENTIALS;

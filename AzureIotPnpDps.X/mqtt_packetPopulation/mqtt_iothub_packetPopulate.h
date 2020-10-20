@@ -15,5 +15,4 @@ void MQTT_CLIENT_iothub_connect(char* deviceID);
 bool MQTT_CLIENT_iothub_subscribe();
 void MQTT_CLIENT_iothub_connected();
 
-
 #endif /* MQTT_IOTHUB_PACKET_POPULATE_H */

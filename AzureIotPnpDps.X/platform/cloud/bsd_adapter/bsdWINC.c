@@ -734,7 +734,7 @@ int BSD_sendto(int socket, const void *msg, size_t len,	int flags, const struct 
 			winc_sockaddr.sa_family = AF_INET;
 
 			wincSendToResponse = sendto((SOCKET)socket, (void *)msg, (uint16_t)(len), (uint16_t)flags, (struct sockaddr *)&winc_sockaddr, (uint8_t)tolen);
-         debug_print("BSD   : wincSendToResponse (%d)", wincSendToResponse);
+         debug_printInfo("BSD   : wincSendToResponse (%d)", wincSendToResponse);
 		break;
 		default:		//Address family not supported by WINC
 			bsd_setErrNo(EAFNOSUPPORT);
@@ -794,7 +794,7 @@ void BSD_SocketHandler(int8_t sock, uint8_t msgType, void *pMsg)
 	switch (msgType)
 	{
 		case SOCKET_MSG_CONNECT:
-         debug_print("BSD   : SOCKET_MSG_CONNECT");
+         debug_printGood("BSD   : SOCKET_MSG_CONNECT");
          if(pMsg)
          {
             	tstrSocketConnectMsg *pstrConnect = (tstrSocketConnectMsg *)pMsg;

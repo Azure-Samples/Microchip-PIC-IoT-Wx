@@ -28,8 +28,8 @@
 #include "../main.h"
 
 #define MAIN_DATATASK_INTERVAL timeout_mSecToTicks(100L)
-#define SW0_Value   (PORTAbits.RA7 /* get SW0 value */)
-#define SW1_Value   (PORTAbits.RA10 /* get SW1 value */)
+#define SW0_Value (PORTAbits.RA7 /* get SW0 value */)
+#define SW1_Value (PORTAbits.RA10 /* get SW1 value */)
 #define SN_STRING "sn"
 
 uint32_t telemetry_interval = CFG_SEND_INTERVAL;
@@ -55,21 +55,21 @@ void application_init() {
 #if CFG_ENABLE_CLI
 	CLI_init();
 	CLI_setdeviceId(attDeviceID);
-#endif   
+#endif
 	debug_init(attDeviceID);
 	debug_setSeverity(SEVERITY_DEBUG);
-	
+
 	// Initialization of modules where the init needs interrupts to be enabled
 	cryptoauthlib_init();
 	if (cryptoDeviceInitialized == false)
 	{
 		debug_printError("APP   : CryptoAuthInit failed");
 	}
-	
+
 #ifdef HUB_DEVICE_ID
 	attDeviceID = HUB_DEVICE_ID;
-#else	
-	// Get serial number from the ECC608 chip 
+#else
+	// Get serial number from the ECC608 chip
 	retValCryptoClientSerialNumber = CRYPTO_CLIENT_printSerialNumber(attDeviceID_buf);
 	if (retValCryptoClientSerialNumber != ATCA_SUCCESS)
 	{
@@ -88,17 +88,17 @@ void application_init() {
 	else
 	{
 		// To use Azure provisioning service, attDeviceID should match with the device cert CN,
-		// which is the serial number of ECC608 prefixed with "sn" if you are using the 
+		// which is the serial number of ECC608 prefixed with "sn" if you are using the
 		// the microchip provisioning tool for PIC24.
 		strcat(buf, SN_STRING);
 		strcat(buf, attDeviceID_buf);
 		attDeviceID = buf;
 	}
-#endif	
-	
-#if CFG_ENABLE_CLI   
+#endif
+
+#if CFG_ENABLE_CLI
 	CLI_setdeviceId(attDeviceID);
-#endif   
+#endif
 	debug_setPrefix(attDeviceID);
 
 	if (!SW0_Value && SW1_Value)
@@ -113,9 +113,6 @@ void application_init() {
 	}
 	else if (!SW0_Value && !SW1_Value)
 	{
-		//SW0 and SW1
-		// strcpy(ssid, CFG_MAIN_WLAN_SSID);
-		// strcpy(pass, CFG_MAIN_WLAN_PSK);
 		sprintf((char*)authType, "%d", CFG_MAIN_WLAN_AUTH);
 	}
 
@@ -142,7 +139,7 @@ void application_cloud_mqtt_connect(char* host, pf_MQTT_CLIENT* pf_table, cloud_
 {
 	CLOUD_init_host(host, attDeviceID, pf_table);
 	fpSendToCloudCallback = fpSendToCloud;
-	timeout_create(&MAIN_dataTasksTimer, MAIN_DATATASK_INTERVAL);	
+	timeout_create(&MAIN_dataTasksTimer, MAIN_DATATASK_INTERVAL);
 }
 
 // React to the WIFI state change here. Status of 1 means connected, Status of 0 means disconnected
@@ -156,16 +153,14 @@ void  wifiConnectionStateChanged(uint8_t status)
 	}
 }
 
-
 // This scheduler will check all tasks and timers that are due and service them
 void runScheduler(void)
 {
 	timeout_callNextCallback();
 }
 
-
-// This could be better done with a function pointer (DI) but in the interest of simplicity 
-//	 we avoided that. This is being called from MAIN_dataTask below  
+// This could be better done with a function pointer (DI) but in the interest of simplicity
+//	 we avoided that. This is being called from MAIN_dataTask below
 void sendToCloud(void);
 
 // This gets called by the scheduler approximately every 100ms
@@ -194,10 +189,10 @@ uint32_t MAIN_dataTask(void* payload)
 
 	if (shared_networking_params.haveAPConnection)
 	{
-		//check_led_status(NULL, false);
+		// Add code for periodic operation when AP mode is enabled and have connection 
 	}
 
 	// This is milliseconds managed by the RTC and the scheduler, this return makes the
-	//	  timer run another time, returning 0 will make it stop
+	// timer run another time, returning 0 will make it stop
 	return MAIN_DATATASK_INTERVAL;
 }

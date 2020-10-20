@@ -44,21 +44,21 @@
 #define CSI_CLS     "\33[2J"
 #define CSI_HOME    "\33[1;1H"
 
-typedef enum 
+typedef enum
 {
-   SEVERITY_NONE,    // No debug trace
-   SEVERITY_ERROR,   // Error
-   SEVERITY_WARN,    // Error and Warn
-   SEVERITY_DEBUG,   // Error, Warn, and Good
-   SEVERITY_INFO     // print everything
+	SEVERITY_NONE,    // No debug trace
+	SEVERITY_ERROR,   // Error
+	SEVERITY_WARN,    // Error and Warn
+	SEVERITY_DEBUG,   // Error, Warn, and Good
+	SEVERITY_INFO     // print everything
 } debug_severity_t;
 
 typedef enum
 {
-   LEVEL_INFO,
-   LEVEL_GOOD,
-   LEVEL_WARN,
-   LEVEL_ERROR
+	LEVEL_INFO,
+	LEVEL_GOOD,
+	LEVEL_WARN,
+	LEVEL_ERROR
 } debug_errorLevel_t;
 
 #include "banner.h"

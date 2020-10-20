@@ -45,7 +45,7 @@ az_iot_hub_client hub_client;
  * be a corresponding publish handler.
  * E.g.: For a particular topic
  *	 mchp/mySubscribedTopic/myDetailedPath
- *	 Sample publish handler function	= void handlePublishMessage(uint8_t *topic, uint8_t *payload)
+ *	 Sample publish handler function = void handlePublishMessage(uint8_t *topic, uint8_t *payload)
  */
 publishReceptionHandler_t imqtt_publishReceiveCallBackTable[MAX_NUM_TOPICS_SUBSCRIBE];
 
@@ -57,7 +57,7 @@ void MQTT_CLIENT_iothub_publish(uint8_t* data, uint16_t len)
 	az_span properties = AZ_SPAN_FROM_BUFFER(properties_buf);
 	az_iot_message_properties properties_topic;
 
-	debug_printInfo("IOTHUB: PUBLISH");
+	debug_printInfo("IOTHUB: Publish");
 
 	rc = az_iot_message_properties_init(&properties_topic, properties, 0);
 	if (az_result_failed(rc = az_iot_message_properties_init(&properties_topic, properties, 0)))
@@ -73,7 +73,8 @@ void MQTT_CLIENT_iothub_publish(uint8_t* data, uint16_t len)
 	{
 		debug_printError("IOTHUB: az_iot_hub_client_telemetry_get_publish_topic failed, return code %d\n", rc);
 	}
-	else {
+	else
+	{
 		mqttPublishPacket cloudPublishPacket;
 		// Fixed header
 		cloudPublishPacket.publishHeaderFlags.duplicate = 0;
@@ -90,7 +91,8 @@ void MQTT_CLIENT_iothub_publish(uint8_t* data, uint16_t len)
 		{
 			debug_printError("IOTHUB: Connection lost PUBLISH failed");
 		}
-		else {
+		else
+		{
 			bRet = true;
 		}
 	}
@@ -128,11 +130,12 @@ void MQTT_CLIENT_iothub_connect(char* deviceID)
 	{
 		debug_printError("IOTHUB: az_iot_hub_client_init failed, return code %d\n", rc);
 	}
-	else if (rc = az_result_failed(az_iot_hub_client_get_user_name(&hub_client, mqtt_username_buf, sizeof(mqtt_username_buf), &mqtt_username_buf_len)))
+	else if (az_result_failed(rc = az_iot_hub_client_get_user_name(&hub_client, mqtt_username_buf, sizeof(mqtt_username_buf), &mqtt_username_buf_len)))
 	{
 		debug_printError("IOTHUB: az_iot_hub_client_get_user_name failed, return code %d\n", rc);
 	}
-	else {
+	else
+	{
 		mqttConnectPacket cloudConnectPacket = {0};
 		// memset(&cloudConnectPacket, 0, sizeof(mqttConnectPacket));
 		cloudConnectPacket.connectVariableHeader.connectFlagsByte.cleanSession = 0;
@@ -249,7 +252,8 @@ void MQTT_CLIENT_iothub_connected()
 	{
 		debug_printError("IOTHUB: az_iot_hub_client_twin_document_get_publish_topic failed, return code %d\n", rc);
 	}
-	else {
+	else
+	{
 		mqttPublishPacket cloudPublishPacket = {0};
 		// Fixed header
 		cloudPublishPacket.publishHeaderFlags.duplicate = 0;
@@ -277,9 +281,9 @@ void MQTT_CLIENT_iothub_connected()
 		LED_holdRed(LED_OFF);
 		LED_stopBlinkingAndSetGreen(LED_ON);
 	}
-	else {
+	else
+	{
 		debug_printError("IOTHUB: Get Twin failed");
 		LED_holdRed(LED_ON);
 	}
-
 }

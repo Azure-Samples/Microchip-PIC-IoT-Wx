@@ -60,7 +60,7 @@ void dps_client_register(uint8_t* topic, uint8_t* payload)
 	int topic_len = strlen((const char*)topic);
 	int payload_len = strlen((const char*)payload);
 
-	// debug_printInfo("DPS   : %s()", __func__);
+	debug_printInfo("DPS   : %s()", __func__);
 
 	if (az_result_failed(
 			rc = az_iot_provisioning_client_parse_received_topic_and_payload(
@@ -71,7 +71,8 @@ void dps_client_register(uint8_t* topic, uint8_t* payload)
 	{
 		debug_printError("DPS   : az_iot_provisioning_client_parse_received_topic_and_payload failed, return code %d\n", rc);
 	}
-	else {
+	else
+	{
 		switch (dps_register_response.operation_status)
 		{
 			case AZ_IOT_PROVISIONING_STATUS_ASSIGNING:
@@ -106,7 +107,8 @@ void dps_client_register(uint8_t* topic, uint8_t* payload)
 	{
 		LED_holdRed(LED_OFF);
 	}
-	else {
+	else
+	{
 		LED_holdRed(LED_OFF);
 	}
 }
@@ -123,7 +125,8 @@ static uint32_t dps_assigning_task(void* payload)
 	{
 		debug_printError("DPS   : az_iot_provisioning_client_query_status_get_publish_topic failed, return code %d\n", rc);
 	}
-	else {
+	else
+	{
 		mqttPublishPacket cloudPublishPacket;
 		// Fixed header
 		cloudPublishPacket.publishHeaderFlags.duplicate = 0;
@@ -220,7 +223,8 @@ void MQTT_CLIENT_iotprovisioning_connect(char* deviceID)
 	{
 		debug_printError("DPS   : az_iot_provisioning_client_get_user_name failed, return code %d\n", rc);
 	}
-	else {
+	else
+	{
 		mqttConnectPacket cloudConnectPacket = { 0 };
 		cloudConnectPacket.connectVariableHeader.connectFlagsByte.cleanSession = 1;
 		cloudConnectPacket.connectVariableHeader.keepAliveTimer = AZ_IOT_DEFAULT_MQTT_CONNECT_KEEPALIVE_SECONDS;
@@ -230,7 +234,7 @@ void MQTT_CLIENT_iotprovisioning_connect(char* deviceID)
 		cloudConnectPacket.username = (uint8_t*) mqtt_username_buf;
 		cloudConnectPacket.usernameLength = (uint16_t) mqtt_username_buf_len;
 
-		debug_print("DPS   : mqtt_iotprovisioning_packetPopulate: ConnectPacket username(%d): %s", mqtt_username_buf_len, mqtt_username_buf);
+		debug_printInfo("DPS   : mqtt_iotprovisioning_packetPopulate: ConnectPacket username(%d): %s", mqtt_username_buf_len, mqtt_username_buf);
 
 		if (MQTT_CreateConnectPacket(&cloudConnectPacket))
 		{
@@ -271,7 +275,8 @@ bool MQTT_CLIENT_iotprovisioning_subscribe()
 	{
 		debug_printInfo("DPS   : Subscribe packet created successfully");
 	}
-	else {
+	else
+	{
 		debug_printError("DPS   : failed to create subscribe packet");
 		LED_holdRed(LED_ON);
 	}
@@ -290,7 +295,8 @@ void MQTT_CLIENT_iotprovisioning_connected()
 	{
 		debug_printError("DPS   : az_iot_provisioning_client_register_get_publish_topic failed, return code %d\n", rc);
 	}
-	else {
+	else
+	{
 		mqttPublishPacket cloudPublishPacket = { 0 };
 		// Fixed header
 		cloudPublishPacket.publishHeaderFlags.qos = 0;
@@ -312,7 +318,8 @@ void MQTT_CLIENT_iotprovisioning_connected()
 		{
 			debug_printError("DPS   : %s: Connection lost PUBLISH failed", __func__);
 		}
-		else {
+		else
+		{
 			bRet = true;
 		}
 

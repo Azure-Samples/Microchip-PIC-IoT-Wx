@@ -40,8 +40,6 @@ led_change_t led_change;
 #define LED_200ms_INTERVAL	timeout_mSecToTicks(200L)
 #define LED_500ms_INTERVAL	timeout_mSecToTicks(500L)
 
-// static bool ledYellowHeld = false;
-
 static bool isSoftAp = false;
 static bool isLedBlinking_blue = false;
 static uint32_t blink_task_blue(void* payload);
@@ -116,7 +114,7 @@ void LED_holdBlue(bool setLed)
 	{
 		debug_printInfo("LED(B): IsBlinking");
 	}
-	
+
 }
 
 static uint32_t blink_task_blue(void* payload)
@@ -318,4 +316,3 @@ void LED_stopBlinkingAndSetYellow(bool setLed)
 	isLedBlinking_yellow = false;
 	LED_holdYellow(setLed);
 }
-

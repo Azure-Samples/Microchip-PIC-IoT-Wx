@@ -55,18 +55,18 @@
 
 typedef union
 {
-  struct {
-    unsigned sw0_button_press:1;
-    unsigned sw1_button_press:1;
-  };
-  unsigned AsUSHORT;
+	struct {
+		unsigned sw0_button_press:1;
+		unsigned sw1_button_press:1;
+	};
+	unsigned AsUSHORT;
 } button_press_flag_t;
 
 typedef struct
 {
-  uint32_t sw0_press_count;
-  uint32_t sw1_press_count;
-  button_press_flag_t flag;
+	uint32_t sw0_press_count;
+	uint32_t sw1_press_count;
+	button_press_flag_t flag;
 } button_press_data_t;
 
 extern button_press_data_t button_press_data;
@@ -2312,9 +2312,9 @@ void PIN_MANAGER_Initialize (void);
 
   @Returns
     None
- 
- 
-  @Example 
+
+
+  @Example
     <code>
         SW0_SetInterruptHandler(&SW0_CallBack);
     </code>
@@ -2333,9 +2333,9 @@ void SW0_CallBack(void);
 
   @Returns
     None
- 
- 
-  @Example 
+
+
+  @Example
     <code>
         SW1_SetInterruptHandler(&SW1_CallBack);
     </code>
@@ -2354,9 +2354,9 @@ void SW1_CallBack(void);
 
   @Returns
     None
- 
- 
-  @Example 
+
+
+  @Example
     <code>
         INT_SetInterruptHandler(&INT_CallBack);
     </code>
@@ -2376,8 +2376,8 @@ void INT_CallBack(void);
 
   @Returns
     None
- 
-  @Example 
+
+  @Example
     <code>
         SW0_SetInterruptHandler(&SW0_CallBack);
     </code>
@@ -2396,8 +2396,8 @@ void SW0_SetInterruptHandler(void (* InterruptHandler)(void));
 
   @Returns
     None
- 
-  @Example 
+
+  @Example
     <code>
         SW0_SetIOCInterruptHandler(&SW0_CallBack);
     </code>
@@ -2416,8 +2416,8 @@ void __attribute__((deprecated("\nThis will be removed in future MCC releases. \
 
   @Returns
     None
- 
-  @Example 
+
+  @Example
     <code>
         SW1_SetInterruptHandler(&SW1_CallBack);
     </code>
@@ -2436,8 +2436,8 @@ void SW1_SetInterruptHandler(void (* InterruptHandler)(void));
 
   @Returns
     None
- 
-  @Example 
+
+  @Example
     <code>
         SW1_SetIOCInterruptHandler(&SW1_CallBack);
     </code>
@@ -2456,8 +2456,8 @@ void __attribute__((deprecated("\nThis will be removed in future MCC releases. \
 
   @Returns
     None
- 
-  @Example 
+
+  @Example
     <code>
         INT_SetInterruptHandler(&INT_CallBack);
     </code>
@@ -2476,8 +2476,8 @@ void INT_SetInterruptHandler(void (* InterruptHandler)(void));
 
   @Returns
     None
- 
-  @Example 
+
+  @Example
     <code>
         INT_SetIOCInterruptHandler(&INT_CallBack);
     </code>
