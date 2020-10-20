@@ -427,7 +427,7 @@ static az_result process_getMaxMinReport(az_span payload, az_span response, az_s
 		else if (jr.token.kind == AZ_JSON_TOKEN_STRING)
 		{
 				RETURN_IF_AZ_RESULT_FAILED(az_json_token_get_string(&jr.token, incoming_since_value, sizeof(incoming_since_value), &incoming_since_value_len));
-				debug_printGood("MAIN  : Found Value = %s in command payload.", az_span_ptr(maxmin_max_temp_name_span), incoming_since_value);
+				debug_printGood("MAIN  : Found request %s Value = %s in command payload.", az_span_ptr(maxmin_max_temp_name_span), incoming_since_value);
 				break;
 		}
 		RETURN_IF_AZ_RESULT_FAILED(az_json_reader_next_token(&jr));
@@ -494,7 +494,7 @@ static az_result process_reboot(az_span payload, az_span response, az_span* out_
 		else if (jr.token.kind == AZ_JSON_TOKEN_STRING)
 		{
 				RETURN_IF_AZ_RESULT_FAILED(az_json_token_get_string(&jr.token, reboot_delay, sizeof(reboot_delay), NULL));
-				debug_printGood("MAIN  : Found Value = %s in command payload.", az_span_ptr(reboot_command_response_delay_span), reboot_delay);
+				debug_printGood("MAIN  : Found request %s Value = %s in command payload.", az_span_ptr(reboot_command_response_delay_span), reboot_delay);
 				break;
 		}
 		RETURN_IF_AZ_RESULT_FAILED(az_json_reader_next_token(&jr));
@@ -535,7 +535,6 @@ static void handle_command_message(
 	az_span command_response_span = AZ_SPAN_FROM_BUFFER(commands_response_payload);
 
 	debug_printInfo("MAIN  : %s() : Command Name %s : Payload : %s", __func__, az_span_ptr(command_request->name), az_span_ptr(payload));
-	debug_printInfo("MAIN  : %s() : %d %d", __func__, __LINE__, az_span_size(command_response_span));
 
 	if (az_span_is_content_equal(maxmin_command_name_span, command_request->name))
 	{
@@ -561,7 +560,6 @@ static void handle_command_message(
 	else if (az_span_is_content_equal(reboot_command_name_span, command_request->name))
 	{
 		// reboot command
-		debug_printInfo("MAIN  : %s() : %d %d", __func__, __LINE__, az_span_size(command_response_span));
 		az_result response = process_reboot(payload, command_response_span, &command_response_span);
 
 		if (response != AZ_OK)
