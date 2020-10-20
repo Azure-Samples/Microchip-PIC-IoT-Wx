@@ -108,7 +108,7 @@ const struct cmd commands[] =
     { "version",     get_firmware_version },
     { "debug",       set_debug_level },
     { "led",         set_led },
-    { "idscope",     get_set_idscope }
+    { "idscope",     get_set_dps_idscope }
 };
 
 const char* led_string[] = 
