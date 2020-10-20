@@ -342,7 +342,7 @@ static void get_set_idscope(char *pArg)
     {
         // Read the ID Scope from the secure element (e.g. ATECC608A)
         atcab_read_bytes_zone(ATCA_ZONE_DATA, ATCA_SLOT_IDSCOPE, 0, (uint8_t*)atca_id_scope, sizeof(atca_id_scope));
-        printf("ID Scope = %s\r\n", atca_id_scope);
+        printf("DPS ID Scope = %s\r\n", atca_id_scope);
     }
     else
     {
