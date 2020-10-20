@@ -33,7 +33,7 @@ pf_MQTT_CLIENT pf_mqtt_iotprovisioning_client = {
 };
 
 extern uint8_t device_id_buf[100];
-extern uint8_t scope_id_buf[100];
+extern uint8_t dps_id_scope_buf[100];
 extern az_span device_id;
 uint8_t atca_id_scope[12];
 char hub_device_key_buf[64];
