@@ -1,35 +1,35 @@
 /*
-    \file   cli.c
+	 \file	cli.c
 
-    \brief  Command Line Interpreter source file.
+	 \brief  Command Line Interpreter source file.
 
-    (c) 2018 Microchip Technology Inc. and its subsidiaries.
+	 (c) 2018 Microchip Technology Inc. and its subsidiaries.
 
-    Subject to your compliance with these terms, you may use Microchip software and any
-    derivatives exclusively with Microchip products. It is your responsibility to comply with third party
-    license terms applicable to your use of third party software (including open source software) that
-    may accompany Microchip software.
+	 Subject to your compliance with these terms, you may use Microchip software and any
+	 derivatives exclusively with Microchip products. It is your responsibility to comply with third party
+	 license terms applicable to your use of third party software (including open source software) that
+	 may accompany Microchip software.
 
-    THIS SOFTWARE IS SUPPLIED BY MICROCHIP "AS IS". NO WARRANTIES, WHETHER
-    EXPRESS, IMPLIED OR STATUTORY, APPLY TO THIS SOFTWARE, INCLUDING ANY
-    IMPLIED WARRANTIES OF NON-INFRINGEMENT, MERCHANTABILITY, AND FITNESS
-    FOR A PARTICULAR PURPOSE.
+	 THIS SOFTWARE IS SUPPLIED BY MICROCHIP "AS IS". NO WARRANTIES, WHETHER
+	 EXPRESS, IMPLIED OR STATUTORY, APPLY TO THIS SOFTWARE, INCLUDING ANY
+	 IMPLIED WARRANTIES OF NON-INFRINGEMENT, MERCHANTABILITY, AND FITNESS
+	 FOR A PARTICULAR PURPOSE.
 
-    IN NO EVENT WILL MICROCHIP BE LIABLE FOR ANY INDIRECT, SPECIAL, PUNITIVE,
-    INCIDENTAL OR CONSEQUENTIAL LOSS, DAMAGE, COST OR EXPENSE OF ANY KIND
-    WHATSOEVER RELATED TO THE SOFTWARE, HOWEVER CAUSED, EVEN IF MICROCHIP
-    HAS BEEN ADVISED OF THE POSSIBILITY OR THE DAMAGES ARE FORESEEABLE. TO
-    THE FULLEST EXTENT ALLOWED BY LAW, MICROCHIP'S TOTAL LIABILITY ON ALL
-    CLAIMS IN ANY WAY RELATED TO THIS SOFTWARE WILL NOT EXCEED THE AMOUNT
-    OF FEES, IF ANY, THAT YOU HAVE PAID DIRECTLY TO MICROCHIP FOR THIS
-    SOFTWARE.
+	 IN NO EVENT WILL MICROCHIP BE LIABLE FOR ANY INDIRECT, SPECIAL, PUNITIVE,
+	 INCIDENTAL OR CONSEQUENTIAL LOSS, DAMAGE, COST OR EXPENSE OF ANY KIND
+	 WHATSOEVER RELATED TO THE SOFTWARE, HOWEVER CAUSED, EVEN IF MICROCHIP
+	 HAS BEEN ADVISED OF THE POSSIBILITY OR THE DAMAGES ARE FORESEEABLE. TO
+	 THE FULLEST EXTENT ALLOWED BY LAW, MICROCHIP'S TOTAL LIABILITY ON ALL
+	 CLAIMS IN ANY WAY RELATED TO THIS SOFTWARE WILL NOT EXCEED THE AMOUNT
+	 OF FEES, IF ANY, THAT YOU HAVE PAID DIRECTLY TO MICROCHIP FOR THIS
+	 SOFTWARE.
 */
 
 #include <stdlib.h>
 #include <stdint.h>
 #include <string.h>
 #include <stdio.h>
-
+#include <ctype.h>
 #include "../drivers/timeout.h"
 #include "../delay.h"
 #include "../drivers/uart.h"
@@ -42,12 +42,12 @@
 #include "../cloud/cloud_service.h"
 #include "../../mqtt_packetPopulation/mqtt_iotprovisioning_packetPopulate.h"
 
-#define WIFI_PARAMS_OPEN    1
-#define WIFI_PARAMS_PSK     2
-#define WIFI_PARAMS_WEP     3
-#define MAX_COMMAND_SIZE        100
-#define MAX_PUB_KEY_LEN         200
-#define NEWLINE "\r\n"
+#define WIFI_PARAMS_OPEN	 1
+#define WIFI_PARAMS_PSK	  2
+#define WIFI_PARAMS_WEP	  3
+#define MAX_COMMAND_SIZE		  100
+#define MAX_PUB_KEY_LEN			200
+#define NEWLINE "\r\n\4"
 
 #define UNKNOWN_CMD_MSG "--------------------------------------------" NEWLINE\
                         "Unknown command. List of available commands:" NEWLINE\
@@ -58,17 +58,18 @@
                         "version" NEWLINE\
                         "cli_version" NEWLINE\
                         "wifi <ssid>[,<pass>,[authType]]" NEWLINE\
-                        "debug" NEWLINE\
-                        "idscope <idscope>" NEWLINE\
-                        "--------------------------------------------"NEWLINE"\4"
+                        "debug <Debug Level : 0 ~ 4>" NEWLINE\
+                        "led <led : 1 ~ 4>,<state : 1 ~ 4> [-? for help]" NEWLINE\
+                        "idscope [DPS ID Scope]" NEWLINE\
+                        "--------------------------------------------" NEWLINE
 
 static char command[MAX_COMMAND_SIZE];
 static bool isCommandReceived = false;
 static uint8_t index = 0;
 static bool commandTooLongFlag = false;
 
-const char * const cli_version_number             = "2.1";
-const char * const firmware_version_number        = "1.1.1";
+const char * const cli_version_number				 = "2.1";
+const char * const firmware_version_number		  = "1.1.1";
 
 static void command_received(char *command_text);
 static void reset_cmd(char *pArg);
@@ -79,321 +80,527 @@ static void get_device_id(char *pArg);
 static void get_cli_version(char *pArg);
 static void get_firmware_version(char *pArg);
 static void set_debug_level(char *pArg);
-static void get_set_idscope(char *pArg);
+static void set_led(char *pArg);
+static void get_set_dps_idscope(char *pArg);
 
 static bool endOfLineTest(char c);
 static void enableUsartRxInterrupts(void);
 
-#define CLI_TASK_INTERVAL       timeout_mSecToTicks(50)
+#define CLI_TASK_INTERVAL		 timeout_mSecToTicks(50)
 
 uint32_t CLI_task(void*);
-timerStruct_t CLI_task_timer             = {CLI_task};
+timerStruct_t CLI_task_timer				 = {CLI_task};
 
 struct cmd
 {
-    const char * const command;
-    void (* const handler)(char *argument);
+	 const char * const command;
+	 void (* const handler)(char *argument);
 };
 
 const struct cmd commands[] =
 {
-    { "reset",       reset_cmd},
-    { "reconnect",   reconnect_cmd },
-    { "wifi",        set_wifi_auth },
-    { "key",         get_public_key },
-    { "device",      get_device_id },
-    { "cli_version", get_cli_version },
-    { "version",     get_firmware_version },
-    { "debug",       set_debug_level },
-    { "idscope",     get_set_idscope }
+	{ "reset",       reset_cmd},
+	{ "reconnect",   reconnect_cmd },
+	{ "wifi",        set_wifi_auth },
+	{ "key",         get_public_key },
+	{ "device",      get_device_id },
+	{ "cli_version", get_cli_version },
+	{ "version",     get_firmware_version },
+	{ "debug",       set_debug_level },
+	{ "led",         set_led },
+	{ "idscope",     get_set_dps_idscope }
+};
+
+const char* led_string[] =
+{
+	"Blue",
+	"Green",
+	"Yellow",
+	"Red"
+};
+
+const char* debug_level[] =
+{
+	"SEVERITY_NONE",
+	"SEVERITY_ERROR",
+	"SEVERITY_WARN",
+	"SEVERITY_DEBUG",
+	"SEVERITY_INFO"
 };
 
 void CLI_init(void)
 {
-    enableUsartRxInterrupts();
-    timeout_create(&CLI_task_timer, CLI_TASK_INTERVAL);
+	enableUsartRxInterrupts();
+	timeout_create(&CLI_task_timer, CLI_TASK_INTERVAL);
 }
 
 static bool endOfLineTest(char c)
 {
-   static char test = 0;
-   bool retvalue = true;
+	static char test = 0;
+	bool retvalue = true;
 
-   if(c == '\n')
-   {
-      if(test == '\r')
-      {
-         retvalue = false;
-      }
-   }
-   test = c;
-   return retvalue;
+	if(c == '\n')
+	{
+		if(test == '\r')
+		{
+			retvalue = false;
+		}
+	}
+	test = c;
+	return retvalue;
 }
 
 uint32_t CLI_task(void* param)
 {
-    bool cmd_rcvd = false;
-    char c = 0;
-   // read all the EUSART bytes in the queue
-   while(uart[CLI].DataReady() && !isCommandReceived)
-   {
-      c = uart[CLI].Read();
-      // read until we get a newline
-      if(c == '\r' || c == '\n')
-      {
-         command[index] = 0;
-         
-         if(!commandTooLongFlag)
-         {
-            if( endOfLineTest(c) && !cmd_rcvd )
-            {
-               command_received((char*)command);
-			   cmd_rcvd = true;
-            }
-         }
-         if(commandTooLongFlag)
-         {
-            printf(NEWLINE"Command too long"NEWLINE);
-         }
-         index = 0;
-         commandTooLongFlag = false;
-      }
-      else // otherwise store the character
-      {
-         if(index < MAX_COMMAND_SIZE)
-         {
-            command[index++] = c;
-         }
-         else
-         {
-            commandTooLongFlag = true;
-         }
-      }
-   }
-	
-   return CLI_TASK_INTERVAL;
+	 bool cmd_rcvd = false;
+	 char c = 0;
+	// read all the EUSART bytes in the queue
+	while(uart[CLI].DataReady() && !isCommandReceived)
+	{
+		c = uart[CLI].Read();
+		// read until we get a newline
+		if(c == '\r' || c == '\n')
+		{
+			command[index] = 0;
+
+			if(!commandTooLongFlag)
+			{
+				if( endOfLineTest(c) && !cmd_rcvd )
+				{
+					command_received((char*)command);
+				cmd_rcvd = true;
+				}
+			}
+			if(commandTooLongFlag)
+			{
+				printf(NEWLINE"Command too long"NEWLINE);
+			}
+			index = 0;
+			commandTooLongFlag = false;
+		}
+		else // otherwise store the character
+		{
+			if(index < MAX_COMMAND_SIZE)
+			{
+				command[index++] = c;
+			}
+			else
+			{
+				commandTooLongFlag = true;
+			}
+		}
+	}
+
+	return CLI_TASK_INTERVAL;
 }
 
 static void set_wifi_auth(char *ssid_pwd_auth)
 {
-    char *credentials[3];
-    char *pch;
-    uint8_t params = 0;
+	 char *credentials[3];
+	 char *pch;
+	 uint8_t params = 0;
 	uint8_t i;
-    
-    for(i=0;i<=2;i++)credentials[i]='\0';
 
-    pch = strtok (ssid_pwd_auth, ",");
-    credentials[0]=pch;
-       
-    while (pch != NULL && params <= 2)
-    {
-        credentials[params] = pch;
-        params++;
-        pch = strtok (NULL, ",");
+	 for(i=0;i<=2;i++)credentials[i]='\0';
 
-    }
-    
-    if(credentials[0]!=NULL)
-    {
-        if(credentials[1]==NULL && credentials[2]==NULL) params=1;
-        else if(credentials[1]!= NULL && credentials[2]== NULL)
-        {
-            params=atoi(credentials[1]);//Resuse the same variable to store the auth type
-            if (params==2 || params==3)params=5;
-            else if(params==1);
-            else params=2;
-        }
-        else params = atoi(credentials[2]);		
-    }
+	 pch = strtok (ssid_pwd_auth, ",");
+	 credentials[0]=pch;
 
-    switch (params)
-    {
-        case WIFI_PARAMS_OPEN:
-            strncpy(ssid, credentials[0],MAX_WIFI_CREDENTIALS_LENGTH-1);
-            strcpy(pass, "\0");
-            strncpy(authType, "1", 2);
-        break;
+	 while (pch != NULL && params <= 2)
+	 {
+		  credentials[params] = pch;
+		  params++;
+		  pch = strtok (NULL, ",");
 
-        case WIFI_PARAMS_PSK:
-            case WIFI_PARAMS_WEP:
-            strncpy(ssid, credentials[0],MAX_WIFI_CREDENTIALS_LENGTH-1);
-            strncpy(pass, credentials[1],MAX_WIFI_CREDENTIALS_LENGTH-1);
-            sprintf(authType, "%d", params);                
-        break;
-            
-        default:
-            params = 0;
-        break;
-    }
+	 }
+
+	 if(credentials[0]!=NULL)
+	 {
+		  if(credentials[1]==NULL && credentials[2]==NULL) params=1;
+		  else if(credentials[1]!= NULL && credentials[2]== NULL)
+		  {
+				params=atoi(credentials[1]);//Resuse the same variable to store the auth type
+				if (params==2 || params==3)params=5;
+				else if(params==1);
+				else params=2;
+		  }
+		  else params = atoi(credentials[2]);
+	 }
+
+	 switch (params)
+	 {
+		  case WIFI_PARAMS_OPEN:
+				strncpy(ssid, credentials[0],MAX_WIFI_CREDENTIALS_LENGTH-1);
+				strcpy(pass, "\0");
+				strncpy(authType, "1", 2);
+		  break;
+
+		  case WIFI_PARAMS_PSK:
+				case WIFI_PARAMS_WEP:
+				strncpy(ssid, credentials[0],MAX_WIFI_CREDENTIALS_LENGTH-1);
+				strncpy(pass, credentials[1],MAX_WIFI_CREDENTIALS_LENGTH-1);
+				sprintf(authType, "%d", params);
+		  break;
+
+		  default:
+				params = 0;
+		  break;
+	 }
 	if (params)
 	{
-            printf("OK\r\n\4");
-        if(CLOUD_isConnected())
-        {
-            MQTT_Close(MQTT_GetClientConnectionInfo());
-        }        
-            wifi_disconnectFromAp();
+				printf("OK\r\n\4");
+		  if(CLOUD_isConnected())
+		  {
+				MQTT_Close(MQTT_GetClientConnectionInfo());
+		  }
+				wifi_disconnectFromAp();
 	}
 	else
 	{
-            printf("Error. Wi-Fi command format is wifi <ssid>[,<pass>,[authType]]\r\n\4");
+				printf("Error. Wi-Fi command format is wifi <ssid>[,<pass>,[authType]]\r\n\4");
 	}
 }
 
 static void reconnect_cmd(char *pArg)
 {
-    (void)pArg;
+	 (void)pArg;
 
-    MQTT_Disconnect(MQTT_GetClientConnectionInfo());
-    printf("OK\r\n");
+	 MQTT_Disconnect(MQTT_GetClientConnectionInfo());
+	 printf("OK\r\n\4");
 }
 
 static void reset_cmd(char *pArg)
 {
-    (void)pArg;
+	 (void)pArg;
 
-    DELAY_milliseconds(30);
-    asm("RESET");
+	 DELAY_milliseconds(30);
+	 asm("RESET");
 }
 
 static void set_debug_level(char *pArg)
 {
-   debug_severity_t level = SEVERITY_NONE;
-   if(*pArg >= '0' && *pArg <= '4')
-   {
-      level = *pArg - '0';
-      debug_setSeverity(level);
-      printf("OK\r\n");
-   }
-   else
-   {
-      printf("debug parameter must be between 0 (Least) and 4 (Most) \r\n");
-   }
+	 debug_severity_t level = SEVERITY_NONE;
+
+	 if (pArg == NULL)
+	 {
+		  level = debug_getSeverity();
+		  printf("Current Debug Level = %s (%d)"NEWLINE, debug_level[level], level);
+	 }
+	 else if(*pArg >= '0' && *pArg <= '4')
+	 {
+		  level = *pArg - '0';
+		  debug_setSeverity(level);
+		  printf("OK\r\n\4");
+	 }
+	 else
+	 {
+		  printf("debug parameter must be between 0 (Least) and 4 (Most) \r\n\4");
+	 }
 }
 
 static void get_public_key(char *pArg)
 {
-    char key_pem_format[MAX_PUB_KEY_LEN];
-    (void)pArg;
+	 char key_pem_format[MAX_PUB_KEY_LEN];
+	 (void)pArg;
 
-    if (CRYPTO_CLIENT_printPublicKey(key_pem_format) == NO_ERROR)
-    {
-        printf(key_pem_format);
-    }
-    else
-    {
-        printf("Error getting key.\r\n\4");
-    }
+	 if (CRYPTO_CLIENT_printPublicKey(key_pem_format) == NO_ERROR)
+	 {
+		  printf(key_pem_format);
+	 }
+	 else
+	 {
+		  printf("Error getting key.\r\n\4");
+	 }
 }
 
 static char *ateccsn = NULL;
 void CLI_setdeviceId(char *id)
 {
-   ateccsn = id;
+	ateccsn = id;
 }
 
 static void get_device_id(char *pArg)
 {
-   (void) pArg;
-    if (ateccsn)
-    {
-        printf("%s\r\n\4", ateccsn);
-    }
-    else
-    {
-        printf("Unknown.\r\n\4");
-    }
+	(void) pArg;
+	 if (ateccsn)
+	 {
+		  printf("%s\r\n\4", ateccsn);
+	 }
+	 else
+	 {
+		  printf("Unknown.\r\n\4");
+	 }
 }
 
 static void get_cli_version(char *pArg)
 {
-    (void)pArg;
-    printf("v%s\r\n\4", cli_version_number);
+	 (void)pArg;
+	 printf("v%s\r\n\4", cli_version_number);
 }
 
 static void get_firmware_version(char *pArg)
-{    
-    (void)pArg;
-    printf("v%s\r\n\4", firmware_version_number);
-}
-
-static void get_set_idscope(char *pArg)
 {
-    char *dps_param[2];
-    char *pch;
-    uint8_t i;
-    uint8_t params = 0;
-    char atca_id_scope[12]; //idscope 0ne001825F3
-
-    for(i=0;i<=1;i++)dps_param[i]='\0';
-
-    pch = strtok (pArg, ",");
-    dps_param[0]=pch;
-       
-    while (pch != NULL && params <= 1)
-    {
-        dps_param[params] = pch;
-        params++;
-        pch = strtok (NULL, ",");
-    }
-
-    if (dps_param[0] == NULL)
-    {
-        // Read the ID Scope from the secure element (e.g. ATECC608A)
-        atcab_read_bytes_zone(ATCA_ZONE_DATA, ATCA_SLOT_IDSCOPE, 0, (uint8_t*)atca_id_scope, sizeof(atca_id_scope));
-        printf("DPS ID Scope = %s\r\n", atca_id_scope);
-    }
-    else
-    {
-        atca_id_scope[11] = '\0';
-        // Can execute this once to write a default ID Scope to the secure element
-        printf("Setting DPS ID Scope = %s\r\n", dps_param[0]);
-	    atcab_write_bytes_zone(ATCA_ZONE_DATA, ATCA_SLOT_IDSCOPE, 0, (uint8_t*)dps_param[0], sizeof(atca_id_scope));
-    }
+	 (void)pArg;
+	 printf("v%s\r\n\4", firmware_version_number);
 }
 
+static void print_led_help(char* msg)
+{
+	 if (msg)
+	 {
+		  printf(msg);
+	 }
+	 printf("==============================================="NEWLINE);
+	 printf("led <LED Number>,<LED State>"NEWLINE);
+	 printf("|1\t|2\t|3\t|4"NEWLINE);
+	 printf("|Blue\t|Greent\t|Yellow\tRed"NEWLINE);
+	 printf("|On\t|Off\t|Blink\t|Stop Blink"NEWLINE);
+	 return;
+}
+
+static void set_led(char *pArg)
+	 {
+	 //	LED number
+	 //	1 = Blue
+	 //	2 = Green
+	 //	3 = Yellow
+	 //	4 = Red
+	 //
+	 //	State
+	 //	1 = On
+	 //	2 = Off
+	 //	3 = Blink
+	 char *led_param[3];
+	 char *pch;
+	 uint8_t i;
+	 uint8_t params = 0;
+	 uint8_t led_num = 0;
+	 uint8_t led_state = 0;
+
+	 for(i = 0 ; i <= 2 ; i++)
+	 {
+		  led_param[i]='\0';
+	 }
+
+	 pch = strtok (pArg, ",");
+	 led_param[0]=pch;
+
+	 while (pch != NULL && params <= 2)
+	 {
+		  led_param[params] = pch;
+		  params++;
+		  pch = strtok(NULL, ",");
+	 }
+
+	 if (params == 1)
+	 {
+		  if (led_param[0][0] == '-' && (led_param[0][1] == 'h' || led_param[0][1] == 'H' || led_param[0][1] == '?'))
+		  {
+				return print_led_help(NULL);
+		  }
+	 }
+
+	 if (led_param[0] != NULL)
+	 {
+		  if (led_param[0][0] == '-' && (led_param[0][1] == 'h' || led_param[0][1] == 'H' || led_param[0][1] == '?'))
+		  {
+				return print_led_help(NULL);
+		  }
+		  else if (!isDigit((int)led_param[0][0])) {
+				return print_led_help("Please provide LED Number" NEWLINE);
+		  }
+		  led_num = atoi(&led_param[0][0]);
+	 }
+	 else
+	 {
+		  return print_led_help("Please provide LED Number" NEWLINE);
+	 }
+
+
+	 if (led_param[1] != NULL)
+	 {
+		  if (!isDigit((int)led_param[1][0])) {
+				return print_led_help("Please provide LED State Number" NEWLINE);
+		  }
+		  led_state = atoi(&led_param[1][0]);
+	 }
+	 else
+	 {
+		  return print_led_help("Please provide LED State Number" NEWLINE);
+	 }
+
+	 switch (led_state)
+	 {
+		  case 1:
+				// turn on LED
+				printf("%s On" NEWLINE, led_string[led_num - 1]);
+				switch (led_num)
+				{
+					 case 1:
+						  LED_holdBlue(LED_ON);
+						  break;
+					 case 2:
+						  LED_holdGreen(LED_ON);
+						  break;
+					 case 3:
+						  LED_holdYellow(LED_ON);
+						  break;
+					 case 4:
+						  LED_holdRed(LED_ON);
+						  break;
+				}
+				break;
+
+		  case 2:
+				// turn off LED
+				printf("%s Off" NEWLINE, led_string[led_num - 1]);
+				switch (led_num)
+				{
+					 case 1:
+						  LED_holdBlue(LED_OFF);
+						  break;
+					 case 2:
+						  LED_holdGreen(LED_OFF);
+						  break;
+					 case 3:
+						  LED_holdYellow(LED_OFF);
+						  break;
+					 case 4:
+						  LED_holdRed(LED_OFF);
+						  break;
+				}
+				break;
+
+		  case 3:
+				// Start blink
+				printf("%s start blinking" NEWLINE, led_string[led_num - 1]);
+				switch (led_num)
+				{
+					 case 1:
+						  LED_startBlinkingBlue(false);
+						  break;
+					 case 2:
+						  LED_startBlinkingGreen(true);
+						  break;
+					 case 3:
+						  LED_startBlinkingYellow();
+						  break;
+					 case 4:
+						  LED_startBlinkingRed();
+						  break;
+				}
+				break;
+
+		  case 4:
+				// Stop blink
+				printf("%s stop blinking" NEWLINE, led_string[led_num - 1]);
+				switch (led_num)
+				{
+					 case 1:
+						  LED_stopBlinkingAndSetBlue(LED_OFF);
+						  break;
+					 case 2:
+						  LED_stopBlinkingAndSetGreen(LED_OFF);
+						  break;
+					 case 3:
+						  LED_stopBlinkingAndSetYellow(LED_OFF);
+						  break;
+					 case 4:
+						  LED_stopBlinkingAndSetRed(LED_OFF);
+						  break;
+				}
+				break;
+		  default:
+				break;
+	 }
+}
+
+static void get_set_dps_idscope(char *pArg)
+{
+	 char *dps_param;
+	 uint8_t i;
+	 char atca_id_scope[12]; //idscope 0ne001825F3
+
+	 dps_param = pArg;
+
+	 if (dps_param == NULL)
+	 {
+		  atcab_read_bytes_zone(ATCA_ZONE_DATA, ATCA_SLOT_DPS_IDSCOPE, 0, (uint8_t*)atca_id_scope, sizeof(atca_id_scope));
+		  printf("Current DPS ID Scope : %s" NEWLINE, atca_id_scope);
+	 }
+	 else
+	 {
+		  if (strlen(dps_param) != 11)
+		  {
+				printf("DPS ID Scope entered : %s. Wrong ID Scope length.  Should be 0neXXXXXXXX format" NEWLINE, dps_param);
+				return;
+		  }
+
+		  if (dps_param[0] != '0' || dps_param[1] != 'n' || dps_param[2] != 'e')
+		  {
+				printf("DPS ID Scope entered : %s. ID Scope should start with 0ne" NEWLINE, dps_param);
+				return;
+		  }
+
+		  for (i = 3 ; i < 10 ; i++)
+		  {
+				if (!isalnum(dps_param[i]))
+				{
+					 printf("DPS ID Scope entered : %s. Non-alpha numberic letter detected.  Should be 0neXXXXXXXX format" NEWLINE, dps_param);
+					 return;
+				}
+		  }
+
+		  printf("Writing DPS ID Scope %s to ATCA" NEWLINE, dps_param);
+		  atcab_write_bytes_zone(ATCA_ZONE_DATA, ATCA_SLOT_DPS_IDSCOPE, 0, (uint8_t*)dps_param, sizeof(atca_id_scope));
+		  DELAY_milliseconds(500);
+		  atcab_read_bytes_zone(ATCA_ZONE_DATA, ATCA_SLOT_DPS_IDSCOPE, 0, (uint8_t*)atca_id_scope, sizeof(atca_id_scope));
+		  printf("New DPS ID Scope : %s" NEWLINE, atca_id_scope);
+	 }
+
+	 return;
+}
 
 static void command_received(char *command_text)
 {
-    char *argument = strstr(command_text, " ");
-    uint8_t cmp;
-    uint8_t ct_len;
-    uint8_t cc_len;
-    uint8_t i = 0;
+	 char *argument = strstr(command_text, " ");
+	 uint8_t cmp;
+	 uint8_t ct_len;
+	 uint8_t cc_len;
+	 uint8_t i = 0;
 
-    if (argument != NULL)
-    {
-        /* Replace the delimiter with string terminator */
-        *argument = '\0';
-        /* Point after the string terminator, to the actual string */
-        argument++;
-    }
+	 if (argument != NULL)
+	 {
+		  /* Replace the delimiter with string terminator */
+		  *argument = '\0';
+		  /* Point after the string terminator, to the actual string */
+		  argument++;
+	 }
 
-    for (i = 0; i < sizeof(commands)/sizeof(*commands); i++)
-    {
-        cmp = strcmp(command_text, commands[i].command);
-        ct_len = strlen(command_text);        
-        cc_len = strlen(commands[i].command);
+	 for (i = 0; i < sizeof(commands)/sizeof(*commands); i++)
+	 {
+		  cmp = strcmp(command_text, commands[i].command);
+		  ct_len = strlen(command_text);
+		  cc_len = strlen(commands[i].command);
 
-        if (cmp == 0 && ct_len == cc_len)
-        {
-            if (commands[i].handler != NULL)
-            {
-                commands[i].handler(argument);
-                return;
-            }
-        }
-    }
+		  if (cmp == 0 && ct_len == cc_len)
+		  {
+				if (commands[i].handler != NULL)
+				{
+					 commands[i].handler(argument);
+					 return;
+				}
+		  }
+	 }
 
-    printf(UNKNOWN_CMD_MSG);
+	 printf(UNKNOWN_CMD_MSG);
 }
 
 static void enableUsartRxInterrupts(void)
 {
-    // Empty RX buffer
-    while(uart[CLI].DataReady())
-    {
-        uart[CLI].Read();
-    }    
+	 // Empty RX buffer
+	 while(uart[CLI].DataReady())
+	 {
+		  uart[CLI].Read();
+	 }
 }
