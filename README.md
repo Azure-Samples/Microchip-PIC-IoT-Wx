@@ -19,7 +19,6 @@
     - [TLS connection](#tls-connection)
     - [MQTT Connection](#mqtt-connection)
   - [Sample Descriptions](#sample-descriptions)
-    - [AzureIotDps.X](#azureiotdpsx)
     - [AzureIotPnpDps.X](#azureiotpnpdpsx)
   - [Checklist](#checklist)
   - [Instruction](#instruction)
@@ -149,10 +148,6 @@ and security, MQTT does not have to provide a username or password.
 ## Sample Descriptions
 
 Currently we have two samples to use with the PIC-IoT-Wx. The first one is using DPS to provision and then connects and interacts with IoT Hub using unprocessed application code. The second one is using DPS to provision and then connects and interacts with IoT Hub using the IoT Plug and Play programming model. To further understand what IoT Plug and Play is, please see the documentation [here](https://docs.microsoft.com/en-us/azure/iot-pnp/overview-iot-plug-and-play). Both samples use the same setup process, differing only slightly in how you interact with them with the IoT Explorer.
-
-### AzureIotDps.X
-
-Connect the device through Azure IoT Hub Device Provisioning to then connect to your IoT Hub. Use the IoT Explorer to view the telemetry as it is received by the service.
 
 ### AzureIotPnpDps.X
 
