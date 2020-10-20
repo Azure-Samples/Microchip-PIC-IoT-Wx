@@ -206,7 +206,7 @@ void MQTT_CLIENT_iotprovisioning_connect(char* deviceID)
 	LED_startBlinkingGreen(true);
 
 	// Read the ID Scope from the secure element (e.g. ATECC608A)
-	atcab_read_bytes_zone(ATCA_ZONE_DATA, ATCA_SLOT_IDSCOPE, 0, atca_id_scope, sizeof(atca_id_scope));
+	atcab_read_bytes_zone(ATCA_ZONE_DATA, ATCA_SLOT_DPS_IDSCOPE, 0, atca_id_scope, sizeof(atca_id_scope));
 	debug_printInfo("DPS   : ID Scope = %s", atca_id_scope);
 
 	const az_span scopeID_parm = az_span_create_from_str((char*)atca_id_scope);
