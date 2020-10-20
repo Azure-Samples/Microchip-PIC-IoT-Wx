@@ -348,7 +348,7 @@ static void get_set_idscope(char *pArg)
     {
         atca_id_scope[11] = '\0';
         // Can execute this once to write a default ID Scope to the secure element
-        printf("Setting ID Scope = %s\r\n", dps_param[0]);
+        printf("Setting DPS ID Scope = %s\r\n", dps_param[0]);
 	    atcab_write_bytes_zone(ATCA_ZONE_DATA, ATCA_SLOT_IDSCOPE, 0, (uint8_t*)dps_param[0], sizeof(atca_id_scope));
     }
 }
