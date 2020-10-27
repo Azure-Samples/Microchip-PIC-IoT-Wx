@@ -18,16 +18,15 @@
     - [Azure IoT Embedded C SDK](#azure-iot-embedded-c-sdk)
     - [TLS connection](#tls-connection)
     - [MQTT Connection](#mqtt-connection)
-  - [Sample Descriptions](#sample-descriptions)
-    - [AzureIotPnpDps.X](#azureiotpnpdpsx)
+  - [Demonstration Application Description](#demonstration-application-description)
   - [Checklist](#checklist)
   - [Instruction](#instruction)
-    - [Step 1: Prepare your development environment](#step-1-prepare-your-development-environment)
+    - [Section 1: Prepare your development environment](#section-1-prepare-your-development-environment)
       - [1. Set up Microchip’s MPLAB X IDE Tool Chain](#1-set-up-microchips-mplab-x-ide-tool-chain)
       - [2. Set up Azure cloud resources](#2-set-up-azure-cloud-resources)
       - [3. Set up Git](#3-set-up-git)
-    - [Step 2: Prepare your PIC-IoT board to connect to Azure](#step-2-prepare-your-pic-iot-board-to-connect-to-azure)
-    - [Step 3: Enroll device into DPS](#step-3-enroll-device-into-dps)
+    - [Section 2: Prepare your PIC-IoT board to connect to Azure](#section-2-prepare-your-pic-iot-board-to-connect-to-azure)
+    - [Section 3: Enroll device into DPS](#section-3-enroll-device-into-dps)
       - [1. Preparing your environment for the certification verifying process:](#1-preparing-your-environment-for-the-certification-verifying-process)
       - [2. In Azure portal, upload the root CA cert “root-ca.pem” in DPS and do proof-of-possession for X.509 CA certificates with your Device Provisioning Service](#2-in-azure-portal-upload-the-root-ca-cert-root-capem-in-dps-and-do-proof-of-possession-for-x509-ca-certificates-with-your-device-provisioning-service)
         - [a. Register the public part of an X.509 certificate and get a verification code](#a-register-the-public-part-of-an-x509-certificate-and-get-a-verification-code)
@@ -36,11 +35,11 @@
         - [STOP! Quick summary of this step](#stop-quick-summary-of-this-step)
       - [3. Add a new enrollment group using the signer-ca.pem file](#3-add-a-new-enrollment-group-using-the-signer-capem-file)
       - [STOP! Sanity checks:](#stop-sanity-checks)
-    - [Step 4: Connect the PIC-IoT device to Azure](#step-4-connect-the-pic-iot-device-to-azure)
-    - [Step 5: Verify the connection between PIC-IoT and Azure](#step-5-verify-the-connection-between-pic-iot-and-azure)
-    - [Step 6: View PIC-IoT board telemetry on Azure IoT Explorer](#step-6-view-pic-iot-board-telemetry-on-azure-iot-explorer)
+    - [Section 4: Connect the PIC-IoT device to Azure](#section-4-connect-the-pic-iot-device-to-azure)
+    - [Section 5: Verify the connection between PIC-IoT and Azure](#section-5-verify-the-connection-between-pic-iot-and-azure)
+    - [Section 6: View PIC-IoT board telemetry on Azure IoT Explorer](#section-6-view-pic-iot-board-telemetry-on-azure-iot-explorer)
     - [Further instructions for IoT Plug and Play](#further-instructions-for-iot-plug-and-play)
-  - [Further consideration](#further-consideration)
+  - [Further Consideration](#further-consideration)
   - [Conclusion](#conclusion)
 
 ## Background Knowledge
@@ -145,16 +144,9 @@ After successfully connecting on the TLS level, the board starts
 establishing the MQTT connection. Since the TLS handles authentication
 and security, MQTT does not have to provide a username or password.
 
-## Sample Descriptions
+## Demonstration Application Description
 
-Currently we have two samples to use with the PIC-IoT-Wx. The first one is using DPS to provision and then connects and interacts with IoT Hub using unprocessed application code. The second one is using DPS to provision and then connects and interacts with IoT Hub using the IoT Plug and Play programming model. To further understand what IoT Plug and Play is, please see the documentation [here](https://docs.microsoft.com/en-us/azure/iot-pnp/overview-iot-plug-and-play). Both samples use the same setup process, differing only slightly in how you interact with them with the IoT Explorer.
-
-### AzureIotPnpDps.X
-
-Use an IoT Plug and Play enabled device with the DTMI detailed [here](https://github.com/Azure/opendigitaltwins-dtdl/blob/master/DTDL/v2/samples/Thermostat.json).
-You can monitor the telemetry, invoke methods, and modify properties easily with the additional instructions listed at [here](#further-instructions-for-iot-plug-and-play).
-
-![Iot Explorer](./docs/images/iotexplorer.png)
+The provided demo project uses DPS to provision and then connects/interacts with IoT Hub using the IoT Plug and Play programming model. To further understand what IoT Plug and Play is, please see the documentation [here](https://docs.microsoft.com/en-us/azure/iot-pnp/overview-iot-plug-and-play).
 
 ## Checklist
 
@@ -165,15 +157,15 @@ list as you complete each stage:
 
 ## Instruction
 
-### Step 1: Prepare your development environment
+### Section 1: Prepare your development environment
 
 #### 1. Set up Microchip’s MPLAB X IDE Tool Chain
 
-- [MPLAB X IDE V5.30 or
+- [MPLAB X IDE V5.40 or
     later](https://www.microchip.com/mplab/mplab-x-ide)
 
-- [XC16 Compiler v1.50 or
-    later](https://www.microchip.com/mplab/compilers)
+- [MPLAB XC16 Compiler v1.50](https://www.microchip.com/development-tools/pic-and-dspic-downloads-archive)
+  (NOTE: XC16 v1.60 has an issue preventing a successful build with this particular demo project (which should be fixed for v1.61) so for now, please use v1.50 specifically for this demo project)
 
 - MPLAB Code Configurator 3.95 or later (once you finish the
     installation of the previous items, launch MPLAB X IDE &gt; click on
@@ -202,7 +194,7 @@ list as you complete each stage:
     <img src=".//media/image15.png"/>
 
 
-### Step 2: Prepare your PIC-IoT board to connect to Azure
+### Section 2: Prepare your PIC-IoT board to connect to Azure
 
 This step serves two purposes:
 
@@ -242,7 +234,7 @@ Hub.
 
 <img src=".//media/image14.png" />
 
-### Step 3: Enroll device into DPS
+### Section 3: Enroll device into DPS
 
 #### 1. Preparing your environment for the certification verifying process:
 
@@ -364,7 +356,7 @@ DPS &gt; click “IoT devices” (on the left-hand side under “Explorers”
 &gt; observe that your PIC-IoT device ID “sn01237F696BEB9C89FE” does
 not show up.
 
-### Step 4: Connect the PIC-IoT device to Azure
+### Section 4: Connect the PIC-IoT device to Azure
 
 In this step, we will flash the PIC-IoT board and connect it to Azure.
 
@@ -381,26 +373,22 @@ In this step, we will flash the PIC-IoT board and connect it to Azure.
 2. Launch the MPLAB X IDE and then open the demo project (\*.X) located
     at:
     ```
-    [path]\Microchip-PIC-IoT-Wx\AzureIotDps.X
+    [path]\Microchip-PIC-IoT-Wx\AzureIotPnPDps.X
     ```
 
    If the load error message in red appears, click on the “Resolve DFP for configuration: default” link: 
 
     <img src=".//media/image21.png" style="width:6.5in;height:1.00833in" alt="A screenshot of a cell phone Description automatically generated" />
 
-3. Modify `AzureIotDps/Header Files/platform/config/conf_winc.h` with your
+3. Modify `AzureIotPnPDps/Header Files/platform/config/conf_winc.h` with your
     wireless router’s SSID and password:
     ```c
     #define CFG_MAIN_WLAN_SSID "Your SSID"
     #define CFG_MAIN_WLAN_PSK  "Your WiFi Password"
     ```
 
-4.  Modify `AzureIotDps/Header Files/platform/config/IoT_Sensor_Node_config.h` with your DPS ID Scope and comment out the Hub Device ID:
+4.  Modify `AzureIotPnPDps/Header Files/platform/config/IoT_Sensor_Node_config.h` with your DPS ID Scope and comment out the Hub Device ID:
 
-    - Comment out the definition for HUB\_DEVICE\_ID
-        ```c
-        //#define HUB_DEVICE_ID "01233EAD58E86797FE"
-        ```
      - Update PROVISIONING\_ID\_SCOPE by copying the ID number directly from the Azure Portal
   
         <img src=".//media/image23.png" style="width:6.5in;height:1.43056in" alt="A screenshot of a cell phone Description automatically generated" />
@@ -410,7 +398,7 @@ In this step, we will flash the PIC-IoT board and connect it to Azure.
         ```
 
 
-5.  Modify `AzureIotDps\Source Files\platform\application_manager.c` to set
+5.  Modify `AzureIotPnPDps\Source Files\platform\application_manager.c` to set
     the highest severity debug level:
 
     - Locate this line of code:
@@ -419,7 +407,7 @@ In this step, we will flash the PIC-IoT board and connect it to Azure.
         ```
     - Add the this function call right below the debug_init call. 
         ```
-        `debug_setSeverity(SEVERITY_DEBUG)`  
+        debug_setSeverity(SEVERITY_DEBUG)  
         ``` 
         This line is added for debugging purpose.  By default the debug level is set to only output when there is error. The result looks like this:
 
@@ -431,7 +419,7 @@ In this step, we will flash the PIC-IoT board and connect it to Azure.
     -   Connect the board to PC, make sure “CURIOSITY” device shows up as a
     disk drive in a File Explorer window.
 
-    -   Right-click the project AzureIotDps &gt; select “Properties” &gt; Verify
+    -   Right-click the project AzureIotPnPDps &gt; select “Properties” &gt; Verify
     that all Configuration settings are at least the minimum versions as
     shown in the below screenshot (and that your PIC-IoT board is
     selected as the Connected Hardware Tool). If any changes were made,
@@ -446,15 +434,14 @@ In this step, we will flash the PIC-IoT board and connect it to Azure.
 
         <img src=".//media/image27.png" style="width:2in;height:2in" alt="A screenshot of a cell phone Description automatically generated" />
 
-    -   Right-click the AzureIotDps project and select “Set as Main Project”
+    -   Right-click the AzureIotPnPDps project and select “Set as Main Project”
 
-    -   Right-click the AzureIotDps project, select "Set as Main Project" and select “Make and Program Device”. This will first automatically clean and build the project. After the “BUILD SUCCESSFUL” message appears in the Output window, the application HEX file will be programmed onto the PIC-IoT board. Once programming has finished, the board will automatically reset and start running its application code. After a few seconds, you can check if the PIC-IoT board has successfully connected to your Wi-Fi Access Point by observing 3 colored LED’s on the board:
+    -   Right-click the AzureIotPnPDps project, select "Set as Main Project" and select “Make and Program Device”. This will first automatically clean and build the project. After the “BUILD SUCCESSFUL” message appears in the Output window, the application HEX file will be programmed onto the PIC-IoT board. Once programming has finished, the board will automatically reset and start running its application code. After approximately 2 minutes, you can check if the PIC-IoT board has successfully connected to your DPS by observing the colored LED’s on the board:
 
-        -   BLUE: Solid ON all the time (WIFI)
-        -   GREEN: Solid ON all the time (COMM)
-        -   ORANGE: Toggling every few seconds (DATA)
+        -   BLUE (WIFI): Solid ON all the time
+        -   GREEN (COMM): Solid ON all the time
 
-### Step 5: Verify the connection between PIC-IoT and Azure
+### Section 5: Verify the connection between PIC-IoT and Azure
 
 PIC-IoT and Azure connection can be verified by different ways:
 1) View debug log messages in the serial terminal
@@ -467,7 +454,7 @@ Here are the steps:
     may need to enable “Local Echo” in your Terminal settings to see
     your keystrokes displayed in the terminal window.
 
-   - Once the PIC-IoT has established a successful connection, continuous
+   - Once the PIC-IoT has established a successful connection (allow up to 2 minutes for the connection to fully stabilitze), continuous
     MQTT messages involving “sendresult” and “Uptime SocketState” will
     be displayed on the terminal window
         ```
@@ -500,7 +487,7 @@ Here are the steps:
 
     <img src=".//media/image29.png" style="width:4.91723in;height:2.58102in" alt="A screenshot of a cell phone Description automatically generated" />
 
-### Step 6: View PIC-IoT board telemetry on Azure IoT Explorer
+### Section 6: View PIC-IoT board telemetry on Azure IoT Explorer
 
  Once the PIC-IoT connection to Azure has been verified in the previous step, the telemetry can be monitored by taking advantage of Azure IoT Explorer. The Azure IoT explorer is a graphical tool for interacting with and testing your IoT device on Azure. View [this document](https://docs.microsoft.com/en-us/azure/iot-pnp/howto-install-iot-explorer#install-azure-iot-explorer) for more details.
  
@@ -530,31 +517,13 @@ Here are the steps:
 
         <img src=".//media/image33.png" style="width:5.76119in;height:1.45753in" alt="A screenshot of a cell phone Description automatically generated" />
 
-  5. Verify that the IoT Hub can send a command to the device. In the
-    device window:
-
-        Click Direct method tab &gt; enter “blink” in Method name &gt; enter {"duration":10} for payload &gt; Invoke method (a pop-up message displaying ERROR will appear, but that is expected since the IoT Hub is sending a simulated error condition to the PIC-IoT board). Observe that the RED LED stays on for 10 seconds.
-
-        <img src=".//media/image34.jpeg" style="width:1.65714in;height:2.32155in" alt="A circuit board Description automatically generated" />
-
-1. Monitor telemetry sending from PIC-IoT to Azure IoT Hub. 
+  5. Monitor telemetry sending from PIC-IoT to Azure IoT Hub. 
    
-   In the device window: Click Telemetry tab &gt; Start: after about 2 minutes, observe telemetry data is being updated in real-time approximately every 5s. 
-   
-    <img src=".//media/image35.png" style="width:5.38735in;height:3.18982in" alt="A screenshot of a cell phone Description automatically generated" />
-    
+        In the device window: Click Telemetry tab &gt; Start: observe telemetry data is being updated in real-time approximately every 5 seconds:
 
-### Further instructions for IoT Plug and Play
+        <img src=".//media/image35.png" style="width:5.38735in;height:3.18982in" alt="A screenshot of a cell phone Description automatically generated" />
 
-- For the IoT Plug and Play sample, download the IoT Plug and Play DTMI [here](https://github.com/Azure/opendigitaltwins-dtdl/blob/master/DTDL/v2/samples/Thermostat.json).
-- Once you open the IoT Explorer tool, on the left side, there should be a tab called "IoT Plug and Play Settings". Open that tab and add the directory where you downloaded the DTMI detailed from [prerequisites](#prerequisites).
-- Paste in the connection string for your IoT Hub from the portal.
-- Find your device listed after clicking on your newly connected IoT Hub and navigate to the left hand side where you will find a "IoT Plug and Play components" tab.
-- There, click on the component listed near the bottom and use the tabs that result on the top to use the various features (Commands, Twin, Telemetry). It should look similar to the picture below.
-
-![Iot Explorer](./docs/images/iotexplorer.png)
-
-## Further consideration
+## Further Consideration
 
 Instead of connection to IoT Hub and view the telemetry on Azure IoT
 explorer, the PIC-IoT board can be provisioned to the IoT Central
