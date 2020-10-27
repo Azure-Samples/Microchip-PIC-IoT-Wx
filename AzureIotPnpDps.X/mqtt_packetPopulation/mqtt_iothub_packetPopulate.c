@@ -155,7 +155,7 @@ void MQTT_CLIENT_pnp_connect(char* deviceID)
 
     size_t mqtt_password_buf_len;
     az_span signature_hash = az_span_create_from_str(signature_hash_buf);
-    result = az_iot_pnp_client_sas_get_password(&pnp_client, signature_hash, expire_time, AZ_SPAN_NULL, mqtt_password_buf, sizeof(mqtt_password_buf), &mqtt_password_buf_len);
+    result = az_iot_pnp_client_sas_get_password(&pnp_client, expire_time, signature_hash, AZ_SPAN_EMPTY, mqtt_password_buf, sizeof(mqtt_password_buf), &mqtt_password_buf_len);
     if (az_result_failed(result))
     {
         debug_printError("az_iot_pnp_client_sas_get_password failed");
