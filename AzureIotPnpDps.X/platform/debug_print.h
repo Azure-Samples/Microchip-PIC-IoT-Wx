@@ -46,18 +46,18 @@
 
 typedef enum 
 {
-   SEVERITY_NONE,
-   SEVERITY_WARNING,
-   SEVERITY_NOTICE,
-   SEVERITY_INFO,
-   SEVERITY_DEBUG
+    SEVERITY_NONE,    // No debug trace
+    SEVERITY_ERROR,   // Error
+    SEVERITY_WARN,    // Error and Warn
+    SEVERITY_DEBUG,   // Error, Warn, and Good
+    SEVERITY_INFO     // print everything
 } debug_severity_t;
 
 typedef enum
 {
-   LEVEL_NORMAL,
+   LEVEL_INFO,
    LEVEL_GOOD,
-   LEVEL_BAD,
+   LEVEL_WARN,
    LEVEL_ERROR
 }debug_errorLevel_t;
 
@@ -69,17 +69,21 @@ void debug_printer(debug_severity_t debug_severity, debug_errorLevel_t error_lev
 void debug_setSeverity(debug_severity_t debug_level);
 void debug_setPrefix(const char *prefix);
 void debug_init(const char *prefix);
+debug_severity_t debug_getSeverity();
 
 #define debug_print(fmt, ...) \
-do { if (IOT_DEBUG_PRINT) debug_printer(SEVERITY_DEBUG, LEVEL_NORMAL, fmt CSI_RESET, ##__VA_ARGS__); } while (0)
+do { if (IOT_DEBUG_PRINT) debug_printer(SEVERITY_INFO, LEVEL_INFO, fmt CSI_RESET, ##__VA_ARGS__); } while (0)
 
-#define debug_printGOOD(fmt, ...) \
-do { if (IOT_DEBUG_PRINT) debug_printer(SEVERITY_DEBUG,LEVEL_GOOD, fmt CSI_RESET,  ##__VA_ARGS__); } while (0)
+#define debug_printGood(fmt, ...) \
+do { if (IOT_DEBUG_PRINT) debug_printer(SEVERITY_DEBUG, LEVEL_GOOD, fmt CSI_RESET,  ##__VA_ARGS__); } while (0)
+
+#define debug_printWarn(fmt, ...) \
+do { if (IOT_DEBUG_PRINT) debug_printer(SEVERITY_WARN, LEVEL_WARN, fmt CSI_RESET, ##__VA_ARGS__); } while (0)
 
 #define debug_printError(fmt, ...) \
-do { if (IOT_DEBUG_PRINT) debug_printer(SEVERITY_DEBUG,LEVEL_ERROR, fmt CSI_RESET, ##__VA_ARGS__); } while (0)
+do { if (IOT_DEBUG_PRINT) debug_printer(SEVERITY_ERROR, LEVEL_ERROR, fmt CSI_RESET, ##__VA_ARGS__); } while (0)
 
 #define debug_printInfo(fmt, ...) \
-do { if (IOT_DEBUG_PRINT) debug_printer(SEVERITY_INFO,LEVEL_NORMAL, fmt CSI_RESET, ##__VA_ARGS__); } while (0)
+do { if (IOT_DEBUG_PRINT) debug_printer(SEVERITY_INFO, LEVEL_INFO, fmt CSI_RESET, ##__VA_ARGS__); } while (0)
 
 #endif // DEBUG_PRINT_H

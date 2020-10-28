@@ -32,18 +32,18 @@
 
 
 static const char *severity_strings[] = {
-   CSI_WHITE   "   NONE" CSI_WHITE,
-   CSI_YELLOW  "WARNING" CSI_WHITE,
-   CSI_BLUE    " NOTICE" CSI_WHITE,
-   CSI_MAGENTA "   INFO" CSI_WHITE,
-   CSI_CYAN    "  DEBUG" CSI_NORMAL CSI_WHITE
+   CSI_WHITE   "  NONE" CSI_WHITE,
+   CSI_RED     " ERROR" CSI_WHITE,
+   CSI_YELLOW  "  WARN" CSI_WHITE,
+   CSI_CYAN    " DEBUG" CSI_WHITE,
+   CSI_WHITE   "  INFO" CSI_NORMAL CSI_WHITE,
 };
 
 static const char *level_strings[] = {
-      CSI_WHITE           "NORMAL" CSI_WHITE,
-      CSI_GREEN           "  GOOD" CSI_WHITE,
-      CSI_RED             "   BAD" CSI_WHITE,
-      CSI_RED CSI_INVERSE " ERROR" CSI_NORMAL CSI_WHITE
+   CSI_WHITE           " INFO" CSI_WHITE,
+   CSI_GREEN           " GOOD" CSI_WHITE,
+   CSI_YELLOW          " WARN" CSI_WHITE,
+   CSI_RED CSI_INVERSE "ERROR" CSI_NORMAL CSI_WHITE
 };
  
 static debug_severity_t debug_severity_filter = SEVERITY_NONE;
@@ -52,13 +52,18 @@ static char debug_message_prefix[40] = "<PREFIX>";
 void debug_init(const char *prefix)
 { 
    debug_setPrefix(prefix);
-   debug_setSeverity(SEVERITY_NOTICE);
+   debug_setSeverity(SEVERITY_DEBUG);
 //   debug_printer(SEVERITY_NONE, LEVEL_NORMAL, CSI_CLS CSI_HOME BANNER CSI_RESET "\r\n\r\n" __DATE__ " " __TIME__ "\r\n");
 }
 
 void debug_setSeverity(debug_severity_t debug_level)
 {
    debug_severity_filter = debug_level;
+}
+
+debug_severity_t debug_getSeverity()
+{
+   return debug_severity_filter;
 }
 
 void debug_setPrefix(const char *prefix)
@@ -69,22 +74,33 @@ void debug_setPrefix(const char *prefix)
 
 void debug_printer(debug_severity_t debug_severity, debug_errorLevel_t error_level, char* format, ...)
 {
-   if(debug_severity >= SEVERITY_NONE && debug_severity <= SEVERITY_DEBUG)
+   int iPrint = 0;
+
+   if (debug_severity == SEVERITY_NONE)
    {
-      if(debug_severity <= debug_severity_filter)
-      {
-         if(error_level < LEVEL_NORMAL) error_level = LEVEL_NORMAL;
-         if(error_level > LEVEL_ERROR) error_level = LEVEL_ERROR;
+      iPrint = 0;
+   }
+   else if (debug_severity_filter == SEVERITY_INFO)
+   {
+      iPrint = 1;
+   }
+   else if (debug_severity <= debug_severity_filter)
+   {
+      iPrint = 1;
+   }
 
-         printf("%s  %s %s ",debug_message_prefix, severity_strings[debug_severity], level_strings[error_level]);
+   if (iPrint == 1)
+   {
+      if (error_level < LEVEL_INFO) error_level = LEVEL_INFO;
+      if (error_level > LEVEL_ERROR) error_level = LEVEL_ERROR;
 
-         va_list argptr;
-         va_start(argptr, format);
-         vprintf(format , argptr);
-         va_end(argptr);
-         printf(CSI_RESET"\r\n");
-      }
-  }
+      printf("%s %s %s ", debug_message_prefix, severity_strings[debug_severity], level_strings[error_level]);
+      va_list argptr;
+      va_start(argptr, format);
+      vprintf(format , argptr);
+      va_end(argptr);
+      printf(CSI_RESET"\r\n");
+   }
 }
 
 

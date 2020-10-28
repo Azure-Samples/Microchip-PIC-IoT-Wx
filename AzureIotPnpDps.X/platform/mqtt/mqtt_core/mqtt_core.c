@@ -182,7 +182,7 @@ time_t connectTime = 0;
  *
  */
 static const qosLevelHandler_t mqtt_qosLevelCallBackTable[] = {
-	//    {0x00, handleQoSLevel0}
+	// {0x00, handleQoSLevel0}
 };
 
 /** \brief Current state of MQTT Client state machine. */
@@ -499,7 +499,7 @@ mqttCurrentState MQTT_GetConnectionState(void) {
 }
 
 bool MQTT_CreateConnectPacket(mqttConnectPacket* newConnectPacket) {
-    debug_print("MQTT: MQTT_CreateConnectPacket");
+	debug_printInfo("  MQTT: MQTT_CreateConnectPacket");
 	uint16_t payloadLength = 0;
 	memset(&txConnectPacket, 0, sizeof(txConnectPacket));
 
@@ -567,7 +567,7 @@ bool MQTT_CreatePublishPacket(mqttPublishPacket* newPublishPacket) {
 	memset(&txPublishPacket, 0, sizeof(txPublishPacket));
 
 	if (mqttState == CONNECTED) {
-		debug_printInfo("MQTT: PublishBuild");
+		debug_printInfo("  MQTT: MQTT_CreatePublishPacket");
 		// Fixed header
 		txPublishPacket.publishHeaderFlags.controlPacketType = PUBLISH;
 		txPublishPacket.publishHeaderFlags.duplicate = newPublishPacket->publishHeaderFlags.duplicate;
@@ -624,7 +624,7 @@ bool MQTT_CreateSubscribePacket(mqttSubscribePacket* newSubscribePacket) {
 
 		// Payload
 		for (topicCount = 0; topicCount < MAX_NUM_TOPICS_SUBSCRIBE && newSubscribePacket->subscribePayload[topicCount].topicLength > 0; topicCount++) {
-            debug_print("MQTT: Subscribe %s", newSubscribePacket->subscribePayload[topicCount].topic);
+			debug_printInfo("  MQTT: Subscribe %s", newSubscribePacket->subscribePayload[topicCount].topic);
 			txSubscribePacket.subscribePayload[topicCount].topicLength = htons(newSubscribePacket->subscribePayload[topicCount].topicLength);
 			txSubscribePacket.subscribePayload[topicCount].topic = newSubscribePacket->subscribePayload[topicCount].topic;
 			txSubscribePacket.subscribePayload[topicCount].requestedQoS = newSubscribePacket->subscribePayload[topicCount].requestedQoS;
@@ -691,7 +691,7 @@ bool MQTT_CreateUnsubscribePacket(mqttUnsubscribePacket* newUnsubscribePacket)
 static bool mqttSendConnect(mqttContext* mqttConnectionPtr) {
 	bool ret = false;
 
-    debug_print("MQTT: mqttSendConnect");
+	debug_printInfo("  MQTT: mqttSendConnect()");
 	MQTT_ExchangeBufferInit(&mqttConnectionPtr->mqttDataExchangeBuffers.txbuff);
 	MQTT_ExchangeBufferInit(&mqttConnectionPtr->mqttDataExchangeBuffers.rxbuff);
 
@@ -714,7 +714,7 @@ static bool mqttSendConnect(mqttContext* mqttConnectionPtr) {
 		mqttTxFlags.newTxConnectPacket = 0;
 	}
 	else {
-		debug_printError("MQTT: Send Error");
+		debug_printError("  MQTT: Send Error");
 	}
 	return ret;
 }
@@ -722,7 +722,7 @@ static bool mqttSendConnect(mqttContext* mqttConnectionPtr) {
 static bool mqttSendPublish(mqttContext* mqttConnectionPtr) {
 	bool ret = false;
 
-    debug_print("MQTT: mqttSendPublish: %s", txPublishPacket.topic);
+	debug_print("  MQTT: mqttSendPublish() : Topic = %s", txPublishPacket.topic);
 	MQTT_ExchangeBufferInit(&mqttConnectionPtr->mqttDataExchangeBuffers.txbuff);
 	MQTT_ExchangeBufferInit(&mqttConnectionPtr->mqttDataExchangeBuffers.rxbuff);
 
@@ -867,7 +867,7 @@ static mqttCurrentState mqttProcessSuback(mqttContext* mqttConnectionPtr) {
 
 	if (ret == CONNECTED)
 	{
-        pf_mqtt_client->MQTT_CLIENT_connected();
+		pf_mqtt_client->MQTT_CLIENT_connected();
 	}
 
 	return ret;
@@ -914,53 +914,53 @@ static mqttCurrentState mqttProcessUnsuback(mqttContext* mqttConnectionPtr)
 
 
 bool matchTopicSubscribe(char* SubTopic, char* publishTopic)
-{    
-    while (SubTopic != NULL && publishTopic != NULL)
-    {
-        int subTopicLen, publishTopicLen;
-        char* endSubTopic = strchr(SubTopic, '/');
-        char* endPublishTopic = strchr(publishTopic, '/');
-        if (endSubTopic == NULL && endPublishTopic == NULL)
-        {
-            return true;
-        }
+{
+	while (SubTopic != NULL && publishTopic != NULL)
+	{
+		int subTopicLen, publishTopicLen;
+		char* endSubTopic = strchr(SubTopic, '/');
+		char* endPublishTopic = strchr(publishTopic, '/');
+		if (endSubTopic == NULL && endPublishTopic == NULL)
+		{
+			return true;
+		}
 
-        if (endSubTopic == NULL)
-        {
-            subTopicLen = strlen(SubTopic);
-        }
-        else
-        {
-            subTopicLen = endSubTopic - SubTopic;
-        }
+		if (endSubTopic == NULL)
+		{
+			subTopicLen = strlen(SubTopic);
+		}
+		else
+		{
+			subTopicLen = endSubTopic - SubTopic;
+		}
 
-        if (endPublishTopic == NULL)
-        {
-            publishTopicLen = strlen(publishTopic);
-        }
-        else
-        {
-            publishTopicLen = endPublishTopic - publishTopic;
-        }
+		if (endPublishTopic == NULL)
+		{
+			publishTopicLen = strlen(publishTopic);
+		}
+		else
+		{
+			publishTopicLen = endPublishTopic - publishTopic;
+		}
 
-        if (memcmp(SubTopic, "+", 1) == 0 && subTopicLen == 1)
-        {
-            // wildcard
-        }
-        else if (memcmp(SubTopic, "#", 1) == 0 && subTopicLen == 1)
-        {
-            return true; // end wild card
-        }
-        else if (memcmp(SubTopic, publishTopic, publishTopicLen) != 0 || publishTopicLen != subTopicLen)
-        {
-            break;
-        }
+		if (memcmp(SubTopic, "+", 1) == 0 && subTopicLen == 1)
+		{
+			// wildcard
+		}
+		else if (memcmp(SubTopic, "#", 1) == 0 && subTopicLen == 1)
+		{
+			return true; // end wild card
+		}
+		else if (memcmp(SubTopic, publishTopic, publishTopicLen) != 0 || publishTopicLen != subTopicLen)
+		{
+			break;
+		}
 
-        SubTopic = endSubTopic + 1;
-        publishTopic = endPublishTopic + 1;
-    }
+		SubTopic = endSubTopic + 1;
+		publishTopic = endPublishTopic + 1;
+	}
 
-    return false;
+	return false;
 }
 
 static mqttCurrentState mqttProcessPublish(mqttContext* mqttConnectionPtr) {
@@ -980,7 +980,7 @@ static mqttCurrentState mqttProcessPublish(mqttContext* mqttConnectionPtr) {
 	// Fixed header
 	MQTT_ExchangeBufferRead(&mqttConnectionPtr->mqttDataExchangeBuffers.rxbuff, &rxPublishPacket.publishHeaderFlags.All, sizeof(rxPublishPacket.publishHeaderFlags.All));
 	MQTT_ExchangeBufferRead(&mqttConnectionPtr->mqttDataExchangeBuffers.rxbuff, &rxPublishPacket.remainingLength[0], sizeof(rxPublishPacket.remainingLength[0]));
-    
+
 	for (i = 1; (rxPublishPacket.remainingLength[i - 1] & 0x80) && (i < sizeof(rxPublishPacket.remainingLength)); i++) {
 		MQTT_ExchangeBufferRead(&mqttConnectionPtr->mqttDataExchangeBuffers.rxbuff, &rxPublishPacket.remainingLength[i], 1);
 	}
@@ -1003,11 +1003,11 @@ static mqttCurrentState mqttProcessPublish(mqttContext* mqttConnectionPtr) {
 	// Send payload information to the application
 	publishRecvHandlerInfo = MQTT_GetPublishReceptionHandlerTable();
 	for (i = 0; i < MAX_NUM_TOPICS_SUBSCRIBE; i++) {			
-        if (publishRecvHandlerInfo && matchTopicSubscribe((char*)publishRecvHandlerInfo->topic, (char*)rxPublishPacket.topic))
-        {
-            publishRecvHandlerInfo->mqttHandlePublishDataCallBack(rxPublishPacket.topic, rxPublishPacket.payload);
-            break;                
-        }
+		if (publishRecvHandlerInfo && matchTopicSubscribe((char*)publishRecvHandlerInfo->topic, (char*)rxPublishPacket.topic))
+		{
+			publishRecvHandlerInfo->mqttHandlePublishDataCallBack(rxPublishPacket.topic, rxPublishPacket.payload);
+			break;
+		}
 		publishRecvHandlerInfo++;
 	}
 
@@ -1060,7 +1060,7 @@ mqttCurrentState MQTT_TransmissionHandler(mqttContext* mqttConnectionPtr) {
 			switch (mqttConnectTxSubstate) {
 			case SENDPINGREQ:
 				if (pingreqTimeoutOccured == true) {
-                    debug_print("MQTT: SENDPINGREQ");
+					debug_printInfo("  MQTT: SENDPINGREQ");
 					// Change state for the next timeout to occur correctly
 					pingreqTimeoutOccured = false;
 					// Periodic sending of PINGREQ packet
@@ -1068,7 +1068,7 @@ mqttCurrentState MQTT_TransmissionHandler(mqttContext* mqttConnectionPtr) {
 				}
 				break;
 			case SENDPUBLISH:
-                debug_print("MQTT: SENDPUBLISH");
+				debug_printInfo("  MQTT: SENDPUBLISH");
 				timeout_delete(&pingreqTimer);
 				packetSent = mqttSendPublish(mqttConnectionPtr);
 
@@ -1078,7 +1078,7 @@ mqttCurrentState MQTT_TransmissionHandler(mqttContext* mqttConnectionPtr) {
 				}
 				break;
 			case SENDSUBSCRIBE:
-                debug_print("MQTT: SENDSUBSCRIBE");
+				debug_printInfo("  MQTT: SENDSUBSCRIBE");
 				timeout_delete(&pingreqTimer);
 				mqttSendSubscribe(mqttConnectionPtr);
 				keepAliveTimeout = ntohs(txConnectPacket.connectVariableHeader.keepAliveTimer);
@@ -1088,6 +1088,7 @@ mqttCurrentState MQTT_TransmissionHandler(mqttContext* mqttConnectionPtr) {
 				}
 				break;
 			case SENDUNSUBSCRIBE:
+				debug_printInfo("  MQTT: SENDUNSUBSCRIBE");
 				timeout_delete(&pingreqTimer);
 				mqttSendUnsubscribe(mqttConnectionPtr);
 				keepAliveTimeout = ntohs(txConnectPacket.connectVariableHeader.keepAliveTimer);
@@ -1152,14 +1153,14 @@ mqttCurrentState MQTT_ReceptionHandler(mqttContext* mqttConnectionPtr) {
 					}
 
 					connectTime = time(NULL);
-					debug_printGOOD("MQTT: CONNACK CONNECTED at %s", ctime(&connectTime));
+					debug_printGood("  MQTT: CONNACK CONNECTED at %s", ctime(&connectTime));
 				}
 				else {
-					debug_printError("MQTT: CONNACK DISCONNECTED :(");
+					debug_printError("  MQTT: CONNACK DISCONNECTED :(");
 				}
 			}
 			else {
-				debug_printError("MQTT: DISCONNECT (%d) from (%d)", receivedPacketHeader.controlPacketType, len);
+				debug_printError("  MQTT: DISCONNECT (%d) from (%d)", receivedPacketHeader.controlPacketType, len);
 				//If the Client does not receive a CONNACK Packet from the Server within a reasonable amount of time,
 				//the Client SHOULD close the Network Connection.
 				mqttState = DISCONNECTED;
@@ -1169,7 +1170,7 @@ mqttCurrentState MQTT_ReceptionHandler(mqttContext* mqttConnectionPtr) {
 		else {
 			mqttState = DISCONNECTED;
 			MQTT_Close(mqttConnectionPtr);
-			debug_printError("MQTT: CONNACK TIMEOUT");
+			debug_printError("  MQTT: CONNACK TIMEOUT");
 		}
 		break;
 
@@ -1180,7 +1181,7 @@ mqttCurrentState MQTT_ReceptionHandler(mqttContext* mqttConnectionPtr) {
 		switch (receivedPacketHeader.controlPacketType) {
 		case PINGRESP:
 			// PINGRESP received
-            debug_print("MQTT: PINGRESP");
+			debug_printInfo("  MQTT: PINGRESP");
 			if ((mqttRxFlags.newRxPingrespPacket == 1) && (pingrespTimeoutOccured == false)) {
 				timeout_delete(&pingrespTimer);
 				mqttProcessPingresp(mqttConnectionPtr);
@@ -1188,7 +1189,7 @@ mqttCurrentState MQTT_ReceptionHandler(mqttContext* mqttConnectionPtr) {
 			break;
 		case SUBACK:
 			// SUBACK received
-            debug_print("MQTT: SUBACK");
+			debug_printInfo("  MQTT: SUBACK");
 			if ((mqttRxFlags.newRxSubackPacket == 1) && (subackTimeoutOccured == false)) {
 				timeout_delete(&subackTimer);
 				mqttState = mqttProcessSuback(mqttConnectionPtr);
@@ -1196,6 +1197,7 @@ mqttCurrentState MQTT_ReceptionHandler(mqttContext* mqttConnectionPtr) {
 			break;
 		case UNSUBACK:
 			// UNSUBACK received
+			debug_printInfo("  MQTT: UNSUBACK");
 			if ((mqttRxFlags.newRxUnsubackPacket == 1) && (unsubackTimeoutOccured == false))
 			{
 				timeout_delete(&unsubackTimer);
@@ -1204,10 +1206,11 @@ mqttCurrentState MQTT_ReceptionHandler(mqttContext* mqttConnectionPtr) {
 			break;
 		case PUBLISH:
 			// PUBLISH received
+			debug_printInfo("  MQTT: PUBLISH");
 			mqttProcessPublish(mqttConnectionPtr);
 			break;
 		case PUBACK:
-            debug_print("MQTT: PUBACK");
+			debug_printInfo("  MQTT: PUBACK");
 			mqttProcessPuback(mqttConnectionPtr);
 			break;
 		default:
@@ -1219,7 +1222,7 @@ mqttCurrentState MQTT_ReceptionHandler(mqttContext* mqttConnectionPtr) {
 		break;
 
 	default:
-		debug_printError("MQTT: mqttState=%d", mqttState);
+		debug_printError("  MQTT: mqttState=%d", mqttState);
 		break;
 	}
 
@@ -1231,8 +1234,8 @@ static bool mqttSendSubscribe(mqttContext* mqttConnectionPtr) {
 	bool ret = false;
 	uint8_t topicCount = 0;
 
-    debug_print("MQTT: mqttSendSubscribe");
-            
+	debug_printInfo("  MQTT: mqttSendSubscribe");
+
 	MQTT_ExchangeBufferInit(&mqttConnectionPtr->mqttDataExchangeBuffers.txbuff);
 	MQTT_ExchangeBufferInit(&mqttConnectionPtr->mqttDataExchangeBuffers.rxbuff);
 
@@ -1370,11 +1373,11 @@ static mqttCurrentState mqttProcessConnack(mqttContext* mqttConnectionPtr) {
 	MQTT_ExchangeBufferRead(&mqttConnectionPtr->mqttDataExchangeBuffers.rxbuff, (uint8_t*)&mqttConnackPacket.connackVariableHeader.connackReturnCode, sizeof(mqttConnackPacket.connackVariableHeader.connackReturnCode));
 
 	if (mqttConnackPacket.connackVariableHeader.connackReturnCode == CONN_ACCEPTED) {
-        debug_print("MQTT: mqttProcessConnack CONNECTED");
-        return CONNECTED;
+		debug_printInfo("  MQTT: mqttProcessConnack CONNECTED");
+		return CONNECTED;
 	}
 	else {
-        debug_print("MQTT: mqttProcessConnack DISCONNECTED");
+		debug_printInfo("  MQTT: mqttProcessConnack DISCONNECTED");
 		return DISCONNECTED;
 	}
 }
