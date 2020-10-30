@@ -106,7 +106,7 @@
       "displayName": {
         "en": "Green LED state"
       },
-      "description": "Returns current state of Green LED. If True, Green LED is on and connected to cloud.",
+      "description": "Returns the current state of the Green LED. If True, Green LED is on and connected to cloud.",
       "schema": {
         "@type": "Enum",
         "valueSchema": "integer",
