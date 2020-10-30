@@ -263,7 +263,7 @@
       "displayName": {
         "en": "Reboot"
       },
-      "description": "Reboot PiC IoT with specified delay.  e.g. PT5S for 5 seconds.",
+      "description": "Reboot PiC IoT with the specified delay.  e.g. PT5S for 5 seconds.",
       "request": {
         "name": "delay",
         "schema": "duration",
