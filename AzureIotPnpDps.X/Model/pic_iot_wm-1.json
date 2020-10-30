@@ -162,7 +162,7 @@
             },
             "enumValue": 1,
             "description": "Yellow LED is turned on.",
-            "comment": "Yellow LED is On state."
+            "comment": "Yellow LED is in the On state."
           },
           {
             "name": "Off",
