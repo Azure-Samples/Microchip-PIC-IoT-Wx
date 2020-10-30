@@ -300,7 +300,7 @@
       "request": {
         "name": "since",
         "displayName": "Since",
-        "description": "Period to return the max-min report",
+        "description": "The start period to return the max-min report from",
         "schema": "dateTime"
       },
       "response": {
