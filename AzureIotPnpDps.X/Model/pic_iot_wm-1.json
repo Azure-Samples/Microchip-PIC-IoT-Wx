@@ -3,7 +3,7 @@
   "@id": "dtmi:com:Microchip:PIC_IoT_WM;1",
   "@type": "Interface",
   "displayName": "PIC-IoT WM",
-  "description": "Reports temperature, light intensity, and states of the 2 buttons & 4 LEDs.  Provides ability to turn on/off any of the 4 LEDs.",
+  "description": "Reports device temperature, light intensity, and the current state of the 2 buttons & 4 LEDs.  Provides ability to turn on/off any of the 4 LEDs.",
   "contents": [
     {
       "@type": [
