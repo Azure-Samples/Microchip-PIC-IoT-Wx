@@ -622,8 +622,8 @@ static az_result process_reboot(az_span payload, az_span response, az_span* out_
 		}
 		else if (jr.token.kind == AZ_JSON_TOKEN_STRING)
 		{
-				RETURN_ERR_IF_FAILED(az_json_token_get_string(&jr.token, reboot_delay, sizeof(reboot_delay), NULL));
-				break;
+			RETURN_ERR_IF_FAILED(az_json_token_get_string(&jr.token, reboot_delay, sizeof(reboot_delay), NULL));
+			break;
 		}
 		RETURN_ERR_IF_FAILED(az_json_reader_next_token(&jr));
 	}
