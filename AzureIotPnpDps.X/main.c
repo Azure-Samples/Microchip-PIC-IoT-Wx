@@ -178,14 +178,15 @@ static const az_span span_error_command_not_supported  = AZ_SPAN_LITERAL_FROM_ST
 static const az_span span_error_no_payload_reboot      = AZ_SPAN_LITERAL_FROM_STR("Delay time not specified. Please specify parameter 'delay' in period format (e.g. PT5S for 5 sec)");
 static const az_span command_empty_payload_maxmin_span = AZ_SPAN_LITERAL_FROM_STR("Payload Empty. Please specify parameter 'since'");
 
-// IoT Plug and Play Device Values
+// IoT Plug and Play Device Values for telemetry
+
 static int32_t device_current_temp;
 static int32_t device_current_light;
 static int32_t device_temperature_avg_total;
 static uint32_t device_temperature_avg_count = 0;
-static int32_t device_max_temp;
-static int32_t device_min_temp;
-static int32_t device_avg_temp;
+static int32_t device_max_temp = 0;
+static int32_t device_min_temp = INT32_MAX;
+static int32_t device_avg_temp = 0;
 
 /**************************************
  A task to reboot (reset) the device
@@ -541,6 +542,9 @@ static az_result process_getMaxMinReport(az_span payload, az_span response, az_s
 	az_span start_time_span = AZ_SPAN_EMPTY;
 	az_json_reader jr;
 	int32_t incoming_since_value_len;
+
+	//we don't actually respect this sinceStr to keep the sample simple,
+	// but want to demonstrate how to parse out in any case.
 
 	RETURN_ERR_IF_FAILED(az_json_reader_init(&jr, payload, NULL));
 	while (jr.token.kind != AZ_JSON_TOKEN_END_OBJECT)
@@ -1071,7 +1075,7 @@ static void handle_property_message(
 		// A response from a twin GET publish message with the twin document as a payload.
 		case AZ_IOT_HUB_CLIENT_TWIN_RESPONSE_TYPE_GET:
 
-			debug_printGood("  MAIN: A twin GET response received");
+			debug_printGood("  MAIN: A twin GET response received : Payload = %s", az_span_ptr(payload_span));
 			is_get_received = true;
 			twin_properties.flag.isGet = 1;
 			break;
@@ -1079,7 +1083,7 @@ static void handle_property_message(
 		// An update to the desired properties with the properties as a JSON payload.
 		case AZ_IOT_HUB_CLIENT_TWIN_RESPONSE_TYPE_DESIRED_PROPERTIES:
 
-			debug_printInfo("  MAIN: A twin desired properties patch message received");
+			debug_printInfo("  MAIN: A twin desired properties patch message received : Payload = %s", az_span_ptr(payload_span));
 			twin_properties.flag.isGet = 0;
 			break;
 
@@ -1112,7 +1116,7 @@ void receivedFromCloud_property(uint8_t* topic, uint8_t* payload)
 
 	if (topic == NULL)
 	{
-		debug_printError("  MAIN: NULL topic");
+		debug_printWarn("  MAIN: NULL topic");
 		return;
 	}
 
@@ -1129,7 +1133,7 @@ void receivedFromCloud_property(uint8_t* topic, uint8_t* payload)
 	}
 	if (payload == NULL)
 	{
-		debug_printError("  MAIN: NULL payload");
+		debug_printWarn("  MAIN: NULL payload");
 	}
 	else
 	{
@@ -1146,7 +1150,7 @@ void receivedFromCloud_patch(uint8_t* topic, uint8_t* payload)
 
 	if (topic == NULL)
 	{
-		debug_printError("  MAIN: NULL topic");
+		debug_printWarn("  MAIN: NULL topic");
 		return;
 	}
 
@@ -1157,7 +1161,7 @@ void receivedFromCloud_patch(uint8_t* topic, uint8_t* payload)
 
 	if (payload == NULL)
 	{
-		debug_printError("  MAIN: NULL payload");
+		debug_printWarn("  MAIN: NULL payload");
 	}
 	else
 	{
@@ -1166,7 +1170,7 @@ void receivedFromCloud_patch(uint8_t* topic, uint8_t* payload)
 }
 
 /**********************************************
-* Check if button(s) interrupt happened or not.
+* Check if button(s) was pressed.
 **********************************************/
 void check_button_status(void)
 {
@@ -1204,7 +1208,7 @@ void check_button_status(void)
 	button_event_span = az_json_writer_get_bytes_used_in_destination(&jw);
 	if (mqtt_publish_message(telemetry_topic, button_event_span, 0) != 0)
 	{
-		debug_printInfo("  MAIN: Failed to publish Button Press event telemetry");
+		debug_printError("  MAIN: Failed to publish Button Press event telemetry");
 	}
 }
 
@@ -1293,7 +1297,7 @@ void check_led_status(twin_properties_t* twin_properties)
 		// clear flags
 		led_status.change_flag.AsUSHORT = 0;
 
-		// if this is from Get Twin, Device Twin code pass will update reported properties
+		// if this is from Get Twin, Device Twin code path will update reported properties
 		if (!bForceSync)
 		{
 			send_reported_property(twin_properties_ptr);
