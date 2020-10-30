@@ -215,7 +215,7 @@
             },
             "enumValue": "Off",
             "description": "Red LED is turned Off.",
-            "comment": "Red LED is Off state."
+            "comment": "Red LED is in the Off state."
           },
           {
             "name": "Blink",
