@@ -74,7 +74,7 @@
             },
             "enumValue": 1,
             "description": "Blue LED is turned on.",
-            "comment": "Blue LED is On state."
+            "comment": "Blue LED is in the On state."
           },
           {
             "name": "Off",
