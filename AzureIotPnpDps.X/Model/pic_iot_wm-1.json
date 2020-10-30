@@ -83,7 +83,7 @@
             },
             "enumValue": 2,
             "description": "Blue LED is turned Off.",
-            "comment": "Blue LED is Off state."
+            "comment": "Blue LED is in the Off state."
           },
           {
             "name": "Blink",
