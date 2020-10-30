@@ -118,7 +118,7 @@
             },
             "enumValue": 1,
             "description": "Green LED is turned on.",
-            "comment": "Green LED is On state."
+            "comment": "Green LED is in the On state."
           },
           {
             "name": "Off",
