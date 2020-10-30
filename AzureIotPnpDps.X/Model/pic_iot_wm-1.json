@@ -62,7 +62,7 @@
       "displayName": {
         "en": "Blue LED state"
       },
-      "description": "Returns current state of Blue LED. If True, Blue LED is on and WiFi AP is connected.",
+      "description": "Returns current state of the Blue LED. If True, the Blue LED is on and the WiFi AP is connected.",
       "schema": {
         "@type": "Enum",
         "valueSchema": "integer",
