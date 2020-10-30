@@ -62,7 +62,7 @@ extern led_status_t led_status;
 // used by pin_manager.c
 extern button_press_data_t button_press_data;
 
-extern uint32_t telemetry_interval;
+extern uint32_t telemetry_interval_seconds;
 
 static bool is_get_received = false;
 static int reboot_delay_seconds = 0;
@@ -470,7 +470,7 @@ static az_result send_telemetry_message(void)
 
 	result = mqtt_publish_message(telemetry_topic, telemetry_payload_span, 0);
 
-	if (twin_properties.flag.max_temp_updated == 1 && isGetReceived)
+	if (twin_properties.flag.max_temp_updated == 1 && is_get_received)
 	{
 		send_reported_property(&twin_properties);
 	}
@@ -595,7 +595,6 @@ static az_result process_getMaxMinReport(az_span payload, az_span response, az_s
 static az_result process_reboot(az_span payload, az_span response, az_span* out_response)
 {
 	char reboot_delay[32];
-	char buffer[32] = {0};
 	az_json_writer jw;
 	az_json_reader jr;
 
@@ -635,13 +634,11 @@ static az_result process_reboot(az_span payload, az_span response, az_span* out_
 		return AZ_ERROR_ARG;
 	}
 
-	memcpy(buffer, &reboot_delay[2], strlen(reboot_delay) - 3);
-	buffer[strlen(reboot_delay) - 3] = '\0';
-	rebootDelay = atoi((const char *)&reboot_delay[2]);
+	reboot_delay_seconds = atoi((const char *)&reboot_delay[2]);
 
 	start_json_object(&jw, response);
 	append_jason_property_string(&jw, span_command_reboot_status, span_command_reboot_success);
-	append_jason_property_int32(&jw, span_command_reboot_delay, rebootDelay);
+	append_jason_property_int32(&jw, span_command_reboot_delay, reboot_delay_seconds);
 	end_json_object(&jw);
 
 	*out_response = az_json_writer_get_bytes_used_in_destination(&jw);
@@ -711,7 +708,7 @@ static void handle_command_message(
 		if (ret == 0 && return_code == 200)
 		{
 			debug_printGood("  MAIN: Reboot Time Set");
-			timeout_create(&reboot_timer, timeout_mSecToTicks(rebootDelay * 1000));
+			timeout_create(&reboot_timer, timeout_mSecToTicks(reboot_delay_seconds * 1000));
 		}
 	}
 	else
@@ -783,7 +780,7 @@ static int send_reported_property(
 			result = append_reported_property_response_int32(
 						&jw,
 						telemetry_interval_property_name,
-						telemetry_interval,
+						telemetry_interval_seconds,
 						200,
 						twin_properties->version_num,
 						AZ_SPAN_FROM_STR("Success"))))
@@ -1003,7 +1000,7 @@ static az_result parse_twin_desired_property(
 		else if (az_json_token_is_text_equal(&jr.token, span_property_telemetry_interval)) {
 			// found writable property to adjust telemetry interval
 			RETURN_ERR_IF_FAILED(az_json_reader_next_token(&jr));
-			RETURN_ERR_IF_FAILED(az_json_token_get_uint32(&jr.token, &telemetry_interval));
+			RETURN_ERR_IF_FAILED(az_json_token_get_uint32(&jr.token, &telemetry_interval_seconds));
 			twin_properties->flag.telemetry_interval_found = 1;
 		}
 		else
@@ -1075,7 +1072,7 @@ static void handle_property_message(
 		case AZ_IOT_HUB_CLIENT_TWIN_RESPONSE_TYPE_GET:
 
 			debug_printGood("  MAIN: A twin GET response received");
-			isGetReceived = true;
+			is_get_received = true;
 			twin_properties.flag.isGet = 1;
 			break;
 
@@ -1177,8 +1174,8 @@ void check_button_status(void)
 	az_json_writer jw;
 
 	// save flags in case user pressed buttons very fast, and for error case.
-	bool sw0 = button_press_data.flag.sw0_button_press == 1 ? true : false;
-	bool sw1 = button_press_data.flag.sw1_button_press == 1 ? true : false;
+	bool sw0 = button_press_data.flag.sw0 == 1 ? true : false;
+	bool sw1 = button_press_data.flag.sw1 == 1 ? true : false;
 
 	// clear the flags
 	button_press_data.flag.AsUSHORT = 0;

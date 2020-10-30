@@ -153,13 +153,13 @@ void PIN_MANAGER_Initialize (void)
 
 void __attribute__((weak)) SW0_CallBack(void)
 {
-    button_press_data.flag.sw0_button_press = 1;
+    button_press_data.flag.sw0 = 1;
     button_press_data.sw0_press_count++;
 }
 
 void __attribute__ ((weak)) SW1_CallBack(void)
 {
-    button_press_data.flag.sw1_button_press = 1;
+    button_press_data.flag.sw1 = 1;
     button_press_data.sw1_press_count++;
 }
 

@@ -33,7 +33,7 @@
 #define SN_STRING   "sn"
 
 // default telemetry interval
-uint32_t telemetry_interval = CFG_SEND_INTERVAL;
+uint32_t telemetry_interval_seconds = CFG_SEND_INTERVAL;
 
 // This will contain the device ID, before we have it this dummy value is the init value which is non-0
 char* attDeviceID;
@@ -183,7 +183,7 @@ uint32_t MAIN_dataTask(void* payload)
 	{
 		// How many seconds since the last time this loop ran?
 		int32_t delta = difftime(timeNow, previousTransmissionTime);
-		if (delta >= telemetry_interval)
+		if (delta >= telemetry_interval_seconds)
 		{
 			previousTransmissionTime = timeNow;
 
@@ -194,10 +194,10 @@ uint32_t MAIN_dataTask(void* payload)
 		check_button_status();
 	}
 
-	if (shared_networking_params.haveAPConnection)
-	{
+//	if (shared_networking_params.haveAPConnection)
+//	{
 		// Add code for periodic operation when AP mode is enabled and have connection 
-	}
+//	}
 
 	// This is milliseconds managed by the RTC and the scheduler, this return makes the
 	// timer run another time, returning 0 will make it stop

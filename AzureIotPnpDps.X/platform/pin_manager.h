@@ -54,8 +54,8 @@
 typedef union
 {
     struct {
-        unsigned sw0_button_press:1;
-        unsigned sw1_button_press:1;
+        unsigned sw0:1;
+        unsigned sw1:1;
         unsigned reserved:14;
     };
     unsigned AsUSHORT;
