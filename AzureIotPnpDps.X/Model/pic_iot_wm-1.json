@@ -206,7 +206,7 @@
             },
             "enumValue": "On",
             "description": "Red LED is turned on.",
-            "comment": "Red LED is On state."
+            "comment": "Red LED is in the On state."
           },
           {
             "name": "Off",
