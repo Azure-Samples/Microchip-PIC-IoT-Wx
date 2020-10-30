@@ -241,7 +241,7 @@
       "displayName": {
         "en": "Set Telemetry Interval"
       },
-      "description": "Sets interval to send telemetry in second",
+      "description": "Sets interval to send telemetry in seconds",
       "writable": true
     },
     {
