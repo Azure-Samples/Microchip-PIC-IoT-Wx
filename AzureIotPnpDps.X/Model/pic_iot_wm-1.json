@@ -194,7 +194,7 @@
       "displayName": {
         "en": "Red LED state"
       },
-      "description": "Current state of Red LED, with string enum data type",
+      "description": "Current state of the Red LED",
       "schema": {
         "@type": "Enum",
         "valueSchema": "string",
