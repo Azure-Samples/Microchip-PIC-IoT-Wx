@@ -532,7 +532,7 @@ static az_result process_getMaxMinReport(az_span payload, az_span response, az_s
 
 	if (az_span_size(payload) == 0 || (az_span_size(payload) == 2 && az_span_is_content_equal(empty_payload_span, payload)))
 	{
-		debug_printError("  MAIN: Empty Payload");
+		debug_printError("  MAIN: Empty command Payload");
 		RETURN_ERR_IF_FAILED(build_error_response_payload(response, command_empty_payload_maxmin_span, out_response));
 		return AZ_ERROR_ITEM_NOT_FOUND;
 	}
