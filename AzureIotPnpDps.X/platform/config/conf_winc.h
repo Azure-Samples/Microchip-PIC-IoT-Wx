@@ -22,7 +22,6 @@ extern "C" {
 // <i> Target WLAN SSID
 // <id> main_wlan_ssid
 //#define CFG_MAIN_WLAN_SSID "GUESTNETWORK"
-//#define CFG_MAIN_WLAN_SSID ""
 
 // <y> Authentication
 // <i> Target WLAN Authentication
