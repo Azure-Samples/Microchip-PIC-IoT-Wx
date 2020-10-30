@@ -637,7 +637,7 @@ static az_result process_reboot(az_span payload, az_span response, az_span* out_
 
 	memcpy(buffer, &reboot_delay[2], strlen(reboot_delay) - 3);
 	buffer[strlen(reboot_delay) - 3] = '\0';
-	rebootDelay = atoi((const char *)buffer);
+	rebootDelay = atoi((const char *)&reboot_delay[2]);
 
 	start_json_object(&jw, response);
 	append_jason_property_string(&jw, span_command_reboot_status, span_command_reboot_success);
