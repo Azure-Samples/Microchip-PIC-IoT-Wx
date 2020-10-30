@@ -64,7 +64,7 @@ extern button_press_data_t button_press_data;
 
 extern uint32_t telemetry_interval;
 
-static bool isGetReceived = false;
+static bool is_get_received = false;
 static int rebootDelay = 0;
 static uint32_t reboot_task(void* payload);
 static timerStruct_t reboot_timer = { reboot_task };
