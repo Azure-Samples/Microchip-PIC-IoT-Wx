@@ -230,15 +230,15 @@ static int8_t connectMQTTSocket(void)
 				ret = BSD_setsockopt(*context->tcpClientSocket, SOL_SSL_SOCKET, SO_SSL_ENABLE_SNI_VALIDATION, &optVal, sizeof(optVal));
 				if (ret == BSD_SUCCESS)
 				{
-			        debug_print("CLOUD: Connect socket");
-			        ret = BSD_connect(*context->tcpClientSocket, (struct bsd_sockaddr*) & addr, sizeof (struct bsd_sockaddr_in));
-			    }
+					debug_print("CLOUD: Connect socket");
+					ret = BSD_connect(*context->tcpClientSocket, (struct bsd_sockaddr*) & addr, sizeof (struct bsd_sockaddr_in));
+				}
 			}
 
 			if (ret != BSD_SUCCESS) {
 				debug_printError("CLOUD connect received %d", ret);
 				shared_networking_params.haveERROR = 1;
-                LED_holdGreenOn(LED_OFF);
+				LED_holdGreenOn(LED_OFF);
 				BSD_close(*context->tcpClientSocket);
 			}
 		}
