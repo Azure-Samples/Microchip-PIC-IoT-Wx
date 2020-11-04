@@ -221,13 +221,21 @@ static int8_t connectMQTTSocket(void)
 
 		socketState = BSD_GetSocketState(*context->tcpClientSocket);
 		if (socketState == SOCKET_CLOSED) {
-			debug_print("CLOUD: Connect socket");
-			ret = BSD_connect(*context->tcpClientSocket, (struct bsd_sockaddr*) & addr, sizeof(struct bsd_sockaddr_in));
+			debug_print("Configuring SNI to connect to %s", mqtt_host);
+			ret = BSD_setsockopt(*context->tcpClientSocket, SOL_SSL_SOCKET, SO_SSL_SNI, mqtt_host, strlen(mqtt_host));
+			if (ret == BSD_SUCCESS) {
+				int optVal = 1;
+				ret = BSD_setsockopt(*context->tcpClientSocket, SOL_SSL_SOCKET, SO_SSL_ENABLE_SNI_VALIDATION, &optVal, sizeof(optVal));
+			}
 
-			if (ret != BSD_SUCCESS) {
+			if (ret == BSD_SUCCESS) {
+				debug_print("CLOUD: Connect socket");
+				ret = BSD_connect(*context->tcpClientSocket, (struct bsd_sockaddr*) & addr, sizeof (struct bsd_sockaddr_in));
+			}
+			else {
 				debug_printError("CLOUD connect received %d", ret);
 				shared_networking_params.haveERROR = 1;
-                LED_holdGreenOn(LED_OFF);
+				LED_holdGreenOn(LED_OFF);
 				BSD_close(*context->tcpClientSocket);
 			}
 		}
