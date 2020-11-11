@@ -81,7 +81,7 @@ static timerStruct_t reboot_timer = { reboot_task };
 
 // * IoT Plug and Play Values *
 // The model id is the unique identifier for device model (also called the Digital Twins Model Identifier or DTMI)
-// The device Model defines the capability of your device. The functionality of the device should match what
+// The device model defines the capability of your device. The functionality of the device should match what
 // is described in the corresponding device model while following IoT Plug and Play convension. 
 // Should you choose to program your own IoT Plug and Play device model,
 // the functionality would need to match the device model and you would need to update the below 'device_model_id'.
