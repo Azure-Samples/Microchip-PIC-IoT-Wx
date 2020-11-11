@@ -73,7 +73,7 @@ static timerStruct_t reboot_timer = { reboot_task };
 //
 // * LEDs *
 //        | On                   | Off                      | Fast Blink (100ms)           | Slow Blink (400ms)
-// Blue	  | AP Connected         | AP Disconnected          | WiFi Connectin in progress   | 
+// Blue	  | AP Connected         | AP Disconnected          | WiFi Connection in progress   | 
 // Green  | Connected to IoT Hub | Not Connected to IoT Hub | DPS provisioning in progress | IoT Hub connection in progress
 // Yellow | User LED Control from Cloud (On, Off, Blink)
 // Red    | Error                | No error                 | Error with DPS connection    | Error with IoT Hub connection
