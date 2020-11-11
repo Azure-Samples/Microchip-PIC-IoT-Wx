@@ -1073,7 +1073,7 @@ static void handle_property_message(
 	switch (property_response->response_type)
 	{
 		// A response from a twin GET publish message with the twin document as a payload.
-		case AZ_IOT_HUB_CLIENT_TWIN_RESPONSE_TYPE_GET:
+		case AZ_IOT_PNP_CLIENT_PROPERTY_RESPONSE_TYPE_GET:
 
 			debug_printGood("  MAIN: A twin GET response received : Payload = %s", az_span_ptr(payload_span));
 			is_get_received = true;
