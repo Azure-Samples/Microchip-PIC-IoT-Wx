@@ -96,7 +96,7 @@ static int32_t request_id_int;
 static char request_id_buf[8];
 
 // IoT Plug and Play temperature and light sensor telemetry
-// Frequency of telemetry is determined by telemetryInterval desired property (or writable property)
+// Frequency of telemetry is determined by the writable property telemetryInterval.
 // JSON document example :
 // {"temperature" : <temperature sensor value in celsius>, "light":<light sensor value>}
 char telemetry_topic[128];
