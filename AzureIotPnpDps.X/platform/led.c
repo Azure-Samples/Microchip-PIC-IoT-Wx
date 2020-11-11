@@ -112,7 +112,7 @@ static uint32_t blink_task(void* payload)
     {
         case LED_BLUE:
             LATCbits.LATC5 ^= 1; /* toggle LED_BLUE output */
-            timeout = led_status.state_flag.blue == LED_STATE_BLINK_FAST ?LED_100ms_INTERVAL:LED_400ms_INTERVAL;
+            timeout = led_status.state_flag.blue == LED_STATE_BLINK_FAST ? LED_100ms_INTERVAL : LED_400ms_INTERVAL;
             break;
         case LED_GREEN:
             LATCbits.LATC4 ^= 1; /* toggle LED_GREEN output */
