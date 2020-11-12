@@ -521,6 +521,8 @@ Here are the steps:
 - Find your device listed after clicking on your newly connected IoT Hub and navigate to the left hand side where you will find a "IoT Plug and Play components" tab.
 - There, click on the component listed near the bottom and use the tabs that result on the top to use the various features (Commands, Twin, Telemetry). It should look similar to the picture below.
 
+![Iot Explorer](./docs/images/iotexplorer.png)
+
 ## Further Consideration
 
 Instead of connection to IoT Hub and view the telemetry on Azure IoT
