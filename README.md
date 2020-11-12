@@ -27,6 +27,7 @@
     - [Section 4: Connect the PIC-IoT device to Azure](#section-4-connect-the-pic-iot-device-to-azure)
     - [Section 5: Verify the connection between PIC-IoT and Azure](#section-5-verify-the-connection-between-pic-iot-and-azure)
     - [Section 6: View PIC-IoT board telemetry on Azure IoT Explorer](#section-6-view-pic-iot-board-telemetry-on-azure-iot-explorer)
+    - [Further instructions for IoT Plug and Play](#further-instructions-for-iot-plug-and-play)
   - [Further Consideration](#further-consideration)
   - [Conclusion](#conclusion)
 
@@ -511,6 +512,14 @@ Here are the steps:
         In the device window: Click Telemetry tab &gt; Start: observe telemetry data is being updated in real-time approximately every 5 seconds:
 
         <img src=".//media/image35.png" style="width:5.38735in;height:3.18982in" alt="A screenshot of a cell phone Description automatically generated" />
+
+### Further instructions for IoT Plug and Play
+
+- For the IoT Plug and Play sample, download the IoT Plug and Play DTMI [here](https://github.com/Azure/opendigitaltwins-dtdl/blob/master/DTDL/v2/samples/Thermostat.json).
+- Once you open the IoT Explorer tool, on the left side, there should be a tab called "IoT Plug and Play Settings". Open that tab and add the directory where you downloaded the DTMI detailed from [prerequisites](#prerequisites).
+- Paste in the connection string for your IoT Hub from the portal.
+- Find your device listed after clicking on your newly connected IoT Hub and navigate to the left hand side where you will find a "IoT Plug and Play components" tab.
+- There, click on the component listed near the bottom and use the tabs that result on the top to use the various features (Commands, Twin, Telemetry). It should look similar to the picture below.
 
 ## Further Consideration
 
