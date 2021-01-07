@@ -82,7 +82,7 @@ static timerStruct_t reboot_timer = { reboot_task };
 // * IoT Plug and Play Values *
 // The model id is the unique identifier for device model (also called the Digital Twins Model Identifier or DTMI)
 // The device model defines the capability of your device. The functionality of the device should match what
-// is described in the corresponding device model while following IoT Plug and Play convention. 
+// is described in the corresponding device model while following IoT Plug and Play convention.
 // Should you choose to program your own IoT Plug and Play device model,
 // the functionality would need to match the device model and you would need to update the below 'device_model_id_span'.
 // Please see the sample README for more information on IoT Plug and Play.
@@ -109,7 +109,7 @@ static const az_span telemetry_name_light_span             = AZ_SPAN_LITERAL_FRO
 // JSON document example :
 //
 // {
-//   "button_event" : 
+//   "button_event" :
 //   {
 //     "button_name" : "SW0",
 //     "press_count" : 1
@@ -170,7 +170,7 @@ static const az_span led_on_string_span                = AZ_SPAN_LITERAL_FROM_ST
 static const az_span led_off_string_span               = AZ_SPAN_LITERAL_FROM_STR("Off");
 static const az_span led_blink_string_span             = AZ_SPAN_LITERAL_FROM_STR("Blink");
 
-// IoT Plug and Play error responses 
+// IoT Plug and Play error responses
 static const az_span error_property_name_span          = AZ_SPAN_LITERAL_FROM_STR("Error");
 static const az_span empty_payload_span                = AZ_SPAN_LITERAL_FROM_STR("\"\"");
 static const az_span error_no_payload_getmaxmin_span   = AZ_SPAN_LITERAL_FROM_STR("Start Time not found");
@@ -359,7 +359,7 @@ void init_twin_data(twin_properties_t* twin_properties)
 }
 
 /**********************************************
-* Create request id span which increments source int each call. 
+* Create request id span which increments source int each call.
 * Capable of holding 8 digit number.
 **********************************************/
 static az_span get_request_id(void)
@@ -491,7 +491,7 @@ void iot_provisioning_completed(void)
 	debug_printGood("  MAIN: IoT Provisioning Completed");
 	application_cloud_mqtt_connect(hub_hostname, &pf_mqtt_pnp_client, sendToCloud);
 }
-#endif //CFG_MQTT_PROVISIONING_HOST 
+#endif //CFG_MQTT_PROVISIONING_HOST
 
 /**********************************************
 * Send the response of the command invocation
@@ -689,7 +689,7 @@ static void handle_command_message(
 				{
 					debug_printError("  MAIN: Failed to build error response. AZ Result 0x%08x", az_ret);
 				}
-				
+
 			}
 			return_code = 404;
 		}
@@ -919,104 +919,41 @@ static int send_reported_property(
 /**********************************************
 * Parse Desired Property (Writable Property)
 **********************************************/
-static az_result parse_twin_desired_property(
+static az_result parse_twin_property(
 	az_span twin_payload_span,
-	twin_properties_t* twin_properties)
+	twin_properties_t* twin_properties,
+	az_iot_pnp_client_property_response_type response_type)
 {
 	az_json_reader jr;
-	bool desired_found = false;
+	az_span component_name_span;
+	az_json_reader jr_property_name_and_value;
 
 	RETURN_ERR_IF_FAILED(az_json_reader_init(&jr, twin_payload_span, NULL));
-	RETURN_ERR_IF_FAILED(az_json_reader_next_token(&jr));
+	RETURN_ERR_IF_FAILED(az_iot_pnp_client_property_get_property_version(
+		&pnp_client, &jr, response_type, &twin_properties->version_num));
 
-	if (jr.token.kind != AZ_JSON_TOKEN_BEGIN_OBJECT)
-	{
-		debug_printError("  MAIN: Start of a JSON object not found in twin : %s", az_span_ptr(twin_payload_span));
-		return AZ_ERROR_UNEXPECTED_CHAR;
-	}
+	twin_properties->flag.version_found = 1;
 
-	if (twin_properties->flag.isGet == 1)
-	{
-		// If is twin get payload, we have to parse one level deeper for "desired" wrapper
-		RETURN_ERR_IF_FAILED(az_json_reader_next_token(&jr));
-		while (jr.token.kind != AZ_JSON_TOKEN_END_OBJECT)
-		{
-			if (jr.token.kind != AZ_JSON_TOKEN_PROPERTY_NAME)
-			{
-				RETURN_ERR_IF_FAILED(az_json_reader_skip_children(&jr));
-			}
-			else {
-				if (az_json_token_is_text_equal(&jr.token, desired_property_span))
-				{
-					desired_found = true;
-					RETURN_ERR_IF_FAILED(az_json_reader_next_token(&jr));
-					break;
-				}
-				else {
-					RETURN_ERR_IF_FAILED(az_json_reader_skip_children(&jr));
-				}
-			}
-			RETURN_ERR_IF_FAILED(az_json_reader_next_token(&jr));
-		}
-	}
-	else
-	{
-		desired_found = true;
-	}
+	RETURN_ERR_IF_FAILED(az_json_reader_init(&jr, twin_payload_span, NULL));
 
-	if (!desired_found)
+	while (az_result_succeeded(az_iot_pnp_client_property_get_next_component_property(
+		&pnp_client, &jr, response_type, &component_name_span, &jr_property_name_and_value)))
 	{
-		debug_printError("  MAIN: Desired property object not found in twin : %s", az_span_ptr(twin_payload_span));
-		return AZ_ERROR_ITEM_NOT_FOUND;
-	}
-
-	if (jr.token.kind != AZ_JSON_TOKEN_BEGIN_OBJECT)
-	{
-		debug_printError("  MAIN: Start of a JSON object not found in twin : %s", az_span_ptr(twin_payload_span));
-		return AZ_ERROR_UNEXPECTED_CHAR;
-	}
-
-	RETURN_ERR_IF_FAILED(az_json_reader_next_token(&jr));
-
-	//
-	// Loop through Desired Twin
-	//
-	while (jr.token.kind != AZ_JSON_TOKEN_END_OBJECT)
-	{
-		if (az_json_token_is_text_equal(&jr.token, desired_property_version_span))
-		{
-			// found $version
-			RETURN_ERR_IF_FAILED(az_json_reader_next_token(&jr));
-			RETURN_ERR_IF_FAILED(az_json_token_get_int32(&jr.token, &twin_properties->version_num));
-			twin_properties->flag.version_found = 1;
-		}
-		else if (az_json_token_is_text_equal(&jr.token, led_yellow_property_name_span)) {
+		if (az_json_token_is_text_equal(&jr_property_name_and_value.token, led_yellow_property_name_span)) {
 			// found writable property to control Yellow LED
-			RETURN_ERR_IF_FAILED(az_json_reader_next_token(&jr));
-			RETURN_ERR_IF_FAILED(az_json_token_get_int32(&jr.token, &twin_properties->desired_led_yellow));
+			RETURN_ERR_IF_FAILED(az_json_reader_next_token(&jr_property_name_and_value));
+			RETURN_ERR_IF_FAILED(az_json_token_get_int32(&jr_property_name_and_value.token, &twin_properties->desired_led_yellow));
 			twin_properties->flag.yellow_led_found = 1;
 		}
-		else if (az_json_token_is_text_equal(&jr.token, property_telemetry_interval_span)) {
-			// found writable property to adjust telemetry interval
-			RETURN_ERR_IF_FAILED(az_json_reader_next_token(&jr));
-			RETURN_ERR_IF_FAILED(az_json_token_get_uint32(&jr.token, &telemetry_interval_seconds));
-			twin_properties->flag.telemetry_interval_found = 1;
-		}
-		else
-		{
-			// else ignore token.
-			RETURN_ERR_IF_FAILED(az_json_reader_skip_children(&jr));
-		}
-		RETURN_ERR_IF_FAILED(az_json_reader_next_token(&jr));
+		else if (az_json_token_is_text_equal(&jr_property_name_and_value.token, property_telemetry_interval_span)) {
+ 			// found writable property to adjust telemetry interval
+ 			RETURN_ERR_IF_FAILED(az_json_reader_next_token(&jr_property_name_and_value));
+ 			RETURN_ERR_IF_FAILED(az_json_token_get_uint32(&jr_property_name_and_value.token, &telemetry_interval_seconds));
+ 			twin_properties->flag.telemetry_interval_found = 1;
+ 		}
 	}
 
-	// make sure $version and at least one of writable properties are found
-	if (twin_properties->flag.version_found == 1 && (twin_properties->flag.AsUSHORT & (~1)) != 0)
-	{
-		return AZ_OK;
-	}
-
-	return AZ_ERROR_ITEM_NOT_FOUND;
+	return AZ_OK;
 }
 
 /**********************************************
@@ -1070,7 +1007,7 @@ static void handle_property_message(
 		// A response from a twin GET publish message with the twin document as a payload.
 		case AZ_IOT_PNP_CLIENT_PROPERTY_RESPONSE_TYPE_GET:
 
-			debug_printGood("  MAIN: A twin GET response received : Payload = %s", az_span_ptr(payload_span));
+			debug_printGood("  MAIN: A twin GET response received");
 			is_get_received = true;
 			twin_properties.flag.isGet = 1;
 			break;
@@ -1078,7 +1015,7 @@ static void handle_property_message(
 		// An update to the desired properties with the properties as a JSON payload.
 		case AZ_IOT_HUB_CLIENT_TWIN_RESPONSE_TYPE_DESIRED_PROPERTIES:
 
-			debug_printInfo("  MAIN: A twin desired properties patch message received : Payload = %s", az_span_ptr(payload_span));
+			debug_printInfo("  MAIN: A twin desired properties patch message received");
 			twin_properties.flag.isGet = 0;
 			break;
 
@@ -1090,7 +1027,7 @@ static void handle_property_message(
 			return;
 	}
 
-	if (az_result_failed(az_ret = parse_twin_desired_property(payload_span, &twin_properties)))
+	if (az_result_failed(az_ret = parse_twin_property(payload_span, &twin_properties, property_response->response_type)))
 	{
 		// If the item can't be found, the desired temp might not be set so take no action
 		debug_printError("  MAIN: Could not parse desired property, return code 0x%08x\n", az_ret);
