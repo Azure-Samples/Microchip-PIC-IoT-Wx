@@ -262,17 +262,12 @@ static az_result append_reported_property_response_int32(
 	int32_t ack_version,
 	az_span ack_description)
 {
-	RETURN_ERR_IF_FAILED(az_json_writer_append_property_name(jw, property_name));
-	RETURN_ERR_IF_FAILED(az_json_writer_append_begin_object(jw));
-	RETURN_ERR_IF_FAILED(az_json_writer_append_property_name(jw, span_desired_ack_value));
+//	RETURN_ERR_IF_FAILED(az_json_writer_append_begin_object(jw));
+	RETURN_ERR_IF_FAILED(az_iot_pnp_client_property_builder_begin_reported_status(
+                           &pnp_client, jw, property_name, ack_code, ack_version, ack_description));
 	RETURN_ERR_IF_FAILED(az_json_writer_append_int32(jw, property_val));
-	RETURN_ERR_IF_FAILED(az_json_writer_append_property_name(jw, span_desired_ack_code));
-	RETURN_ERR_IF_FAILED(az_json_writer_append_int32(jw, ack_code));
-	RETURN_ERR_IF_FAILED(az_json_writer_append_property_name(jw, span_desired_ack_version));
-	RETURN_ERR_IF_FAILED(az_json_writer_append_int32(jw, ack_version));
-	RETURN_ERR_IF_FAILED(az_json_writer_append_property_name(jw, span_desired_ack_description));
-	RETURN_ERR_IF_FAILED(az_json_writer_append_string(jw, ack_description));
-	RETURN_ERR_IF_FAILED(az_json_writer_append_end_object(jw));
+	RETURN_ERR_IF_FAILED(az_iot_pnp_client_property_builder_end_reported_status(&pnp_client, jw));
+//	RETURN_ERR_IF_FAILED(az_json_writer_append_end_object(jw));
 	return AZ_OK;
 }
 
