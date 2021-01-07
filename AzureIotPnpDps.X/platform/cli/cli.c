@@ -167,7 +167,7 @@ uint32_t CLI_task(void* param)
 
             if(!commandTooLongFlag)
             {
-                if( endOfLineTest(c) && !cmd_rcvd )
+                if(endOfLineTest(c) && !cmd_rcvd)
                 {
                     command_received((char*)command);
                     cmd_rcvd = true;
