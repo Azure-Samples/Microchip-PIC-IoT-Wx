@@ -239,7 +239,7 @@ static int8_t connectMQTTSocket(void)
 			else {
 				debug_printError("CLOUD connect received %d", ret);
 				shared_networking_params.haveERROR = 1;
-				LED_SetRed(LED_STATE_HOLD);
+				LED_SetRed(LED_OFF);
 				BSD_close(*context->tcpClientSocket);
 			}
 		}
