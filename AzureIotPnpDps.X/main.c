@@ -538,7 +538,7 @@ static az_result process_getMaxMinReport(az_span payload, az_span response, az_s
 	az_json_reader jr;
 	int32_t incoming_since_value_len;
 
-	//we don't actually respect this sinceStr to keep the sample simple,
+	// we don't actually respect this sinceStr to keep the sample simple,
 	// but want to demonstrate how to parse out in any case.
 
 	RETURN_ERR_IF_FAILED(az_json_reader_init(&jr, payload, NULL));
