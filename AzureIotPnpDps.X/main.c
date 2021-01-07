@@ -73,7 +73,7 @@ static timerStruct_t reboot_timer = { reboot_task };
 //
 // * LEDs *
 //        | On                   | Off                      | Fast Blink (100ms)           | Slow Blink (400ms)
-// Blue	  | AP Connected         | AP Disconnected          | WiFi Connection in progress   | 
+// Blue	  | AP Connected         | AP Disconnected          | WiFi Connection in progress  |
 // Green  | Connected to IoT Hub | Not Connected to IoT Hub | DPS provisioning in progress | IoT Hub connection in progress
 // Yellow | User LED Control from Cloud (On, Off, Blink)
 // Red    | Error                | No error                 | Error with DPS connection    | Error with IoT Hub connection
@@ -226,7 +226,7 @@ static az_result end_json_object(
 *	Add a JSON key-value pair with int32 data
 *	e.g. "property_name" : property_val (number)
 **********************************************/
-static az_result append_jason_property_int32(
+static az_result append_json_property_int32(
 	az_json_writer* jw,
 	az_span property_name,
 	int32_t property_val)
@@ -298,9 +298,9 @@ static az_result build_getMaxMinReport_response_payload(
 	// Build the command response payload
 	RETURN_ERR_IF_FAILED(start_json_object(&jw, response_span));
 
-	RETURN_ERR_IF_FAILED(append_jason_property_int32(&jw, span_command_getmaxmin_max_temp, device_max_temp));
-	RETURN_ERR_IF_FAILED(append_jason_property_int32(&jw, span_command_getmaxmin_min_temp, device_min_temp));
-	RETURN_ERR_IF_FAILED(append_jason_property_int32(&jw, span_command_getmaxmin_avg_temp, device_avg_temp));
+	RETURN_ERR_IF_FAILED(append_json_property_int32(&jw, span_command_getmaxmin_max_temp, device_max_temp));
+	RETURN_ERR_IF_FAILED(append_json_property_int32(&jw, span_command_getmaxmin_min_temp, device_min_temp));
+	RETURN_ERR_IF_FAILED(append_json_property_int32(&jw, span_command_getmaxmin_avg_temp, device_avg_temp));
 	RETURN_ERR_IF_FAILED(append_jason_property_string(&jw, span_command_getmaxmin_start_time, start_time_span));
 	RETURN_ERR_IF_FAILED(append_jason_property_string(&jw, span_command_getmaxmin_end_time, end_time_span));
 	RETURN_ERR_IF_FAILED(end_json_object(&jw));
@@ -345,7 +345,7 @@ static az_result append_button_press_telemetry(
 	RETURN_ERR_IF_FAILED(az_json_writer_append_property_name(jw, span_event_name_button_event));
 	RETURN_ERR_IF_FAILED(az_json_writer_append_begin_object(jw));
 	RETURN_ERR_IF_FAILED(append_jason_property_string(jw, span_event_name_button_name, button_name_span));
-	RETURN_ERR_IF_FAILED(append_jason_property_int32(jw, span_event_name_press_count, press_count));
+	RETURN_ERR_IF_FAILED(append_json_property_int32(jw, span_event_name_press_count, press_count));
 	RETURN_ERR_IF_FAILED(az_json_writer_append_end_object(jw));
 	return AZ_OK;
 }
@@ -440,8 +440,8 @@ static az_result build_sensor_telemetry_message(az_span* out_payload)
 	az_json_writer jw;
 	memset(&telemetry_payload, 0, sizeof(telemetry_payload));
 	RETURN_ERR_IF_FAILED(start_json_object(&jw, AZ_SPAN_FROM_BUFFER(telemetry_payload)));
-	RETURN_ERR_IF_FAILED(append_jason_property_int32(&jw, span_telemetry_name_temperature, device_current_temp));
-	RETURN_ERR_IF_FAILED(append_jason_property_int32(&jw, span_telemetry_name_light, device_current_light));
+	RETURN_ERR_IF_FAILED(append_json_property_int32(&jw, span_telemetry_name_temperature, device_current_temp));
+	RETURN_ERR_IF_FAILED(append_json_property_int32(&jw, span_telemetry_name_light, device_current_light));
 	RETURN_ERR_IF_FAILED(end_json_object(&jw));
 	*out_payload = az_json_writer_get_bytes_used_in_destination(&jw);
 	return AZ_OK;
@@ -642,7 +642,7 @@ static az_result process_reboot(az_span payload, az_span response, az_span* out_
 
 	start_json_object(&jw, response);
 	append_jason_property_string(&jw, span_command_reboot_status, span_command_reboot_success);
-	append_jason_property_int32(&jw, span_command_reboot_delay, reboot_delay_seconds);
+	append_json_property_int32(&jw, span_command_reboot_delay, reboot_delay_seconds);
 	end_json_object(&jw);
 
 	*out_response = az_json_writer_get_bytes_used_in_destination(&jw);
@@ -863,7 +863,7 @@ static int send_reported_property(
 	if (twin_properties->reported_led_blue != LED_NO_CHANGE)
 	{
 		if (az_result_failed(
-			result = append_jason_property_int32(
+			result = append_json_property_int32(
 				&jw,
 				led_blue_property_name,
 				twin_properties->reported_led_blue)))
@@ -877,7 +877,7 @@ static int send_reported_property(
 	if (twin_properties->reported_led_green != LED_NO_CHANGE)
 	{
 		if (az_result_failed(
-			result = append_jason_property_int32(
+			result = append_json_property_int32(
 				&jw,
 				led_green_property_name,
 				twin_properties->reported_led_green)))
@@ -890,7 +890,7 @@ static int send_reported_property(
 	if (twin_properties->flag.max_temp_updated || twin_properties->flag.isGet == 1)
 	{
 		if (az_result_failed(
-			result = append_jason_property_int32(
+			result = append_json_property_int32(
 				&jw,
 				span_property_max_temp,
 				device_max_temp)))
