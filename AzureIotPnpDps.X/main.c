@@ -1063,6 +1063,7 @@ void receivedFromCloud_property(uint8_t* topic, uint8_t* payload)
 		az_span_to_str(request_id_buf, sizeof(request_id_buf), property_response.request_id);
 		debug_printInfo("  MAIN: Property request, request_id:%s, status: %d", request_id_buf, property_response.status);
 	}
+
 	if (payload == NULL)
 	{
 		debug_printWarn("  MAIN: NULL payload");
@@ -1110,26 +1111,26 @@ void check_button_status(void)
 	az_json_writer jw;
 
 	// save flags in case user pressed buttons very fast, and for error case.
-	bool sw0 = button_press_data.flag.sw0 == 1 ? true : false;
-	bool sw1 = button_press_data.flag.sw1 == 1 ? true : false;
+	bool sw0_pressed = button_press_data.flag.sw0 == 1 ? true : false;
+	bool sw1_pressed = button_press_data.flag.sw1 == 1 ? true : false;
 
 	// clear the flags
 	button_press_data.flag.AsUSHORT = 0;
 
-	if (sw0 != true && sw1 != true)
+	if (sw0_pressed != true && sw1_pressed != true)
 	{
 		return;
 	}
 
 	RETURN_IF_FAILED(start_json_object(&jw, button_event_span));
 
-	if (sw0 == true)
+	if (sw0_pressed == true)
 	{
 		debug_printGood("  MAIN: Button SW0 Press Count %lu", button_press_data.sw0_press_count);
 		RETURN_IF_FAILED(append_button_press_telemetry(&jw, event_name_button_sw0_span, button_press_data.sw0_press_count));
 	}
 
-	if (sw1 == true)
+	if (sw1_pressed == true)
 	{
 		debug_printGood("  MAIN: Button SW1 Press Count %lu", button_press_data.sw1_press_count);
 		RETURN_IF_FAILED(append_button_press_telemetry(&jw, event_name_button_sw1_span, button_press_data.sw1_press_count));
