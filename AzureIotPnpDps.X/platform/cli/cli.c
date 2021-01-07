@@ -478,7 +478,6 @@ static void set_led(char *pArg)
 static void get_set_dps_idscope(char *pArg)
 {
     char *dps_param;
-    uint8_t i;
     char atca_id_scope[12]; //idscope 0ne001825F3
 
     dps_param = pArg;
@@ -501,6 +500,8 @@ static void get_set_dps_idscope(char *pArg)
             printf("ID Scope entered : %s. ID Scope should start with 0ne" NEWLINE, dps_param);
             return;
         }
+
+        uint8_t i;
 
         for (i = 3 ; i < 10 ; i++)
         {
