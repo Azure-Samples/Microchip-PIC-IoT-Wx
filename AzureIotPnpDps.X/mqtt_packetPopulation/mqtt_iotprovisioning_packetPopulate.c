@@ -142,7 +142,7 @@ static uint32_t dps_assigning_task(void* payload)
         }
     }
 
-    if (bRet == false)
+    if (!bRet)
     {
         LED_SetRed(LED_STATE_BLINK_FAST);
     }
