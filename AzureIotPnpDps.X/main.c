@@ -1013,7 +1013,7 @@ static void handle_property_message(
 			break;
 
 		// An update to the desired properties with the properties as a JSON payload.
-		case AZ_IOT_HUB_CLIENT_TWIN_RESPONSE_TYPE_DESIRED_PROPERTIES:
+		case AZ_IOT_PNP_CLIENT_PROPERTY_RESPONSE_TYPE_DESIRED_PROPERTIES:
 
 			debug_printInfo("  MAIN: A twin desired properties patch message received");
 			twin_properties.flag.isGet = 0;
