@@ -26,7 +26,7 @@ pf_MQTT_CLIENT pf_mqtt_pnp_client = {
   NULL
 };
 
-extern const az_span device_model_id;
+extern const az_span device_model_id_span;
 extern void receivedFromCloud_commands(uint8_t* topic, uint8_t* payload);
 extern void receivedFromCloud_property(uint8_t* topic, uint8_t* payload);
 extern void receivedFromCloud_patch(uint8_t* topic, uint8_t* payload);
@@ -130,7 +130,7 @@ void MQTT_CLIENT_pnp_connect(char* deviceID)
     az_span_copy(device_id, deviceID_parm);
     device_id = az_span_slice(device_id, 0, az_span_size(deviceID_parm));
 
-    if (az_result_failed(az_iot_pnp_client_init(&pnp_client, iothub_hostname, device_id, device_model_id, NULL)))
+    if (az_result_failed(az_iot_pnp_client_init(&pnp_client, iothub_hostname, device_id, device_model_id_span, NULL)))
     {
         debug_printError("IOTHUB: az_iot_pnp_client_init failed");
     }

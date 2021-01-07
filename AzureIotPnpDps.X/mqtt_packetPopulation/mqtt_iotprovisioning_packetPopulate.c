@@ -32,7 +32,7 @@ pf_MQTT_CLIENT pf_mqtt_iotprovisioning_client = {
   NULL
 };
 
-extern const az_span device_model_id;
+extern const az_span device_model_id_span;
 extern uint8_t device_id_buf[100];
 extern az_span device_id;
 uint8_t atca_dps_id_scope[12];
@@ -270,7 +270,7 @@ void MQTT_CLIENT_iotprovisioning_connected()
 {
     bool bRet = false; // assume failure
 
-    debug_printGood("   DPS: Connected.  Announcing DTMI '%s'", az_span_ptr(device_model_id));
+    debug_printGood("   DPS: Connected.  Announcing DTMI '%s'", az_span_ptr(device_model_id_span));
 
     if (az_result_failed(az_iot_provisioning_client_register_get_publish_topic(&provisioning_client, mqtt_dsp_topic_buf, sizeof(mqtt_dsp_topic_buf), NULL)))
     {
@@ -288,7 +288,7 @@ void MQTT_CLIENT_iotprovisioning_connected()
         // Payload
         register_payload = az_span_create((uint8_t*)register_payload_buf, sizeof(register_payload_buf));
         span_remainder = az_span_copy(register_payload, az_span_create_from_str("{\"payload\":{\"modelId\":\""));
-        span_remainder = az_span_copy(span_remainder, device_model_id);
+        span_remainder = az_span_copy(span_remainder, device_model_id_span);
         span_remainder = az_span_copy(span_remainder, az_span_create_from_str("\"}}"));
         az_span_copy_u8(span_remainder, '\0');
 
