@@ -1021,7 +1021,7 @@ static void handle_property_message(
 
 		// A response from a twin reported properties publish message. With a successful update of
 		// the reported properties, the payload will be empty and the status will be 204.
-		case AZ_IOT_HUB_CLIENT_TWIN_RESPONSE_TYPE_REPORTED_PROPERTIES:
+		case AZ_IOT_PNP_CLIENT_PROPERTY_RESPONSE_TYPE_REPORTED_PROPERTIES:
 
 			debug_printInfo("  MAIN: A twin reported properties response message was received");
 			return;
