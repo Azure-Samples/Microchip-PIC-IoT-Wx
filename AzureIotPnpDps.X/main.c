@@ -1153,7 +1153,7 @@ void check_led_status(twin_properties_t* twin_properties)
 	twin_properties_t* twin_properties_ptr;
 	twin_properties_t twin_properties_local;
 
-	bool bForceSync = false; // force LED status synchronization if this request is coming from Twin Get
+	bool b_force_sync = false; // force LED status synchronization if this request is coming from Twin Get
 
 	if (twin_properties == NULL)
 	{
@@ -1174,12 +1174,12 @@ void check_led_status(twin_properties_t* twin_properties)
 
 	debug_printInfo("  MAIN: %s() led_change %x", __func__, led_status.change_flag.AsUSHORT);
 
-  // if this is from Get Twin, update according to Desired Property
-	bForceSync = twin_properties_ptr->flag.isGet == 1 ? true : false;
+	// if this is from Get Twin, update according to Desired Property
+	b_force_sync = twin_properties_ptr->flag.isGet == 1 ? true : false;
 
-	if (led_status.change_flag.AsUSHORT != 0 || bForceSync)
+	if (led_status.change_flag.AsUSHORT != 0 || b_force_sync)
 	{
-		if (led_status.change_flag.blue == 1 || bForceSync)
+		if (led_status.change_flag.blue == 1 || b_force_sync)
 		{
 			if ((led_status.state_flag.blue & (LED_STATE_BLINK_SLOW | LED_STATE_BLINK_FAST)) != 0)
 			{
@@ -1195,7 +1195,7 @@ void check_led_status(twin_properties_t* twin_properties)
 			}
 		}
 
-		if (led_status.change_flag.green == 1 || bForceSync)
+		if (led_status.change_flag.green == 1 || b_force_sync)
 		{
 			if ((led_status.state_flag.green & (LED_STATE_BLINK_SLOW | LED_STATE_BLINK_FAST)) != 0)
 			{
@@ -1211,7 +1211,7 @@ void check_led_status(twin_properties_t* twin_properties)
 			}
 		}
 
-		if (led_status.change_flag.red == 1 || bForceSync)
+		if (led_status.change_flag.red == 1 || b_force_sync)
 		{
 			if ((led_status.state_flag.red & (LED_STATE_BLINK_SLOW | LED_STATE_BLINK_FAST)) != 0)
 			{
@@ -1231,7 +1231,7 @@ void check_led_status(twin_properties_t* twin_properties)
 		led_status.change_flag.AsUSHORT = 0;
 
 		// if this is from Get Twin, Device Twin code path will update reported properties
-		if (!bForceSync)
+		if (!b_force_sync)
 		{
 			send_reported_property(twin_properties_ptr);
 		}
