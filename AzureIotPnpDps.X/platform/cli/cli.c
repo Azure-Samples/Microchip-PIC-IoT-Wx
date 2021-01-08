@@ -39,7 +39,9 @@
 #include "../credentials_storage/credentials_storage.h"
 #include "../mqtt/mqtt_core/mqtt_core.h"
 #include "../debug_print.h"
+#ifdef LED_CLI
 #include "../led.h"
+#endif
 #include "../cloud/wifi_service.h"
 #include "../cloud/cloud_service.h"
 #include "../../mqtt_packetPopulation/mqtt_iotprovisioning_packetPopulate.h"
@@ -51,6 +53,20 @@
 #define MAX_PUB_KEY_LEN     200
 #define NEWLINE "\r\n"
 
+#ifndef LED_CLI
+#define UNKNOWN_CMD_MSG "--------------------------------------------" NEWLINE\
+                        "Unknown command. List of available commands:" NEWLINE\
+                        "reset"NEWLINE\
+                        "device"NEWLINE\
+                        "key"NEWLINE\
+                        "reconnect" NEWLINE\
+                        "version" NEWLINE\
+                        "cli_version" NEWLINE\
+                        "wifi <ssid>[,<pass>,[authType]]" NEWLINE\
+                        "debug <Debug Level : 0 ~ 4>" NEWLINE\
+                        "idscope [DPS ID Scope]" NEWLINE\
+                        "--------------------------------------------"NEWLINE"\4"
+#else
 #define UNKNOWN_CMD_MSG "--------------------------------------------" NEWLINE\
                         "Unknown command. List of available commands:" NEWLINE\
                         "reset"NEWLINE\
@@ -64,6 +80,7 @@
                         "led <led : 1 ~ 4>,<state : 1 ~ 4> [-? for help]" NEWLINE\
                         "idscope [DPS ID Scope]" NEWLINE\
                         "--------------------------------------------"NEWLINE"\4"
+#endif
 
 static char command[MAX_COMMAND_SIZE];
 static bool isCommandReceived = false;
@@ -82,7 +99,9 @@ static void get_device_id(char *pArg);
 static void get_cli_version(char *pArg);
 static void get_firmware_version(char *pArg);
 static void get_set_debug_level(char *pArg);
+#ifdef LED_CLI
 static void set_led(char *pArg);
+#endif
 static void get_set_dps_idscope(char *pArg);
 
 static bool endOfLineTest(char c);
@@ -109,7 +128,9 @@ const struct cmd commands[] =
     { "cli_version", get_cli_version },
     { "version",     get_firmware_version },
     { "debug",       get_set_debug_level },
+#ifdef LED_CLI
     { "led",         set_led },
+#endif
     { "idscope",     get_set_dps_idscope }
 };
 
@@ -122,6 +143,7 @@ const char* debug_level[] =
     "SEVERITY_INFO"
 };
 
+#ifdef LED_CLI
 const char* led_string[] =
 {
     "Blue",
@@ -129,6 +151,7 @@ const char* led_string[] =
     "Yellow",
     "Red"
 };
+#endif
 
 void CLI_init(void)
 {
@@ -346,6 +369,7 @@ static void get_firmware_version(char *pArg)
     printf("v%s\r\n\4", firmware_version_number);
 }
 
+#ifdef LED_CLI
 static void print_led_help(char* msg)
 {
     if (msg)
@@ -474,6 +498,8 @@ static void set_led(char *pArg)
             break;
     }
 }
+
+#endif
 
 static void get_set_dps_idscope(char *pArg)
 {

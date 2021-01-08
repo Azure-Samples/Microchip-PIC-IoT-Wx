@@ -225,10 +225,18 @@ static int8_t connectMQTTSocket(void)
 
 		socketState = BSD_GetSocketState(*context->tcpClientSocket);
 		if (socketState == SOCKET_CLOSED) {
-			debug_printWarn(" CLOUD: socket closed");
-			ret = BSD_connect(*context->tcpClientSocket, (struct bsd_sockaddr*) & addr, sizeof(struct bsd_sockaddr_in));
+			debug_printWarn(" CLOUD: Configuring SNI to connect to %s", mqtt_host);
+			ret = BSD_setsockopt(*context->tcpClientSocket, SOL_SSL_SOCKET, SO_SSL_SNI, mqtt_host, strlen(mqtt_host));
+			if (ret == BSD_SUCCESS) {
+				int optVal = 1;
+				ret = BSD_setsockopt(*context->tcpClientSocket, SOL_SSL_SOCKET, SO_SSL_ENABLE_SNI_VALIDATION, &optVal, sizeof(optVal));
+			}
 
-			if (ret != BSD_SUCCESS) {
+			if (ret == BSD_SUCCESS) {
+				debug_printGood(" CLOUD: Connect socket");
+				ret = BSD_connect(*context->tcpClientSocket, (struct bsd_sockaddr*) & addr, sizeof (struct bsd_sockaddr_in));
+			}
+			else {
 				debug_printError(" CLOUD: connect failed.  BSD Status = %d", ret);
 				shared_networking_params.haveERROR = 1;
 				LED_SetRed(LED_STATE_HOLD);
