@@ -284,14 +284,14 @@ void enable_provision_ap(void)
 {
 	debug_printGood("  WiFi: Enableing SoftAP : SSID %s", CFG_WLAN_AP_NAME);
 	tstrM2MAPConfig apConfig = {
-	   CFG_WLAN_AP_NAME, // Access Point Name.
-	   1, // Channel to use.
-	   0, // Wep key index.
-	   WEP_40_KEY_STRING_SIZE, // Wep key size.
-	   "1234567890", // Wep key.
-	   M2M_WIFI_SEC_OPEN, // Security mode.
-	   SSID_MODE_VISIBLE, // SSID visible.
-	   CFG_WLAN_AP_IP_ADDRESS
+		CFG_WLAN_AP_NAME, // Access Point Name.
+		1, // Channel to use.
+		0, // Wep key index.
+		WEP_40_KEY_STRING_SIZE, // Wep key size.
+		"1234567890", // Wep key.
+		M2M_WIFI_SEC_OPEN, // Security mode.
+		SSID_MODE_VISIBLE, // SSID visible.
+		CFG_WLAN_AP_IP_ADDRESS
 	};
 	static char gacHttpProvDomainName[] = CFG_WLAN_AP_NAME;
 	m2m_wifi_start_provision_mode(&apConfig, gacHttpProvDomainName, 1);
