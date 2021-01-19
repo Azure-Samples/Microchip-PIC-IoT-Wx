@@ -728,7 +728,7 @@ static void handle_command_message(
 **********************************************/
 void receivedFromCloud_commands(uint8_t* topic, uint8_t* payload)
 {
-	debug_printInfo("  MAIN: Commands");
+	debug_printInfo("  MAIN: %s() : Command Received");
 
 	az_iot_pnp_client_command_request command_request;
 	az_span command_topic_span = az_span_create_from_str((char*)topic);

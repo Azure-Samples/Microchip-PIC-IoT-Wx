@@ -39,9 +39,6 @@
 #include "../credentials_storage/credentials_storage.h"
 #include "../mqtt/mqtt_core/mqtt_core.h"
 #include "../debug_print.h"
-#ifdef LED_CLI
-#include "../led.h"
-#endif
 #include "../cloud/wifi_service.h"
 #include "../cloud/cloud_service.h"
 #include "../../mqtt_packetPopulation/mqtt_iotprovisioning_packetPopulate.h"
@@ -52,6 +49,11 @@
 #define MAX_COMMAND_SIZE    100
 #define MAX_PUB_KEY_LEN     200
 #define NEWLINE "\r\n"
+
+//#define LED_CLI
+#ifdef LED_CLI
+#include "../led.h"
+#endif
 
 #ifndef LED_CLI
 #define UNKNOWN_CMD_MSG "--------------------------------------------" NEWLINE\
