@@ -23,29 +23,69 @@
     CLAIMS IN ANY WAY RELATED TO THIS SOFTWARE WILL NOT EXCEED THE AMOUNT
     OF FEES, IF ANY, THAT YOU HAVE PAID DIRECTLY TO MICROCHIP FOR THIS
     SOFTWARE.
-*/ 
-
+*/
 
 #ifndef LED_H_
 #define LED_H_
 #include <stdint.h>
 #include <stdbool.h>
 
-#define LED_ON				false
-#define LED_OFF				true
+#define LED_ON   false
+#define LED_OFF  true
+
+typedef enum
+{
+    LED_BLUE,
+    LED_GREEN,
+    LED_YELLOW,
+    LED_RED
+} led_number_t;
+
+typedef union
+{
+    struct {
+        unsigned short red:1;
+        unsigned short green:1;
+        unsigned short blue:1;
+        unsigned short yellow:1;
+        unsigned short reserved:12;
+    };
+    unsigned short AsUSHORT;
+} led_change_t;
+
+typedef union
+{
+    struct {
+        unsigned short red:3;
+        unsigned short green:3;
+        unsigned short blue:3;
+        unsigned short yellow:3;
+        unsigned short reserved:6;
+    };
+    unsigned short AsUSHORT;
+} led_state_t;
+
+typedef struct led
+{
+    led_change_t change_flag;
+    led_state_t  state_flag;
+} led_status_t;
+
+typedef enum
+{
+    LED_STATE_OFF        = 0,
+    LED_STATE_HOLD       = (1 << 0),
+    LED_STATE_BLINK_FAST = (1 << 1),
+    LED_STATE_BLINK_SLOW = (1 << 2),
+    LED_STAT_MAX         = INT16_MAX
+} led_set_state_t;
 
 void LED_test(void);
-void LED_flashYellow(void);
-void LED_holdYellowOn(bool holdHigh);
-void LED_holdGreenOn(bool holdHigh);
-void LED_holdRedOn(bool holdHigh);
-void LED_flashRed(double interval_seconds);
-bool LED_isBlinkingRed(void);
-void LED_blinkingBlue(bool amBlinking);
-void LED_startBlinkingGreen(void);
-void LED_stopBlinkingGreen(void);
-bool LED_isBlinkingGreen(void);
-void LED_startBlinkingRed(void);
-void LED_stopBlinkingRed(void);
+void LED_init(void);
+
+void LED_SetBlue(led_set_state_t newState);
+void LED_SetGreen(led_set_state_t newState);
+void LED_SetYellow(led_set_state_t newState);
+void LED_SetRed(led_set_state_t newState);
 
 #endif /* LED_H_ */

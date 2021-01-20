@@ -56,7 +56,13 @@
 /**
  Section: File specific functions
 */
+void (*SW0_InterruptHandler)(void) = NULL;
+void (*SW1_InterruptHandler)(void) = NULL;
 void (*INT_InterruptHandler)(void) = NULL;
+
+button_press_data_t button_press_data = {0};
+uint32_t button_sw0_numPresses = 0;
+uint32_t button_sw1_numPresses = 0;
 
 /**
  Section: Driver Interface Function Definitions
@@ -107,27 +113,33 @@ void PIN_MANAGER_Initialize (void)
     __builtin_write_OSCCONL(OSCCON & 0xbf); // unlock PPS
 
     RPOR12bits.RP24R = 0x0003;    //RC8->UART1:U1TX
-    RPINR18bits.U1RXR = 0x0019;    //RC9->UART1:U1RX
-    RPINR20bits.SDI1R = 0x001F;    //RA13->SPI1:SDI1
-    RPOR8bits.RP16R = 0x0007;    //RC0->SPI1:SDO1
-    RPOR9bits.RP18R = 0x0008;    //RC2->SPI1:SCK1OUT
+    RPINR18bits.U1RXR = 0x0019;   //RC9->UART1:U1RX
+    RPINR20bits.SDI1R = 0x001F;   //RA13->SPI1:SDI1
+    RPOR8bits.RP16R = 0x0007;     //RC0->SPI1:SDO1
+    RPOR9bits.RP18R = 0x0008;     //RC2->SPI1:SCK1OUT
 
     __builtin_write_OSCCONL(OSCCON | 0x40); // lock PPS
     
     /****************************************************************************
      * Interrupt On Change: negative
      ***************************************************************************/
+    IOCNAbits.IOCNA10 = 0;    //Pin : RA10
     IOCNAbits.IOCNA12 = 0;    //Pin : RA12
+    IOCNAbits.IOCNA7  = 0;    //Pin : RA7
     /****************************************************************************
      * Interrupt On Change: flag
      ***************************************************************************/
+    IOCFAbits.IOCFA10 = 0;    //Pin : RA10
     IOCFAbits.IOCFA12 = 0;    //Pin : RA12
+    IOCFAbits.IOCFA7  = 0;    //Pin : RA7
     /****************************************************************************
      * Interrupt On Change: config
      ***************************************************************************/
     PADCONbits.IOCON = 0;    //Config for PORTA
     
     /* Initialize IOC Interrupt Handler*/
+	SW0_SetInterruptHandler(&SW0_CallBack);
+	SW1_SetInterruptHandler(&SW1_CallBack);
     INT_SetInterruptHandler(&INT_CallBack);
     
     /****************************************************************************
@@ -135,11 +147,49 @@ void PIN_MANAGER_Initialize (void)
      ***************************************************************************/
     IFS1bits.IOCIF = 0; //Clear IOCI interrupt flag
     IEC1bits.IOCIE = 1; //Enable IOCI interrupt
+    IOCNAbits.IOCNA7  = 1; //Enable negative edge interrupt for SW0 (RA7)
+    IOCNAbits.IOCNA10 = 1; //Enable negative edge interrupt for SW1 (RA10)
+}
+
+void __attribute__((weak)) SW0_CallBack(void)
+{
+    button_press_data.flag.sw0 = 1;
+    button_press_data.sw0_press_count++;
+}
+
+void __attribute__ ((weak)) SW1_CallBack(void)
+{
+    button_press_data.flag.sw1 = 1;
+    button_press_data.sw1_press_count++;
 }
 
 void __attribute__ ((weak)) INT_CallBack(void)
 {
 
+}
+
+void SW0_SetInterruptHandler(void (* InterruptHandler)(void))
+{
+    IEC1bits.IOCIE = 0; //Disable IOCI interrupt
+    SW0_InterruptHandler = InterruptHandler;
+    IEC1bits.IOCIE = 1; //Enable IOCI interrupt
+}
+
+void SW0_SetIOCInterruptHandler(void *handler)
+{
+    SW0_SetInterruptHandler(handler);
+}
+
+void SW1_SetInterruptHandler(void (* InterruptHandler)(void))
+{
+    IEC1bits.IOCIE = 0; //Disable IOCI interrupt
+    SW1_InterruptHandler = InterruptHandler;
+    IEC1bits.IOCIE = 1; //Enable IOCI interrupt
+}
+
+void SW1_SetIOCInterruptHandler(void *handler)
+{
+    SW1_SetInterruptHandler(handler);
 }
 
 void INT_SetInterruptHandler(void (* InterruptHandler)(void))
@@ -159,6 +209,24 @@ void __attribute__ (( interrupt, no_auto_psv )) _IOCInterrupt ( void )
 {
     if(IFS1bits.IOCIF == 1)
     {
+        if(IOCFAbits.IOCFA7 == 1)
+        {
+            if(SW0_InterruptHandler)
+            {
+                SW0_InterruptHandler();
+            }
+            IOCFAbits.IOCFA7 = 0;  //Clear flag for Pin - RA7
+        }
+
+        if(IOCFAbits.IOCFA10 == 1)
+        {
+            if(SW1_InterruptHandler)
+            {
+                SW1_InterruptHandler();
+            }
+            IOCFAbits.IOCFA10 = 0;  //Clear flag for Pin - RA10
+        }
+
         if(IOCFAbits.IOCFA12 == 1)
         {
             if(INT_InterruptHandler) 
@@ -167,9 +235,7 @@ void __attribute__ (( interrupt, no_auto_psv )) _IOCInterrupt ( void )
             }
             
             IOCFAbits.IOCFA12 = 0;  //Clear flag for Pin - RA12
-
         }
-        
         
         // Clear the flag
         IFS1bits.IOCIF = 0;

@@ -12,6 +12,7 @@
 #include "mqtt_iothub_packetPopulate.h"
 #include "../platform/config/IoT_Sensor_Node_config.h"
 #include "../platform/debug_print.h"
+#include "../platform/led.h"
 #include "../platform/cryptoauthlib/lib/basic/atca_basic.h"
 #include <azure/iot/az_iot_common.h>
 #include <azure/iot/az_iot_pnp_client.h>
@@ -25,7 +26,7 @@ pf_MQTT_CLIENT pf_mqtt_pnp_client = {
   NULL
 };
 
-extern const az_span device_model_id;
+extern const az_span device_model_id_span;
 extern void receivedFromCloud_commands(uint8_t* topic, uint8_t* payload);
 extern void receivedFromCloud_property(uint8_t* topic, uint8_t* payload);
 extern void receivedFromCloud_patch(uint8_t* topic, uint8_t* payload);
@@ -54,48 +55,59 @@ void MQTT_CLIENT_pnp_publish(uint8_t* data, uint16_t len)
     uint8_t properties_buf[256];
     az_span properties = AZ_SPAN_FROM_BUFFER(properties_buf);
     az_iot_message_properties properties_topic;
-    az_result result = az_iot_message_properties_init(&properties_topic, properties, 0);
-    if (az_result_failed(result))
+    bool bRet = false; // assume failure
+
+    debug_printGood("IOTHUB: Publish");
+
+    if (az_result_failed(az_iot_message_properties_init(&properties_topic, properties, 0)))
     {
-        debug_printError("az_iot_message_properties_init failed");
-        return;
+        debug_printError("IOTHUB: az_iot_message_properties_init failed");
+    }
+    else if (az_result_failed(az_iot_message_properties_append(&properties_topic, AZ_SPAN_FROM_STR("foo"), AZ_SPAN_FROM_STR("bar"))))
+    {
+        debug_printError("IOTHUB: az_iot_message_properties_append failed");
+    }
+    else if (az_result_failed(az_iot_pnp_client_telemetry_get_publish_topic(
+                                &pnp_client,
+                                AZ_SPAN_EMPTY, 
+                                &properties_topic,
+                                mqtt_telemetry_topic_buf,
+                                sizeof(mqtt_telemetry_topic_buf), NULL)))
+    {
+        debug_printError("IOTHUB: az_iot_pnp_client_telemetry_get_publish_topic failed");
+    }
+    else
+    {
+        static uint16_t packetIdentifier;
+        packetIdentifier++;
+        mqttPublishPacket cloudPublishPacket;
+        // Fixed header
+        cloudPublishPacket.publishHeaderFlags.duplicate = 0;
+        cloudPublishPacket.publishHeaderFlags.qos = 1;
+        cloudPublishPacket.publishHeaderFlags.retain = 0;
+        cloudPublishPacket.packetIdentifierLSB = packetIdentifier & 0xff;
+        cloudPublishPacket.packetIdentifierMSB = packetIdentifier >> 8;
+        // Variable header
+        cloudPublishPacket.topic = (uint8_t*)mqtt_telemetry_topic_buf;
+
+        // Payload
+        cloudPublishPacket.payload = data;
+        cloudPublishPacket.payloadLength = len;
+
+        if (MQTT_CreatePublishPacket(&cloudPublishPacket) != true)
+        {
+            debug_printError("IOTHUB: Connection lost PUBLISH failed");
+        }
+        else
+        {
+            bRet = true;
+        }
     }
 
-    result = az_iot_message_properties_append(&properties_topic, AZ_SPAN_FROM_STR("foo"), AZ_SPAN_FROM_STR("bar"));
-    if (az_result_failed(result))
+    if (!bRet)
     {
-        debug_printError("az_iot_message_properties_append failed");
-        return;
-    }
-
-    result = az_iot_pnp_client_telemetry_get_publish_topic(
-        &pnp_client, AZ_SPAN_EMPTY, &properties_topic, mqtt_telemetry_topic_buf, sizeof(mqtt_telemetry_topic_buf), NULL);
-
-    if (az_result_failed(result))
-    {
-        debug_printError("az_iot_pnp_client_telemetry_get_publish_topic failed");
-        return;
-    }
-
-    static uint16_t packetIdentifier;
-    packetIdentifier++;
-    mqttPublishPacket cloudPublishPacket;
-    // Fixed header
-    cloudPublishPacket.publishHeaderFlags.duplicate = 0;
-    cloudPublishPacket.publishHeaderFlags.qos = 1;
-    cloudPublishPacket.publishHeaderFlags.retain = 0;
-    cloudPublishPacket.packetIdentifierLSB = packetIdentifier & 0xff;
-    cloudPublishPacket.packetIdentifierMSB = packetIdentifier >> 8;
-    // Variable header
-    cloudPublishPacket.topic = (uint8_t*)mqtt_telemetry_topic_buf;
-
-    // Payload
-    cloudPublishPacket.payload = data;
-    cloudPublishPacket.payloadLength = len;
-
-    if (MQTT_CreatePublishPacket(&cloudPublishPacket) != true)
-    {
-        debug_printError("MQTT: Connection lost PUBLISH failed");
+        debug_printError("IOTHUB: Publish failed");
+        LED_SetRed(LED_STATE_BLINK_SLOW);
     }
 }
 
@@ -106,88 +118,104 @@ void MQTT_CLIENT_pnp_receive(uint8_t* data, uint16_t len)
 
 void MQTT_CLIENT_pnp_connect(char* deviceID)
 {
+    bool bRet = false; // assume failure
+    size_t mqtt_username_buf_len;
+
+    debug_printGood("IOTHUB: Connect");
+    LED_SetGreen(LED_STATE_BLINK_SLOW);
+
     const az_span iothub_hostname = az_span_create_from_str(hub_hostname);
     const az_span deviceID_parm = az_span_create_from_str(deviceID);
-        az_span device_id = AZ_SPAN_FROM_BUFFER(device_id_buf);
+    az_span device_id = AZ_SPAN_FROM_BUFFER(device_id_buf);
     az_span_copy(device_id, deviceID_parm);
     device_id = az_span_slice(device_id, 0, az_span_size(deviceID_parm));
 
-    az_result result = az_iot_pnp_client_init(&pnp_client, iothub_hostname, device_id, device_model_id, NULL);
-    if (az_result_failed(result))
+    if (az_result_failed(az_iot_pnp_client_init(&pnp_client, iothub_hostname, device_id, device_model_id_span, NULL)))
     {
-        debug_printError("az_iot_pnp_client_init failed");
-        return;
+        debug_printError("IOTHUB: az_iot_pnp_client_init failed");
     }
+    else if (az_result_failed(az_iot_pnp_client_get_user_name(
+                                &pnp_client,
+                                mqtt_username_buf,
+                                sizeof(mqtt_username_buf),
+                                &mqtt_username_buf_len)))
+    {
+        debug_printError("IOTHUB: az_iot_pnp_client_sas_get_signature failed");
+    }
+    else
+    {
+        mqttConnectPacket cloudConnectPacket;
+        memset(&cloudConnectPacket, 0, sizeof(mqttConnectPacket));
+        cloudConnectPacket.connectVariableHeader.connectFlagsByte.cleanSession = 0;
+        cloudConnectPacket.connectVariableHeader.keepAliveTimer = AZ_IOT_DEFAULT_MQTT_CONNECT_KEEPALIVE_SECONDS;
+        cloudConnectPacket.clientID = az_span_ptr(device_id);
 
-    size_t mqtt_username_buf_len;
-    result = az_iot_pnp_client_get_user_name(&pnp_client, mqtt_username_buf, sizeof(mqtt_username_buf), &mqtt_username_buf_len);
-    if (az_result_failed(result))
-    {
-      debug_printError("az_iot_pnp_client_sas_get_signature failed");
-      return;
-    }
 #ifdef SAS
-    time_t expire_time = time(NULL) + 60 * 60; // token expires in 1 hour
-    uint8_t signature_buf[256];
-    az_span signature = AZ_SPAN_FROM_BUFFER(signature_buf);
-    result = az_iot_pnp_client_sas_get_signature(&pnp_client, expire_time, signature, &signature); 
-    if (az_result_failed(result))
-    {
-        debug_printError("az_iot_pnp_client_sas_get_signature failed");
-        return;
-    }
+        time_t expire_time = time(NULL) + 60 * 60; // token expires in 1 hour
+        uint8_t signature_buf[256];
+        az_span signature = AZ_SPAN_FROM_BUFFER(signature_buf);
+        result = az_iot_pnp_client_sas_get_signature(&pnp_client, expire_time, signature, &signature);
+        if (az_result_failed(result))
+        {
+            debug_printError("IOTHUB: az_iot_pnp_client_sas_get_signature failed");
+            LED_SetRed(LED_STATE_BLINK_SLOW);
+            return;
+        }
 
-    uint8_t key[32];
-    size_t key_size = sizeof(key);
-    atcab_base64decode_(hub_device_key, strlen(hub_device_key), key, &key_size, az_iot_b64rules);
-    atcab_nonce(key);
-    uint8_t hash[32];
-    ATCA_STATUS atca_status = atcab_sha_hmac(signature_buf, az_span_size(signature), ATCA_TEMPKEY_KEYID, hash, SHA_MODE_TARGET_OUT_ONLY);
-    if (atca_status != ATCA_SUCCESS)
-    {
-        debug_printError("atcab_sha_hmac failed");
-        return;
-    }
+        uint8_t key[32];
+        size_t key_size = sizeof(key);
+        atcab_base64decode_(hub_device_key, strlen(hub_device_key), key, &key_size, az_iot_b64rules);
+        atcab_nonce(key);
+        uint8_t hash[32];
+        ATCA_STATUS atca_status = atcab_sha_hmac(signature_buf, az_span_size(signature), ATCA_TEMPKEY_KEYID, hash, SHA_MODE_TARGET_OUT_ONLY);
+        if (atca_status != ATCA_SUCCESS)
+        {
+            debug_printError("IOTHUB: atcab_sha_hmac failed");
+            LED_SetRed(LED_STATE_BLINK_SLOW);
+            return;
+        }
 
-    char signature_hash_buf[64];
-    key_size = sizeof(signature_hash_buf);
-    atcab_base64encode_(hash, sizeof(hash), signature_hash_buf, &key_size, az_iot_b64rules);
+        char signature_hash_buf[64];
+        key_size = sizeof(signature_hash_buf);
+        atcab_base64encode_(hash, sizeof(hash), signature_hash_buf, &key_size, az_iot_b64rules);
 
-    size_t mqtt_password_buf_len;
-    az_span signature_hash = az_span_create_from_str(signature_hash_buf);
-    result = az_iot_pnp_client_sas_get_password(&pnp_client, expire_time, signature_hash, AZ_SPAN_EMPTY, mqtt_password_buf, sizeof(mqtt_password_buf), &mqtt_password_buf_len);
-    if (az_result_failed(result))
-    {
-        debug_printError("az_iot_pnp_client_sas_get_password failed");
-        return;
-    }   
-#endif
+        size_t mqtt_password_buf_len;
+        az_span signature_hash = az_span_create_from_str(signature_hash_buf);
+        result = az_iot_pnp_client_sas_get_password(&pnp_client, signature_hash, expire_time, AZ_SPAN_NULL, mqtt_password_buf, sizeof(mqtt_password_buf), &mqtt_password_buf_len);
+        if (az_result_failed(result))
+        {
+            debug_printError("IOTHUB: az_iot_pnp_client_sas_get_password failed");
+            LED_SetRed(LED_STATE_BLINK_SLOW);
+            return;
+        }
 
-    mqttConnectPacket cloudConnectPacket;
-    memset(&cloudConnectPacket, 0, sizeof(mqttConnectPacket));
-    cloudConnectPacket.connectVariableHeader.connectFlagsByte.cleanSession = 0; 
-    cloudConnectPacket.connectVariableHeader.keepAliveTimer = AZ_IOT_DEFAULT_MQTT_CONNECT_KEEPALIVE_SECONDS;
-
-    cloudConnectPacket.clientID = az_span_ptr(device_id);
-    
-#ifdef SAS
-    cloudConnectPacket.password = (uint8_t*)mqtt_password_buf;
-    cloudConnectPacket.passwordLength = mqtt_password_buf_len;
+        cloudConnectPacket.password = (uint8_t*)mqtt_password_buf;
+        cloudConnectPacket.passwordLength = mqtt_password_buf_len;
 #else
-    cloudConnectPacket.password = NULL;
-    cloudConnectPacket.passwordLength = 0;
+        cloudConnectPacket.password = NULL;
+        cloudConnectPacket.passwordLength = 0;
 #endif
-    
-    cloudConnectPacket.username = (uint8_t*)mqtt_username_buf;
-    cloudConnectPacket.usernameLength = (uint16_t)mqtt_username_buf_len;
+        cloudConnectPacket.username = (uint8_t*)mqtt_username_buf;
+        cloudConnectPacket.usernameLength = (uint16_t)mqtt_username_buf_len;
 
-    MQTT_CreateConnectPacket(&cloudConnectPacket);
+        bRet = MQTT_CreateConnectPacket(&cloudConnectPacket);
+    }
+
+    if (!bRet)
+    {
+        debug_printError("IOTHUB: Connect failed");
+        LED_SetRed(LED_STATE_BLINK_SLOW);
+    }
 }
 
 bool MQTT_CLIENT_pnp_subscribe()
 {
     mqttSubscribePacket cloudSubscribePacket = { 0 };
-    // Variable header   
+    bool bRet = false; // assume failure
+
+    debug_printInfo("IOTHUB: Subscribe");
+
+    // Variable header
     cloudSubscribePacket.packetIdentifierLSB = 1;
     cloudSubscribePacket.packetIdentifierMSB = 0;
 
@@ -210,40 +238,62 @@ bool MQTT_CLIENT_pnp_subscribe()
     imqtt_publishReceiveCallBackTable[2].mqttHandlePublishDataCallBack = receivedFromCloud_property;
     MQTT_SetPublishReceptionHandlerTable(imqtt_publishReceiveCallBackTable);
 
-    bool ret = MQTT_CreateSubscribePacket(&cloudSubscribePacket);
-    if (ret == true)
+    bRet = MQTT_CreateSubscribePacket(&cloudSubscribePacket);
+    if (bRet == true)
     {
-        debug_printInfo("MQTT: SUBSCRIBE packet created");
+        debug_printInfo("IOTHUB: SUBSCRIBE packet created");
+    }
+    else
+    {
+        debug_printError("IOTHUB: Subscribe failed");
+        LED_SetRed(LED_STATE_BLINK_SLOW);
     }
 
-    return ret;
+    return bRet;
 }
 
 void MQTT_CLIENT_pnp_connected()
 {
+    bool bRet = false; // assume failure
+
+    debug_printGood("IOTHUB: Connected");
+
     // get the current state of the device properties
 
-    az_result result = az_iot_pnp_client_property_document_get_publish_topic(&pnp_client, twin_request_id, mqtt_get_topic_twin_buf, sizeof(mqtt_get_topic_twin_buf), NULL);
-    if (az_result_failed(result))
+    if (az_result_failed(az_iot_pnp_client_property_document_get_publish_topic(
+                            &pnp_client,
+                            twin_request_id,
+                            mqtt_get_topic_twin_buf,
+                            sizeof(mqtt_get_topic_twin_buf),
+                            NULL)))
     {
-        debug_printError("az_iot_pnp_client_twin_document_get_publish_topic failed");
-        return;
+        debug_printError("IOTHUB: az_iot_pnp_client_twin_document_get_publish_topic failed");
+    }
+    else
+    {
+        mqttPublishPacket cloudPublishPacket;
+        // Fixed header
+        cloudPublishPacket.publishHeaderFlags.duplicate = 0;
+        cloudPublishPacket.publishHeaderFlags.qos = 0;
+        cloudPublishPacket.publishHeaderFlags.retain = 0;
+        // Variable header
+        cloudPublishPacket.topic = (uint8_t*)mqtt_get_topic_twin_buf;
+
+        // Payload
+        cloudPublishPacket.payload = NULL;
+        cloudPublishPacket.payloadLength = 0;
+
+        bRet = MQTT_CreatePublishPacket(&cloudPublishPacket);
     }
 
-    mqttPublishPacket cloudPublishPacket;
-    // Fixed header
-    cloudPublishPacket.publishHeaderFlags.duplicate = 0;
-    cloudPublishPacket.publishHeaderFlags.qos = 0;
-    cloudPublishPacket.publishHeaderFlags.retain = 0;
-    // Variable header
-    cloudPublishPacket.topic = (uint8_t*)mqtt_get_topic_twin_buf;
-
-    // Payload
-    cloudPublishPacket.payload = NULL;
-    cloudPublishPacket.payloadLength = 0;
-
-    if (MQTT_CreatePublishPacket(&cloudPublishPacket) != true)
+    if (bRet)
     {
-        debug_printError("MQTT: Connection lost PUBLISH failed");
+        LED_SetGreen(LED_STATE_HOLD);
+        LED_SetRed(LED_STATE_OFF);
+    }
+    else
+    {
+        debug_printError("IOTHUB: Get Twin failed");
+        LED_SetRed(LED_STATE_BLINK_SLOW);
     }
 }

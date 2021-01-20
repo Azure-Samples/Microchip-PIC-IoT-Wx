@@ -1,228 +1,380 @@
 /*
-	\file   led.c
+    \file   led.c
 
-	\brief  Manage board LED's
+    \brief  Manage board LED's
 
-	(c) 2018 Microchip Technology Inc. and its subsidiaries.
+    (c) 2018 Microchip Technology Inc. and its subsidiaries.
 
-	Subject to your compliance with these terms, you may use Microchip software and any
-	derivatives exclusively with Microchip products. It is your responsibility to comply with third party
-	license terms applicable to your use of third party software (including open source software) that
-	may accompany Microchip software.
+    Subject to your compliance with these terms, you may use Microchip software and any
+    derivatives exclusively with Microchip products. It is your responsibility to comply with third party
+    license terms applicable to your use of third party software (including open source software) that
+    may accompany Microchip software.
 
-	THIS SOFTWARE IS SUPPLIED BY MICROCHIP "AS IS". NO WARRANTIES, WHETHER
-	EXPRESS, IMPLIED OR STATUTORY, APPLY TO THIS SOFTWARE, INCLUDING ANY
-	IMPLIED WARRANTIES OF NON-INFRINGEMENT, MERCHANTABILITY, AND FITNESS
-	FOR A PARTICULAR PURPOSE.
+    THIS SOFTWARE IS SUPPLIED BY MICROCHIP "AS IS". NO WARRANTIES, WHETHER
+    EXPRESS, IMPLIED OR STATUTORY, APPLY TO THIS SOFTWARE, INCLUDING ANY
+    IMPLIED WARRANTIES OF NON-INFRINGEMENT, MERCHANTABILITY, AND FITNESS
+    FOR A PARTICULAR PURPOSE.
 
-	IN NO EVENT WILL MICROCHIP BE LIABLE FOR ANY INDIRECT, SPECIAL, PUNITIVE,
-	INCIDENTAL OR CONSEQUENTIAL LOSS, DAMAGE, COST OR EXPENSE OF ANY KIND
-	WHATSOEVER RELATED TO THE SOFTWARE, HOWEVER CAUSED, EVEN IF MICROCHIP
-	HAS BEEN ADVISED OF THE POSSIBILITY OR THE DAMAGES ARE FORESEEABLE. TO
-	THE FULLEST EXTENT ALLOWED BY LAW, MICROCHIP'S TOTAL LIABILITY ON ALL
-	CLAIMS IN ANY WAY RELATED TO THIS SOFTWARE WILL NOT EXCEED THE AMOUNT
-	OF FEES, IF ANY, THAT YOU HAVE PAID DIRECTLY TO MICROCHIP FOR THIS
-	SOFTWARE.
+    IN NO EVENT WILL MICROCHIP BE LIABLE FOR ANY INDIRECT, SPECIAL, PUNITIVE,
+    INCIDENTAL OR CONSEQUENTIAL LOSS, DAMAGE, COST OR EXPENSE OF ANY KIND
+    WHATSOEVER RELATED TO THE SOFTWARE, HOWEVER CAUSED, EVEN IF MICROCHIP
+    HAS BEEN ADVISED OF THE POSSIBILITY OR THE DAMAGES ARE FORESEEABLE. TO
+    THE FULLEST EXTENT ALLOWED BY LAW, MICROCHIP'S TOTAL LIABILITY ON ALL
+    CLAIMS IN ANY WAY RELATED TO THIS SOFTWARE WILL NOT EXCEED THE AMOUNT
+    OF FEES, IF ANY, THAT YOU HAVE PAID DIRECTLY TO MICROCHIP FOR THIS
+    SOFTWARE.
 */
 #include <xc.h>
 #include <stdbool.h>
 #include "led.h"
 #include "drivers/timeout.h"
 #include "delay.h"
+#include "debug_print.h"
+#include "../main.h"
 
-#define LEDS_TEST_INTERVAL        50L
-#define LED_ON_INTERVAL           timeout_mSecToTicks(200L)
-#define LED_ON_INTERVAL_FAST      timeout_mSecToTicks(100L)
-#define LEDS_HOLD_INTERVAL	      timeout_mSecToTicks(2000L)
+led_status_t led_status;
 
-static bool ledForHubConnection = false;
-static bool ledYellowHeld = false;
-static bool isRedLedFlashing = false;
+#define LOW   0
+#define HIGH  1
 
-static uint32_t redblink_task(void* payload);
-static timerStruct_t redBlink_timer = { redblink_task };
+#define LEDS_TEST_INTERVAL  50L
+#define LED_100ms_INTERVAL  timeout_mSecToTicks(100L)
+#define LED_400ms_INTERVAL  timeout_mSecToTicks(400L)
 
-static uint32_t yellow_task(void* payload);
-static timerStruct_t yellow_timer = { yellow_task };
+static uint32_t blink_task(void* payload);
+static timerStruct_t blinkTimer_blue = { blink_task, (void*)LED_BLUE };
+static timerStruct_t blinkTimer_green = { blink_task, (void*)LED_GREEN};
+static timerStruct_t blinkTimer_yellow = { blink_task, (void*)LED_YELLOW};
+static timerStruct_t blinkTimer_red = { blink_task, (void*)LED_RED};
 
-static uint32_t red_task(void* payload);
-static timerStruct_t red_timer = { red_task };
-
-static uint32_t hubConnection_task(void* payload);
-static timerStruct_t hubConnection_timer = { hubConnection_task };
-
-static uint32_t softAp_task(void* payload);
-static timerStruct_t softAP_timer = { softAp_task };
+const char* debug_led_state[] =
+{
+    "Off",
+    "On",
+    "Blink(Fast)",
+    "N/A",
+    "Blink(Slow)"
+};
 
 static void testSequence(uint8_t ledState)
 {
-	if (ledState == LED_ON)
-	{
-		LATCbits.LATC5 = 0; /* set LED_BLUE output low */
-		DELAY_milliseconds(LEDS_TEST_INTERVAL);
-		LATCbits.LATC4 = 0; /* set LED_GREEN output low */
-		DELAY_milliseconds(LEDS_TEST_INTERVAL);
-		LATCbits.LATC3 = 0; /* set LED_YELLOW output low */
-		DELAY_milliseconds(LEDS_TEST_INTERVAL);
-		LATBbits.LATB4 = 0; /* set LED_RED output low */
-		DELAY_milliseconds(LEDS_TEST_INTERVAL);
-	}
-	else
-	{
-		LATCbits.LATC5 = 1; /* set LED_BLUE output high */
-		DELAY_milliseconds(LEDS_TEST_INTERVAL);
-		LATCbits.LATC4 = 1; /* set LED_GREEN output high */
-		DELAY_milliseconds(LEDS_TEST_INTERVAL);
-		LATCbits.LATC3 = 1; /* set LED_YELLOW output high */
-		DELAY_milliseconds(LEDS_TEST_INTERVAL);
-		LATBbits.LATB4 = 1; /* set LED_RED output high */
-		DELAY_milliseconds(LEDS_TEST_INTERVAL);
-	}
+    if (ledState == LED_ON)
+    {
+        LATCbits.LATC5 = 0; /* set LED_BLUE output low */
+        DELAY_milliseconds(LEDS_TEST_INTERVAL);
+        LATCbits.LATC4 = 0; /* set LED_GREEN output low */
+        DELAY_milliseconds(LEDS_TEST_INTERVAL);
+        LATCbits.LATC3 = 0; /* set LED_YELLOW output low */
+        DELAY_milliseconds(LEDS_TEST_INTERVAL);
+        LATBbits.LATB4 = 0; /* set LED_RED output low */
+        DELAY_milliseconds(LEDS_TEST_INTERVAL);
+    }
+    else
+    {
+        LATCbits.LATC5 = 1; /* set LED_BLUE output high */
+        DELAY_milliseconds(LEDS_TEST_INTERVAL);
+        LATCbits.LATC4 = 1; /* set LED_GREEN output high */
+        DELAY_milliseconds(LEDS_TEST_INTERVAL);
+        LATCbits.LATC3 = 1; /* set LED_YELLOW output high */
+        DELAY_milliseconds(LEDS_TEST_INTERVAL);
+        LATBbits.LATB4 = 1; /* set LED_RED output high */
+        DELAY_milliseconds(LEDS_TEST_INTERVAL);
+    }
 }
 
 void LED_test(void)
 {
-	testSequence(LED_ON);
-	testSequence(LED_OFF);
+    testSequence(LED_ON);
+    testSequence(LED_OFF);
 }
 
-static uint32_t yellow_task(void* payload)
+void LED_init(void)
 {
-	LATCbits.LATC3 = 1; /* set LED_YELLOW output high */
-	ledYellowHeld = false;
-	return 0;
+    led_status.change_flag.AsUSHORT = 0;
+    led_status.state_flag.AsUSHORT = 0;
+
+    led_status.state_flag.blue = LED_STATE_OFF;
+    LATCbits.LATC5 = HIGH; /* set LED_BLUE output high */
+    led_status.state_flag.green = LED_STATE_OFF;
+    LATCbits.LATC4 = HIGH; /* set LED_GREEN output high */
+    led_status.state_flag.yellow = LED_STATE_OFF;
+    LATCbits.LATC3 = HIGH; /* set LED_YELLOW output high */
+    led_status.state_flag.red = LED_STATE_OFF;
+    LATBbits.LATB4 = HIGH; /* set LED_RED output high */
 }
 
-static uint32_t red_task(void* payload)
+static uint32_t blink_task(void* payload)
 {
-	isRedLedFlashing = false;
-	LATBbits.LATB4 = 1; /* set LED_RED output high */
-	return 0;
+    led_number_t led = (led_number_t)payload;
+    uint32_t timeout = LED_100ms_INTERVAL;
+
+    switch (led)
+    {
+        case LED_BLUE:
+            LATCbits.LATC5 ^= 1; /* toggle LED_BLUE output */
+            timeout = led_status.state_flag.blue == LED_STATE_BLINK_FAST ? LED_100ms_INTERVAL : LED_400ms_INTERVAL;
+            break;
+        case LED_GREEN:
+            LATCbits.LATC4 ^= 1; /* toggle LED_GREEN output */
+            timeout = led_status.state_flag.green == LED_STATE_BLINK_FAST ? LED_100ms_INTERVAL : LED_400ms_INTERVAL;
+            break;
+        case LED_YELLOW:
+            LATCbits.LATC3 ^= 1; /* toggle LED_YELLOW output */
+            timeout = led_status.state_flag.yellow == LED_STATE_BLINK_FAST ? LED_100ms_INTERVAL : LED_400ms_INTERVAL;
+            break;
+        case LED_RED:
+            LATBbits.LATB4 ^= 1; /* toggle LED_RED output */
+            timeout = led_status.state_flag.red == LED_STATE_BLINK_FAST ? LED_100ms_INTERVAL : LED_400ms_INTERVAL;
+            break;
+    }
+
+    return timeout;
 }
 
-static uint32_t redblink_task(void* payload)
+/*************************************************
+*
+* Blue LED
+*
+*************************************************/
+
+void LED_SetBlue(led_set_state_t newState)
 {
-	LATBbits.LATB4 ^= 1; /* toggle LED_RED output */
-	return isRedLedFlashing ? LED_ON_INTERVAL_FAST : 0;
+    timerStruct_t* timer = &blinkTimer_blue;
+
+    debug_printInfo("LED(B): %s => %s", debug_led_state[led_status.state_flag.blue], debug_led_state[newState]);
+
+    if (led_status.state_flag.blue == newState)
+    {
+        return;
+    }
+
+    switch ((int32_t)led_status.state_flag.blue)
+    {
+        case LED_STATE_OFF:
+        case LED_STATE_HOLD:
+            if ((newState & (LED_STATE_BLINK_FAST | LED_STATE_BLINK_SLOW)) != 0)
+            {
+                timeout_create(timer, newState == LED_STATE_BLINK_FAST? LED_100ms_INTERVAL : LED_400ms_INTERVAL);
+            }
+
+            break;
+
+        case LED_STATE_BLINK_FAST:
+
+            if (newState == LED_STATE_HOLD || newState == LED_STATE_OFF)
+            {
+                timeout_delete(timer);
+            }
+            break;
+
+        case LED_STATE_BLINK_SLOW:
+
+            if (newState == LED_STATE_HOLD || newState == LED_STATE_OFF)
+            {
+                timeout_delete(timer);
+            }
+
+            break;
+
+        default:
+            break;
+    }
+
+    if (newState == LED_STATE_HOLD)
+    {
+        LATCbits.LATC5 = LOW;
+    }
+    else if (newState == LED_STATE_OFF)
+    {
+        LATCbits.LATC5 = HIGH;
+    }
+
+    led_status.state_flag.blue = newState;
+    led_status.change_flag.blue = 1;
 }
 
-static uint32_t softAp_task(void* payload)
+/*************************************************
+*
+* Green LED
+*
+*************************************************/
+
+void LED_SetGreen(led_set_state_t newState)
 {
-	LATCbits.LATC5 ^= 1; /* toggle LED_BLUE output */
-	return LED_ON_INTERVAL;
+    timerStruct_t* timer = &blinkTimer_green;
+
+    debug_printInfo("LED(G): %s => %s", debug_led_state[led_status.state_flag.green], debug_led_state[newState]);
+
+    if (led_status.state_flag.green == newState)
+    {
+        return;
+    }
+
+    switch ((int32_t)led_status.state_flag.green)
+    {
+        case LED_STATE_OFF:
+        case LED_STATE_HOLD:
+            if ((newState & (LED_STATE_BLINK_FAST | LED_STATE_BLINK_SLOW)) != 0)
+            {
+                timeout_create(timer, newState == LED_STATE_BLINK_FAST? LED_100ms_INTERVAL : LED_400ms_INTERVAL);
+            }
+
+            break;
+
+        case LED_STATE_BLINK_FAST:
+
+            if (newState == LED_STATE_HOLD || newState == LED_STATE_OFF)
+            {
+                timeout_delete(timer);
+            }
+            break;
+
+        case LED_STATE_BLINK_SLOW:
+
+            if (newState == LED_STATE_HOLD || newState == LED_STATE_OFF)
+            {
+                timeout_delete(timer);
+            }
+
+            break;
+
+        default:
+            break;
+    }
+
+    if (newState == LED_STATE_HOLD)
+    {
+        LATCbits.LATC4 = LOW;
+    }
+    else if (newState == LED_STATE_OFF)
+    {
+        LATCbits.LATC4 = HIGH;
+    }
+
+    led_status.state_flag.green = newState;
+    led_status.change_flag.green = 1;
 }
 
-static uint32_t hubConnection_task(void* payload)
+/*************************************************
+*
+* Yellow LED
+*
+*************************************************/
+
+void LED_SetYellow(led_set_state_t newState)
 {
-	LATCbits.LATC4 ^= 1; /* toggle LED_GREEN output */
-	return LED_ON_INTERVAL;
+    timerStruct_t* timer = &blinkTimer_yellow;
+
+    debug_printInfo("LED(Y): %s => %s", debug_led_state[led_status.state_flag.yellow], debug_led_state[newState]);
+
+    if (led_status.state_flag.yellow == newState)
+    {
+        return;
+    }
+
+    switch ((int32_t)led_status.state_flag.yellow)
+    {
+        case LED_STATE_OFF:
+        case LED_STATE_HOLD:
+            if ((newState & (LED_STATE_BLINK_FAST | LED_STATE_BLINK_SLOW)) != 0)
+            {
+                timeout_create(timer, newState == LED_STATE_BLINK_FAST? LED_100ms_INTERVAL : LED_400ms_INTERVAL);
+            }
+
+            break;
+
+        case LED_STATE_BLINK_FAST:
+
+            if (newState == LED_STATE_HOLD || newState == LED_STATE_OFF)
+            {
+                timeout_delete(timer);
+            }
+            break;
+
+        case LED_STATE_BLINK_SLOW:
+
+            if (newState == LED_STATE_HOLD || newState == LED_STATE_OFF)
+            {
+                timeout_delete(timer);
+            }
+
+            break;
+
+        default:
+            break;
+    }
+
+    if (newState == LED_STATE_HOLD)
+    {
+        LATCbits.LATC3 = LOW;
+    }
+    else if (newState == LED_STATE_OFF)
+    {
+        LATCbits.LATC3 = HIGH;
+    }
+
+    led_status.state_flag.yellow = newState;
+    led_status.change_flag.yellow = 1;
 }
 
-void LED_flashYellow(void)
-{
-	if (ledYellowHeld == false)
-	{
-		LATCbits.LATC3 = 0; /* set LED_YELLOW output low */
-		timeout_create(&yellow_timer, LED_ON_INTERVAL);
-	}
+/*************************************************
+*
+* Red LED
+*
+*************************************************/
 
-}
-
-void LED_holdYellowOn(bool holdHigh)
+void LED_SetRed(led_set_state_t newState)
 {
-	if (holdHigh == true)
-	{
-		LATCbits.LATC3 = 0; /* set LED_YELLOW output low */
-	}
-	else
-	{
-		LATCbits.LATC3 = 1; /* set LED_YELLOW output high */
-	}
-	// Re-Use yellow_timer task
-	ledYellowHeld = true;
-	timeout_create(&yellow_timer, LEDS_HOLD_INTERVAL);
-}
+    timerStruct_t* timer = &blinkTimer_red;
 
-void LED_holdGreenOn(bool holdHigh)
-{
-	if (holdHigh == LED_ON)
-	{
-		LATCbits.LATC4 = 0; /* set LED_GREEN output low */
-	}
-	else
-	{
-		LATCbits.LATC4 = 1; /* set LED_GREEN output high */
-	}
-}
+    debug_printInfo("LED(R): %s => %s", debug_led_state[led_status.state_flag.red], debug_led_state[newState]);
 
-void LED_flashRed(double interval_seconds)
-{
-	isRedLedFlashing = true;
-	long interval_ms = LED_ON_INTERVAL;
-	if (interval_seconds > 0)
-	{
-		interval_ms = timeout_mSecToTicks(interval_seconds * 1000L);
-	}
-	LATBbits.LATB4 = 0; /* set LED_RED output low */
-	timeout_create(&red_timer, interval_ms);
-}
+    if (led_status.state_flag.red == newState)
+    {
+        return;
+    }
 
-bool LED_isBlinkingRed(void)
-{
-	return isRedLedFlashing;
-}
+    switch ((int32_t)led_status.state_flag.red)
+    {
+        case LED_STATE_OFF:
+        case LED_STATE_HOLD:
+            if ((newState & (LED_STATE_BLINK_FAST | LED_STATE_BLINK_SLOW)) != 0)
+            {
+                timeout_create(timer, newState == LED_STATE_BLINK_FAST? LED_100ms_INTERVAL : LED_400ms_INTERVAL);
+            }
 
-void LED_stopBlinkingRed(void)
-{
-	isRedLedFlashing = false;
-}
+            break;
 
-void LED_startBlinkingRed(void)
-{
-	timeout_create(&redBlink_timer, LED_ON_INTERVAL_FAST);
-	isRedLedFlashing = true;
-}
+        case LED_STATE_BLINK_FAST:
 
-void LED_holdRedOn(bool holdHigh)
-{
-	if (holdHigh == LED_ON)
-	{
-		LATBbits.LATB4 = 0; /* set LED_RED output low */
-	}
-	else
-	{
-		LATBbits.LATB4 = 1; /* set LED_RED output high */
-	}
-}
+            if (newState == LED_STATE_HOLD || newState == LED_STATE_OFF)
+            {
+                timeout_delete(timer);
+            }
+            break;
 
-void LED_blinkingBlue(bool amBlinking)
-{
-	if (amBlinking == true)
-	{
-		timeout_create(&softAP_timer, LED_ON_INTERVAL);
-	}
-	else
-	{
-		timeout_delete(&softAP_timer);
-	}
-}
+        case LED_STATE_BLINK_SLOW:
 
-void LED_startBlinkingGreen(void)
-{
-	timeout_create(&hubConnection_timer, LED_ON_INTERVAL);
-	ledForHubConnection = true;
-}
+            if (newState == LED_STATE_HOLD || newState == LED_STATE_OFF)
+            {
+                timeout_delete(timer);
+            }
 
-void LED_stopBlinkingGreen(void)
-{
-	if (ledForHubConnection == true)
-	{
-		timeout_delete(&hubConnection_timer);
-		ledForHubConnection = false;
-	}
-}
+            break;
 
-bool LED_isBlinkingGreen(void)
-{
-	return ledForHubConnection;
+        default:
+            break;
+    }
+
+    if (newState == LED_STATE_HOLD)
+    {
+        LATBbits.LATB4 = LOW;
+    }
+    else if (newState == LED_STATE_OFF)
+    {
+        LATBbits.LATB4 = HIGH;
+    }
+
+    led_status.state_flag.red = newState;
+    led_status.change_flag.red = 1;
 }

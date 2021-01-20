@@ -41,6 +41,7 @@ uint32_t checkBackTask(void* param);
 timerStruct_t checkBackTimer = { checkBackTask };
 
 static bool responseFromProvisionConnect = false;
+static bool isSoftAP = false;
 
 void (*callback_funcPtr)(uint8_t);
 
@@ -57,10 +58,7 @@ int8_t hif_deinit(void* arg);
 
 void wifi_reinit()
 {
-
-//    tstrWifiInitParam param = { 0 };
-
-    tstrWifiInitParam param;
+	tstrWifiInitParam param;
 	/* Initialize Wi-Fi parameters structure. */
 	memset((uint8_t*)&param, 0, sizeof(tstrWifiInitParam));
 
@@ -72,32 +70,35 @@ void wifi_reinit()
 	wifiConnectionStateChangedCallback = callback_funcPtr;
 
 	nm_bsp_init();
-    m2m_wifi_init(&param);
+	m2m_wifi_init(&param);
 
-	socketInit();    
+	socketInit();
 }
 
 // funcPtr passed in here will be called indicating AP state changes with the following values
 // Wi-Fi state is disconnected   == 0
 // Wi-Fi state is connected      == 1
 // Wi-Fi state is undefined      == 0xff
-void wifi_init(void (*funcPtr)(uint8_t), uint8_t mode) {
+void wifi_init(void (*funcPtr)(uint8_t), uint8_t mode)
+{
 	callback_funcPtr = funcPtr;
+	isSoftAP = (mode == WIFI_SOFT_AP);
 
 	// This uses the global ptr set above
 	wifi_reinit();
-
+	LED_SetRed(LED_STATE_OFF);
 	// Mode == 0 means AP configuration mode
-	if (mode == WIFI_SOFT_AP)
+	if (isSoftAP)
 	{
+		debug_printInfo("  WiFi: Access Point Mode for provisioning");
+		LED_SetBlue(LED_STATE_BLINK_SLOW);
 		enable_provision_ap();
-		debug_printInfo("ACCESS POINT MODE for provisioning");
 	}
 	else
 	{
+		LED_SetBlue(LED_STATE_BLINK_FAST);
 		timeout_create(&ntpTimeFetchTimer, CLOUD_NTP_TASK_INTERVAL);
 	}
-
 
 	timeout_create(&wifiHandlerTimer, CLOUD_WIFI_TASK_INTERVAL);
 }
@@ -106,9 +107,11 @@ bool wifi_connectToAp(uint8_t passed_wifi_creds)
 {
 	int8_t e = 0;
 
+	LED_SetBlue(LED_STATE_BLINK_FAST);
+
 	m2m_wifi_configure_sntp((char*)"time.nist.gov", 18, SNTP_ENABLE_DHCP);
 	//e = m2m_wifi_set_device_name((uint8*)"01233EAD58E86797FE", strlen("01233EAD58E86797FE"));
-        
+
 #ifdef CFG_MAIN_WLAN_SSID
 	passed_wifi_creds = NEW_CREDENTIALS;
 	sprintf(authType, "%d", CFG_MAIN_WLAN_AUTH);
@@ -127,9 +130,9 @@ bool wifi_connectToAp(uint8_t passed_wifi_creds)
 
 	if (M2M_SUCCESS != e)
 	{
-		debug_printError("WIFI: wifi error = %d", e);
+		debug_printError("  WiFi: WiFi error = %d", e);
 		shared_networking_params.haveERROR = 1;
-        LED_holdGreenOn(LED_OFF);
+		LED_SetRed(LED_STATE_HOLD);
 		return false;
 	}
 
@@ -140,11 +143,11 @@ uint32_t softApConnectTask(void* param)
 {
 	if (!wifi_connectToAp((uint8_t)NEW_CREDENTIALS))
 	{
-		debug_printError("WIFI: Soft AP Connect Failure");
+		debug_printError("  WiFi: Soft AP Connect Failure");
 	}
 	else
 	{
-		debug_printInfo("SOFT AP: New Connect credentials sent WINC");
+		debug_printInfo("  WiFi: SoftAP: New Connect credentials sent WINC");
 	}
 	return SOFT_AP_CONNECT_RETRY_INTERVAL;
 }
@@ -156,7 +159,7 @@ bool wifi_disconnectFromAp(void)
 	{
 		if (M2M_SUCCESS != (m2mDisconnectError = m2m_wifi_disconnect()))
 		{
-			debug_printError("WIFI: Disconnect from AP error = %d", m2mDisconnectError);
+			debug_printError("  WiFi: Disconnect from AP error = %d", m2mDisconnectError);
 			return false;
 		}
 	}
@@ -179,115 +182,123 @@ uint32_t wifiHandlerTask(void* param)
 
 uint32_t checkBackTask(void* param)
 {
-	debug_printError("wifi_cb: M2M_WIFI_RESP_CON_STATE_CHANGED: DISCONNECTED");
 	shared_networking_params.haveAPConnection = 0;
 	shared_networking_params.haveERROR = 1;
 	shared_networking_params.amDisconnecting = 0;
-    LED_holdGreenOn(LED_OFF);
 	return 0;
 }
 
 static void wifiCallback(uint8_t msgType, void* pMsg)
 {
-	switch (msgType) {
-	case M2M_WIFI_RESP_CON_STATE_CHANGED:
+	switch (msgType)
 	{
-		tstrM2mWifiStateChanged* pstrWifiState = (tstrM2mWifiStateChanged*)pMsg;
-		if (pstrWifiState->u8CurrState == M2M_WIFI_CONNECTED)
+		case M2M_WIFI_RESP_CON_STATE_CHANGED:
 		{
-			if (responseFromProvisionConnect)
+			tstrM2mWifiStateChanged* pstrWifiState = (tstrM2mWifiStateChanged*)pMsg;
+			if (pstrWifiState->u8CurrState == M2M_WIFI_CONNECTED)
 			{
-				timeout_delete(&softApConnectTimer);
-				responseFromProvisionConnect = false;
-				LED_blinkingBlue(false);
-				timeout_create(&ntpTimeFetchTimer, CLOUD_NTP_TASK_INTERVAL);
-				application_post_provisioning();
+				if (responseFromProvisionConnect)
+				{
+					timeout_delete(&softApConnectTimer);
+					responseFromProvisionConnect = false;
+					timeout_create(&ntpTimeFetchTimer, CLOUD_NTP_TASK_INTERVAL);
+					application_post_provisioning();
+				}
+				shared_networking_params.haveAPConnection = 1;
+				debug_printGood("  WiFi: M2M_WIFI_RESP_CON_STATE_CHANGED: CONNECTED");
+				CREDENTIALS_STORAGE_clearWifiCredentials();
+
+				if (!isSoftAP)
+				{
+					LED_SetBlue(LED_STATE_HOLD);
+				}
+				LED_SetRed(LED_STATE_OFF);
+				// We need more than AP to have an APConnection, we also need a DHCP IP address!
 			}
-			shared_networking_params.haveAPConnection = 1;
-			debug_printGOOD("wifi_cb: M2M_WIFI_RESP_CON_STATE_CHANGED: CONNECTED");
-			CREDENTIALS_STORAGE_clearWifiCredentials();
-			LED_stopBlinkingGreen();
-			// We need more than AP to have an APConnection, we also need a DHCP IP address!
+			else if (pstrWifiState->u8CurrState == M2M_WIFI_DISCONNECTED)
+			{
+				debug_printWarn("  WiFi: M2M_WIFI_RESP_CON_STATE_CHANGED: DISCONNECTED: Err %d", pstrWifiState->u8ErrCode);
+				
+				if (!isSoftAP)
+				{
+					LED_SetBlue(LED_STATE_OFF);
+				}
+				LED_SetRed(LED_STATE_HOLD);
+				
+				timeout_create(&checkBackTimer, CLOUD_WIFI_TASK_INTERVAL);
+				shared_networking_params.amDisconnecting = 1;
+			}
+
+			if ((wifiConnectionStateChangedCallback != NULL) && (shared_networking_params.amDisconnecting == 0))
+			{
+				wifiConnectionStateChangedCallback(pstrWifiState->u8CurrState);
+			}
+			break;
 		}
-		else if (pstrWifiState->u8CurrState == M2M_WIFI_DISCONNECTED)
+
+		case M2M_WIFI_RESP_GET_SYS_TIME:
 		{
-			timeout_create(&checkBackTimer, CLOUD_WIFI_TASK_INTERVAL);
-			shared_networking_params.amDisconnecting = 1;
+			tstrSystemTime* WINCTime = (tstrSystemTime*)pMsg;
+			struct tm theTime;
+
+			// Convert to UNIX_EPOCH, this mktime uses years since 1900 and months are 0 based so we
+			// are doing a couple of adjustments here.
+			if (WINCTime->u16Year > 0)
+			{
+				theTime.tm_hour = WINCTime->u8Hour;
+				theTime.tm_min = WINCTime->u8Minute;
+				theTime.tm_sec = WINCTime->u8Second;
+				theTime.tm_year = WINCTime->u16Year - 1900;
+				theTime.tm_mon = WINCTime->u8Month - 1;
+				theTime.tm_mday = WINCTime->u8Day;
+				theTime.tm_isdst = 0;
+
+				TMR2_Counter32BitSet(mktime(&theTime));
+			}
+			break;
 		}
 
-		if ((wifiConnectionStateChangedCallback != NULL) && (shared_networking_params.amDisconnecting == 0))
+		case M2M_WIFI_RESP_PROVISION_INFO:
 		{
-			wifiConnectionStateChangedCallback(pstrWifiState->u8CurrState);
+			tstrM2MProvisionInfo* pstrProvInfo = (tstrM2MProvisionInfo*)pMsg;
+			if (pstrProvInfo->u8Status == M2M_SUCCESS)
+			{
+				sprintf((char*)authType, "%d", pstrProvInfo->u8SecType);
+				strcpy(ssid, (char*)pstrProvInfo->au8SSID);
+				strcpy(pass, (char*)pstrProvInfo->au8Password);
+				debug_printInfo("  WiFi: SsftAP : Connect Credentials sent to WINC");
+				responseFromProvisionConnect = true;
+				timeout_create(&softApConnectTimer, 0);
+			}
+			break;
 		}
-		break;
-	}
 
-	case M2M_WIFI_RESP_GET_SYS_TIME:
-	{
-		tstrSystemTime* WINCTime = (tstrSystemTime*)pMsg;
-		struct tm theTime;
-
-		// Convert to UNIX_EPOCH, this mktime uses years since 1900 and months are 0 based so we
-		//    are doing a couple of adjustments here.
-		if (WINCTime->u16Year > 0)
+		default:
 		{
-			theTime.tm_hour = WINCTime->u8Hour;
-			theTime.tm_min = WINCTime->u8Minute;
-			theTime.tm_sec = WINCTime->u8Second;
-			theTime.tm_year = WINCTime->u16Year - 1900;
-			theTime.tm_mon = WINCTime->u8Month - 1;
-			theTime.tm_mday = WINCTime->u8Day;
-			theTime.tm_isdst = 0;
-
-			TMR2_Counter32BitSet(mktime(&theTime));
+			break;
 		}
-		break;
-	}
-
-
-	case M2M_WIFI_RESP_PROVISION_INFO:
-	{
-		tstrM2MProvisionInfo* pstrProvInfo = (tstrM2MProvisionInfo*)pMsg;
-		if (pstrProvInfo->u8Status == M2M_SUCCESS)
-		{
-			sprintf((char*)authType, "%d", pstrProvInfo->u8SecType);
-			debug_printInfo("%s", pstrProvInfo->au8SSID);
-			strcpy(ssid, (char*)pstrProvInfo->au8SSID);
-			strcpy(pass, (char*)pstrProvInfo->au8Password);
-			debug_printInfo("SOFT AP: Connect Credentials sent to WINC");
-			responseFromProvisionConnect = true;
-			timeout_create(&softApConnectTimer, 0);
-		}
-		break;
-	}
-
-	default:
-	{
-		break;
-	}
 	}
 }
 
-
 void enable_provision_ap(void)
 {
+	debug_printGood("  WiFi: Enableing SoftAP : SSID %s", CFG_WLAN_AP_NAME);
 	tstrM2MAPConfig apConfig = {
-	   CFG_WLAN_AP_NAME, // Access Point Name.
-	   1, // Channel to use.
-	   0, // Wep key index.
-	   WEP_40_KEY_STRING_SIZE, // Wep key size.
-	   "1234567890", // Wep key.
-	   M2M_WIFI_SEC_OPEN, // Security mode.
-	   SSID_MODE_VISIBLE, // SSID visible.
-	   CFG_WLAN_AP_IP_ADDRESS
+		CFG_WLAN_AP_NAME, // Access Point Name.
+		1, // Channel to use.
+		0, // Wep key index.
+		WEP_40_KEY_STRING_SIZE, // Wep key size.
+		"1234567890", // Wep key.
+		M2M_WIFI_SEC_OPEN, // Security mode.
+		SSID_MODE_VISIBLE, // SSID visible.
+		CFG_WLAN_AP_IP_ADDRESS
 	};
 	static char gacHttpProvDomainName[] = CFG_WLAN_AP_NAME;
-	LED_blinkingBlue(true);
 	m2m_wifi_start_provision_mode(&apConfig, gacHttpProvDomainName, 1);
 }
 
 bool wifi_getIpAddressByHostName(uint8_t* host_name)
 {
-    return gethostbyname(host_name) == M2M_SUCCESS;
+	return gethostbyname(host_name) == M2M_SUCCESS;
 }
 

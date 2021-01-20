@@ -22,8 +22,7 @@ extern "C" {
 // <i> Target WLAN SSID
 // <id> main_wlan_ssid
 //#define CFG_MAIN_WLAN_SSID "GUESTNETWORK"
-#define CFG_MAIN_WLAN_SSID ""
-    
+
 // <y> Authentication
 // <i> Target WLAN Authentication
 // <M2M_WIFI_SEC_INVALID"> Invalid security type
@@ -34,13 +33,13 @@ extern "C" {
 // <id> main_wlan_auth
 //#define CFG_MAIN_WLAN_AUTH M2M_WIFI_SEC_OPEN
 #define CFG_MAIN_WLAN_AUTH M2M_WIFI_SEC_WPA_PSK
-    
+
 // <s> Password
 // <i> Target WLAN password
 // <id> main_wlan_psk
 //#define CFG_MAIN_WLAN_PSK ""
 #define CFG_MAIN_WLAN_PSK ""
-    
+
 // </h>
 
 // <h> AP Mode Configuration
@@ -53,9 +52,9 @@ extern "C" {
 // <s> IP Address
 // <i> AP IP Address
 // <id> wlan_ap_ip_address
-#define CFG_WLAN_AP_IP_ADDRESS                                                                                         \
-	{                                                                                                                  \
-		192, 168, 1, 1                                                                                                 \
+#define CFG_WLAN_AP_IP_ADDRESS \
+	{                          \
+		192, 168, 1, 1         \
 	}
 // </h>
 

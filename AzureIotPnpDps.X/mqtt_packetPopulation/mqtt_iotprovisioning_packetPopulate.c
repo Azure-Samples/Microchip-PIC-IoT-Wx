@@ -28,13 +28,14 @@ pf_MQTT_CLIENT pf_mqtt_iotprovisioning_client = {
   MQTT_CLIENT_iotprovisioning_receive,
   MQTT_CLIENT_iotprovisioning_connect,
   MQTT_CLIENT_iotprovisioning_subscribe,
-  MQTT_CLIENT_iotprovisioning_connected,  
+  MQTT_CLIENT_iotprovisioning_connected,
   NULL
 };
 
-extern const az_span device_model_id;
+extern const az_span device_model_id_span;
 extern uint8_t device_id_buf[100];
 extern az_span device_id;
+uint8_t atca_dps_id_scope[12];
 char hub_device_key_buf[64];
 char hub_hostname_buf[128];
 
@@ -56,68 +57,96 @@ void dps_client_register(uint8_t* topic, uint8_t* payload)
     int rc;
     int topic_len = strlen((const char*)topic);
     int payload_len = strlen((const char*)payload);
-    
+
+    debug_printInfo("   DPS: %s()", __func__);
+
     if (az_result_failed(
             rc = az_iot_provisioning_client_parse_received_topic_and_payload(
-                &provisioning_client,
-                az_span_create(topic, topic_len),
-                az_span_create(payload, payload_len),
-                &dps_register_response)))
+                    &provisioning_client,
+                    az_span_create(topic, topic_len),
+                    az_span_create(payload, payload_len),
+                    &dps_register_response)))
     {
-      debug_printError("az_iot_provisioning_client_parse_received_topic_and_payload failed, return code %d\n", rc);
-      return;
+        debug_printError("   DPS: az_iot_provisioning_client_parse_received_topic_and_payload failed, return code %d\n", rc);
     }
-    switch (dps_register_response.operation_status)
-    {       
-        case AZ_IOT_PROVISIONING_STATUS_ASSIGNING:
-            debug_print("mqtt_iotprovisioning_packetPopulate: AZ_IOT_PROVISIONING_STATUS_ASSIGNING");
-            timeout_create(&dps_assigning_timer, HALF_SECOND * 2 * dps_register_response.retry_after_seconds);            
-            break;
+    else
+    {
+        switch (dps_register_response.operation_status)
+        {
+            case AZ_IOT_PROVISIONING_STATUS_ASSIGNING:
+                debug_printInfo("   DPS: AZ_IOT_PROVISIONING_STATUS_ASSIGNING");
+                timeout_create(&dps_assigning_timer, HALF_SECOND * 2 * dps_register_response.retry_after_seconds);
+                break;
 
-        case AZ_IOT_PROVISIONING_STATUS_ASSIGNED:
-            debug_print("mqtt_iotprovisioning_packetPopulate: AZ_IOT_PROVISIONING_STATUS_ASSIGNED");
-            LED_holdRedOn(LED_OFF);
-            timeout_delete(&dps_retry_timer); 
-            az_span_to_str(hub_hostname_buf, sizeof(hub_hostname_buf), dps_register_response.registration_state.assigned_hub_hostname);
-            hub_hostname = hub_hostname_buf;
-            pf_mqtt_iotprovisioning_client.MQTT_CLIENT_task_completed();
-            break;
-            
-        case AZ_IOT_PROVISIONING_STATUS_FAILED:
-            debug_print("mqtt_iotprovisioning_packetPopulate: AZ_IOT_PROVISIONING_STATUS_FAILED");
-        case AZ_IOT_PROVISIONING_STATUS_DISABLED:            
-        default:
-            LED_holdRedOn(LED_ON);
-            break;
+            case AZ_IOT_PROVISIONING_STATUS_ASSIGNED:
+                debug_printInfo("   DPS: AZ_IOT_PROVISIONING_STATUS_ASSIGNED");
+                timeout_delete(&dps_retry_timer);
+                az_span_to_str(hub_hostname_buf, sizeof(hub_hostname_buf), dps_register_response.registration_state.assigned_hub_hostname);
+                hub_hostname = hub_hostname_buf;
+                // Slow Blink to indicate IoT Hub connection in progress
+                LED_SetGreen(LED_STATE_BLINK_SLOW);
+                LED_SetRed(LED_STATE_OFF);
+                pf_mqtt_iotprovisioning_client.MQTT_CLIENT_task_completed();
+                break;
+
+            case AZ_IOT_PROVISIONING_STATUS_FAILED:
+                debug_printError("   DPS: AZ_IOT_PROVISIONING_STATUS_FAILED");
+                LED_SetRed(LED_STATE_BLINK_FAST);
+                break;
+
+            case AZ_IOT_PROVISIONING_STATUS_DISABLED:
+                debug_printError("   DPS: AZ_IOT_PROVISIONING_STATUS_DISABLED");
+                LED_SetRed(LED_STATE_BLINK_FAST);
+                break;
+
+            default:
+                break;
+        }
     }
 }
 
 static uint32_t dps_assigning_task(void* payload)
 {
-    int rc = az_iot_provisioning_client_query_status_get_publish_topic(
-        &provisioning_client, dps_register_response.operation_id, mqtt_dsp_topic_buf, sizeof(mqtt_dsp_topic_buf), NULL);
-    if (az_result_failed(rc))
+    bool bRet = false; // assume failure
+
+    if (az_result_failed(az_iot_provisioning_client_query_status_get_publish_topic(
+                            &provisioning_client,
+                            dps_register_response.operation_id,
+                            mqtt_dsp_topic_buf,
+                            sizeof(mqtt_dsp_topic_buf),
+                            NULL)))
     {
-        debug_printError("az_iot_provisioning_client_query_status_get_publish_topic failed");
-        return 0L;
+        debug_printError("   DPS: az_iot_provisioning_client_query_status_get_publish_topic failed");
+    }
+    else
+    {
+        mqttPublishPacket cloudPublishPacket;
+        // Fixed header
+        cloudPublishPacket.publishHeaderFlags.duplicate = 0;
+        cloudPublishPacket.publishHeaderFlags.qos = 0;
+        cloudPublishPacket.publishHeaderFlags.retain = 1;
+        // Variable header
+        cloudPublishPacket.topic = (uint8_t*)mqtt_dsp_topic_buf;
+
+        // Payload
+        cloudPublishPacket.payload = NULL;
+        cloudPublishPacket.payloadLength = 0;
+
+        if (MQTT_CreatePublishPacket(&cloudPublishPacket))
+        {
+            bRet = true;
+        }
+        else
+        {
+            debug_printError("   DPS: Connection lost PUBLISH failed");
+        }
     }
 
-    mqttPublishPacket cloudPublishPacket;
-    // Fixed header
-    cloudPublishPacket.publishHeaderFlags.duplicate = 0;
-    cloudPublishPacket.publishHeaderFlags.qos = 0;
-    cloudPublishPacket.publishHeaderFlags.retain = 1;
-    // Variable header
-    cloudPublishPacket.topic = (uint8_t*)mqtt_dsp_topic_buf;
-
-    // Payload
-    cloudPublishPacket.payload = NULL;
-    cloudPublishPacket.payloadLength = 0;
-
-    if (MQTT_CreatePublishPacket(&cloudPublishPacket) != true)
+    if (!bRet)
     {
-        debug_printError("mqtt_iotprovisioning_packetPopulate: Connection lost PUBLISH failed");
+        LED_SetRed(LED_STATE_BLINK_FAST);
     }
+
     return 0L;
 }
 
@@ -125,7 +154,6 @@ static uint32_t dps_retry_task(void* payload)
 {
     if (++dps_retryTimer % 120 == 0)  // retry every 1 min
     {
-        LED_holdRedOn(LED_ON);
         MQTT_CLIENT_iotprovisioning_connect((char* )device_id_buf);
         dps_retryTimer = 0;
     }
@@ -150,54 +178,76 @@ void MQTT_CLIENT_iotprovisioning_publish(uint8_t* data, uint16_t len)
 
 void MQTT_CLIENT_iotprovisioning_receive(uint8_t* data, uint16_t len)
 {
-    MQTT_GetReceivedData(data, len);    
+    MQTT_GetReceivedData(data, len);
 }
 
 void MQTT_CLIENT_iotprovisioning_connect(char* deviceID)
 {
+    size_t mqtt_username_buf_len;
+    bool bRet = false; // assume failure
+
+    debug_printGood("   DPS: Start provisioning Device Id = %s", deviceID);
+
+    LED_SetGreen(LED_STATE_BLINK_FAST);
+
     const az_span deviceID_parm = az_span_create_from_str(deviceID);
     az_span device_id = AZ_SPAN_FROM_BUFFER(device_id_buf);
     az_span_copy(device_id, deviceID_parm);
     device_id = az_span_slice(device_id, 0, az_span_size(deviceID_parm));
-   
-    const az_span global_device_endpoint = AZ_SPAN_LITERAL_FROM_STR(CFG_MQTT_PROVISIONING_HOST);
-    const az_span id_scope = AZ_SPAN_LITERAL_FROM_STR(PROVISIONING_ID_SCOPE);
-    az_result result = az_iot_provisioning_client_init(&provisioning_client, global_device_endpoint, id_scope, device_id, NULL);
-    if (az_result_failed(result))
-    {
-        debug_printError("az_iot_provisioning_client_init failed");
-        return;
-    }
-    
-    size_t mqtt_username_buf_len;
-    result = az_iot_provisioning_client_get_user_name(&provisioning_client, mqtt_username_buf, sizeof(mqtt_username_buf), &mqtt_username_buf_len);
-    if (az_result_failed(result))
-    {
-        debug_printError("az_iot_provisioning_client_get_user_name failed");
-        return;
-    }
-    
-    mqttConnectPacket cloudConnectPacket = { 0 };
-    cloudConnectPacket.connectVariableHeader.connectFlagsByte.cleanSession = 1; 
-    cloudConnectPacket.connectVariableHeader.keepAliveTimer = AZ_IOT_DEFAULT_MQTT_CONNECT_KEEPALIVE_SECONDS;    
-    cloudConnectPacket.clientID = (uint8_t*) az_span_ptr(device_id);
-    cloudConnectPacket.password = NULL;
-    cloudConnectPacket.passwordLength = 0;
-    cloudConnectPacket.username = (uint8_t*) mqtt_username_buf;
-    cloudConnectPacket.usernameLength = (uint16_t) mqtt_username_buf_len;
 
-    debug_print("mqtt_iotprovisioning_packetPopulate: ConnectPacket username(%d): %s", mqtt_username_buf_len, mqtt_username_buf);
-    MQTT_CreateConnectPacket(&cloudConnectPacket);
+    const az_span global_device_endpoint = AZ_SPAN_LITERAL_FROM_STR(CFG_MQTT_PROVISIONING_HOST);
+
+    // Read the ID Scope from the secure element (e.g. ATECC608A)
+    atcab_read_bytes_zone(ATCA_ZONE_DATA, ATCA_SLOT_DPS_IDSCOPE, 0, atca_dps_id_scope, sizeof(atca_dps_id_scope));
+    const az_span scopeID_parm = az_span_create_from_str((char*)atca_dps_id_scope);
+
+    debug_printGood("   DPS: ID Scope = %s from secure element", atca_dps_id_scope);
+
+    if (strlen((char*)atca_dps_id_scope) < 11)
+    {
+        debug_printError("   DPS: invalid DPS ID Scope");
+    }
+    else if (az_result_failed(az_iot_provisioning_client_init(&provisioning_client, global_device_endpoint, scopeID_parm, device_id, NULL)))
+    {
+        debug_printError("   DPS: az_iot_provisioning_client_init failed");
+    }
+    else if (az_result_failed(az_iot_provisioning_client_get_user_name(&provisioning_client, mqtt_username_buf, sizeof(mqtt_username_buf), &mqtt_username_buf_len)))
+    {
+        debug_printError("   DPS: az_iot_provisioning_client_get_user_name failed");
+    }
+    else
+    {
+        mqttConnectPacket cloudConnectPacket = { 0 };
+        cloudConnectPacket.connectVariableHeader.connectFlagsByte.cleanSession = 1;
+        cloudConnectPacket.connectVariableHeader.keepAliveTimer = AZ_IOT_DEFAULT_MQTT_CONNECT_KEEPALIVE_SECONDS;
+        cloudConnectPacket.clientID = (uint8_t*) az_span_ptr(device_id);
+        cloudConnectPacket.password = NULL;
+        cloudConnectPacket.passwordLength = 0;
+        cloudConnectPacket.username = (uint8_t*) mqtt_username_buf;
+        cloudConnectPacket.usernameLength = (uint16_t) mqtt_username_buf_len;
+
+        debug_printInfo("   DPS: ConnectPacket username(%d): %s", mqtt_username_buf_len, mqtt_username_buf);
+
+        if (MQTT_CreateConnectPacket(&cloudConnectPacket))
+        {
+            bRet = true;
+        }
+    }
+
+    if (!bRet)
+    {
+        LED_SetRed(LED_STATE_BLINK_FAST);
+    }
 }
 
 bool MQTT_CLIENT_iotprovisioning_subscribe()
 {
 
     mqttSubscribePacket cloudSubscribePacket = { 0 };
-    // Variable header   
+    // Variable header
     cloudSubscribePacket.packetIdentifierLSB = 1;
     cloudSubscribePacket.packetIdentifierMSB = 0;
-    
+
     cloudSubscribePacket.subscribePayload[0].topic = (uint8_t*) AZ_IOT_PROVISIONING_CLIENT_REGISTER_SUBSCRIBE_TOPIC;
     cloudSubscribePacket.subscribePayload[0].topicLength = sizeof(AZ_IOT_PROVISIONING_CLIENT_REGISTER_SUBSCRIBE_TOPIC) - 1;
     cloudSubscribePacket.subscribePayload[0].requestedQoS = 0;
@@ -207,48 +257,62 @@ bool MQTT_CLIENT_iotprovisioning_subscribe()
     imqtt_publishReceiveCallBackTable[0].mqttHandlePublishDataCallBack = dps_client_register;
     MQTT_SetPublishReceptionHandlerTable(imqtt_publishReceiveCallBackTable);
 
-    bool ret = MQTT_CreateSubscribePacket(&cloudSubscribePacket);
-    if (ret == true)
+    if (MQTT_CreateSubscribePacket(&cloudSubscribePacket) != true)
     {
-        debug_printInfo("mqtt_iotprovisioning_packetPopulate: SUBSCRIBE packet created");
+        debug_printError("   DPS: failed to create subscribe packet");
+        LED_SetRed(LED_STATE_BLINK_FAST);
+        return false;
     }
-    return ret;
+    return true;
 }
 
 void MQTT_CLIENT_iotprovisioning_connected()
 {
-    az_result result = az_iot_provisioning_client_register_get_publish_topic(&provisioning_client, mqtt_dsp_topic_buf, sizeof(mqtt_dsp_topic_buf), NULL);
-    if (az_result_failed(result))
+    bool bRet = false; // assume failure
+
+    debug_printGood("   DPS: Connected.  Announcing DTMI '%s'", az_span_ptr(device_model_id_span));
+
+    if (az_result_failed(az_iot_provisioning_client_register_get_publish_topic(&provisioning_client, mqtt_dsp_topic_buf, sizeof(mqtt_dsp_topic_buf), NULL)))
     {
         debug_printError("az_iot_provisioning_client_register_get_publish_topic failed");
-        return;
     }
-
-    mqttPublishPacket cloudPublishPacket = { 0 };
-    // Fixed header
-    cloudPublishPacket.publishHeaderFlags.qos = 0;
-    cloudPublishPacket.publishHeaderFlags.retain = 0;
-    // Variable header
-    cloudPublishPacket.topic = (uint8_t*)mqtt_dsp_topic_buf;
-
-    // Payload
-    register_payload = az_span_create((uint8_t*)register_payload_buf, sizeof(register_payload_buf));
-    span_remainder = az_span_copy(register_payload, az_span_create_from_str("{\"payload\":{\"modelId\":\""));
-    span_remainder = az_span_copy(span_remainder, device_model_id);
-    span_remainder = az_span_copy(span_remainder, az_span_create_from_str("\"}}"));
-    az_span_copy_u8(span_remainder, '\0');
-     
-    cloudPublishPacket.payload = (uint8_t*)register_payload_buf;
-    cloudPublishPacket.payloadLength = strlen(register_payload_buf);
-            
-    if (MQTT_CreatePublishPacket(&cloudPublishPacket) != true)
+    else
     {
-        debug_printError("mqtt_iotprovisioning_packetPopulate: Connection lost PUBLISH failed");
+        mqttPublishPacket cloudPublishPacket = { 0 };
+        // Fixed header
+        cloudPublishPacket.publishHeaderFlags.qos = 0;
+        cloudPublishPacket.publishHeaderFlags.retain = 0;
+        // Variable header
+        cloudPublishPacket.topic = (uint8_t*)mqtt_dsp_topic_buf;
+
+        // Payload
+        register_payload = az_span_create((uint8_t*)register_payload_buf, sizeof(register_payload_buf));
+        span_remainder = az_span_copy(register_payload, az_span_create_from_str("{\"payload\":{\"modelId\":\""));
+        span_remainder = az_span_copy(span_remainder, device_model_id_span);
+        span_remainder = az_span_copy(span_remainder, az_span_create_from_str("\"}}"));
+        az_span_copy_u8(span_remainder, '\0');
+
+        cloudPublishPacket.payload = (uint8_t*)register_payload_buf;
+        cloudPublishPacket.payloadLength = strlen(register_payload_buf);
+
+        if (MQTT_CreatePublishPacket(&cloudPublishPacket) != true)
+        {
+            debug_printError("   DPS: Connection lost PUBLISH failed");
+        }
+        else
+        {
+            bRet = true;
+        }
+
+        // keep retrying connecting to DPS
+        dps_retryTimer = 0;
+        timeout_create(&dps_retry_timer, HALF_SECOND);
     }
-    
-    // keep retrying connecting to DPS
-    dps_retryTimer = 0; 
-    timeout_create(&dps_retry_timer, HALF_SECOND);
+
+    if (!bRet)
+    {
+        LED_SetRed(LED_STATE_BLINK_FAST);
+    }
 }
 
 #endif // CFG_MQTT_PROVISIONING_HOST
