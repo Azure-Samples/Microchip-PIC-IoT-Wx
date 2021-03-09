@@ -67,19 +67,19 @@ void dps_client_register(uint8_t* topic, uint8_t* payload)
                     az_span_create(payload, payload_len),
                     &dps_register_response)))
     {
-        debug_printError("   DPS: az_iot_provisioning_client_parse_received_topic_and_payload failed, return code %d\n", rc);
+        debug_printError("   DPS: az_iot_provisioning_client_parse_received_topic_and_payload fail:%d\n", rc);
     }
     else
     {
         switch (dps_register_response.operation_status)
         {
             case AZ_IOT_PROVISIONING_STATUS_ASSIGNING:
-                debug_printInfo("   DPS: AZ_IOT_PROVISIONING_STATUS_ASSIGNING");
+                debug_printInfo("   DPS: ASSIGNING");
                 timeout_create(&dps_assigning_timer, HALF_SECOND * 2 * dps_register_response.retry_after_seconds);
                 break;
 
             case AZ_IOT_PROVISIONING_STATUS_ASSIGNED:
-                debug_printInfo("   DPS: AZ_IOT_PROVISIONING_STATUS_ASSIGNED");
+                debug_printInfo("   DPS: ASSIGNED");
                 timeout_delete(&dps_retry_timer);
                 az_span_to_str(hub_hostname_buf, sizeof(hub_hostname_buf), dps_register_response.registration_state.assigned_hub_hostname);
                 hub_hostname = hub_hostname_buf;
@@ -90,12 +90,12 @@ void dps_client_register(uint8_t* topic, uint8_t* payload)
                 break;
 
             case AZ_IOT_PROVISIONING_STATUS_FAILED:
-                debug_printError("   DPS: AZ_IOT_PROVISIONING_STATUS_FAILED");
+                debug_printError("   DPS: FAILED");
                 LED_SetRed(LED_STATE_BLINK_FAST);
                 break;
 
             case AZ_IOT_PROVISIONING_STATUS_DISABLED:
-                debug_printError("   DPS: AZ_IOT_PROVISIONING_STATUS_DISABLED");
+                debug_printError("   DPS: DISABLED");
                 LED_SetRed(LED_STATE_BLINK_FAST);
                 break;
 
@@ -186,7 +186,7 @@ void MQTT_CLIENT_iotprovisioning_connect(char* deviceID)
     size_t mqtt_username_buf_len;
     bool bRet = false; // assume failure
 
-    debug_printGood("   DPS: Start provisioning Device Id = %s", deviceID);
+    debug_printGood("   DPS: Start prov DeviceId %s", deviceID);
 
     LED_SetGreen(LED_STATE_BLINK_FAST);
 
@@ -201,11 +201,11 @@ void MQTT_CLIENT_iotprovisioning_connect(char* deviceID)
     atcab_read_bytes_zone(ATCA_ZONE_DATA, ATCA_SLOT_DPS_IDSCOPE, 0, atca_dps_id_scope, sizeof(atca_dps_id_scope));
     const az_span scopeID_parm = az_span_create_from_str((char*)atca_dps_id_scope);
 
-    debug_printGood("   DPS: ID Scope = %s from secure element", atca_dps_id_scope);
+    debug_printGood("   DPS: ID Scope=%s from secure element", atca_dps_id_scope);
 
     if (strlen((char*)atca_dps_id_scope) < 11)
     {
-        debug_printError("   DPS: invalid DPS ID Scope");
+        debug_printError("   DPS: invalid IDScope");
     }
     else if (az_result_failed(az_iot_provisioning_client_init(&provisioning_client, global_device_endpoint, scopeID_parm, device_id, NULL)))
     {

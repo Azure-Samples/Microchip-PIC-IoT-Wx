@@ -803,7 +803,7 @@ void BSD_SocketHandler(int8_t sock, uint8_t msgType, void *pMsg)
 				}
 				else
 				{
-					debug_printError("   BSD: SH closing Socket in MSG_CONNECT error (%d)", pstrConnect->s8Error);
+					debug_printError("   BSD: SH closing Socket in MSG_CONNECT:%d", pstrConnect->s8Error);
 					BSD_close(sock);
 				}
 			}

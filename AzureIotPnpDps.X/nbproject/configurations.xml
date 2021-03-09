@@ -459,13 +459,13 @@
         <targetDevice>PIC24FJ128GA705</targetDevice>
         <targetHeader></targetHeader>
         <targetPluginBoard></targetPluginBoard>
-        <platformTool>noID</platformTool>
+        <platformTool>nEdbgTool</platformTool>
         <languageToolchain>XC16</languageToolchain>
         <languageToolchainVersion>1.50</languageToolchainVersion>
         <platform>3</platform>
       </toolsSet>
       <packs>
-        <pack name="PIC24F-GA-GB_DFP" vendor="Microchip" version="1.4.141"/>
+        <pack name="PIC24F-GA-GB_DFP" vendor="Microchip" version="1.3.109"/>
       </packs>
       <ScriptingSettings>
       </ScriptingSettings>
@@ -526,7 +526,7 @@
         <property key="oXC16gcc-sfr-warn" value="false"/>
         <property key="oXC16gcc-smar-io-lvl" value="1"/>
         <property key="oXC16gcc-smart-io-fmt" value=""/>
-        <property key="optimization-level" value="s"/>
+        <property key="optimization-level" value="1"/>
         <property key="post-instruction-scheduling" value="default"/>
         <property key="pre-instruction-scheduling" value="default"/>
         <property key="preprocessor-macros" value="uintptr_t=void*"/>
@@ -667,6 +667,7 @@
         <property key="firmware.toolpack"
                   value="Press to select which tool pack to use"/>
         <property key="firmware.update.action" value="firmware.update.use.latest"/>
+        <property key="freeze.timers" value="false"/>
         <property key="memories.aux" value="false"/>
         <property key="memories.bootflash" value="true"/>
         <property key="memories.configurationmemory" value="true"/>
@@ -680,6 +681,7 @@
                   value="${memories.instruction.ram.ranges}"/>
         <property key="memories.programmemory" value="true"/>
         <property key="memories.programmemory.ranges" value="0-15eff"/>
+        <property key="memories.rww" value="true"/>
         <property key="poweroptions.powerenable" value="false"/>
         <property key="programoptions.eraseb4program" value="true"/>
         <property key="programoptions.preservedataflash" value="false"/>

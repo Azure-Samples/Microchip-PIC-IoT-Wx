@@ -205,7 +205,7 @@ static void wifiCallback(uint8_t msgType, void* pMsg)
 					application_post_provisioning();
 				}
 				shared_networking_params.haveAPConnection = 1;
-				debug_printGood("  WiFi: M2M_WIFI_RESP_CON_STATE_CHANGED: CONNECTED");
+				debug_printGood("  WiFi CONNECTED");
 				CREDENTIALS_STORAGE_clearWifiCredentials();
 
 				if (!isSoftAP)
@@ -217,7 +217,7 @@ static void wifiCallback(uint8_t msgType, void* pMsg)
 			}
 			else if (pstrWifiState->u8CurrState == M2M_WIFI_DISCONNECTED)
 			{
-				debug_printWarn("  WiFi: M2M_WIFI_RESP_CON_STATE_CHANGED: DISCONNECTED: Err %d", pstrWifiState->u8ErrCode);
+				debug_printWarn("  WiFi DISCONNECTED: Err %d", pstrWifiState->u8ErrCode);
 				
 				if (!isSoftAP)
 				{

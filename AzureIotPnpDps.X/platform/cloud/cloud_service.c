@@ -195,7 +195,7 @@ static int8_t connectMQTTSocket(void)
 	sslInit = m2m_ssl_init(NETWORK_wifiSslCallback);
 	if(sslInit != M2M_SUCCESS)
 	{
-		debug_printError(" CLOUD: WiFi SSL Initialization failed. M2M Status %d", sslInit);
+		debug_printError(" CLOUD: WiFi SSL Init fail:%d", sslInit);
 	}
 		
 	if (mqttHostIP > 0)
@@ -237,7 +237,7 @@ static int8_t connectMQTTSocket(void)
 				ret = BSD_connect(*context->tcpClientSocket, (struct bsd_sockaddr*) & addr, sizeof (struct bsd_sockaddr_in));
 			}
 			else {
-				debug_printError(" CLOUD: connect failed.  BSD Status = %d", ret);
+				debug_printError(" CLOUD: connect failed:%d", ret);
 				shared_networking_params.haveERROR = 1;
 				LED_SetRed(LED_STATE_HOLD);
 				BSD_close(*context->tcpClientSocket);
@@ -425,13 +425,13 @@ static uint8_t reInit(void)
 	if ((strcmp(ssid, "") != 0) && (strcmp(authType, "") != 0))
 	{
 		wifi_creds = NEW_CREDENTIALS;
-		debug_printInfo("  WiFi: Connecting to AP with new credentials");
+		debug_printInfo("  WiFi: Connecting to AP with new creds");
 	}
 	// This works provided the board had connected to the AP successfully	
 	else
 	{
 		wifi_creds = DEFAULT_CREDENTIALS;
-		debug_printInfo("  WiFi: Connecting to AP with the last used credentials");
+		debug_printInfo("  WiFi: Connecting to AP with last used creds");
 	}
 
 	if (!wifi_connectToAp(wifi_creds))

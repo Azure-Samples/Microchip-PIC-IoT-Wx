@@ -79,13 +79,13 @@ void application_init() {
 		switch (retValCryptoClientSerialNumber)
 		{
 		case ATCA_GEN_FAIL:
-			debug_printError("   APP: DeviceID generation failed, unspecified error");
+			debug_printError("   APP: DeviceID generation fail, unspecified error");
 			break;
 		case ATCA_BAD_PARAM:
-			debug_printError("   APP: DeviceID generation failed, bad argument");
+			debug_printError("   APP: DeviceID generation fail, bad arg");
 			break;
 		default:
-			debug_printError("   APP: DeviceID generation failed");
+			debug_printError("   APP: DeviceID generation fail");
 			break;
 		}
 	}
