@@ -225,7 +225,7 @@ static int8_t connectMQTTSocket(void)
 
 		socketState = BSD_GetSocketState(*context->tcpClientSocket);
 		if (socketState == SOCKET_CLOSED) {
-			debug_printWarn(" CLOUD: Configuring SNI to connect to %s", mqtt_host);
+			debug_printWarn(" CLOUD: Config SNI:%s", mqtt_host);
 			ret = BSD_setsockopt(*context->tcpClientSocket, SOL_SSL_SOCKET, SO_SSL_SNI, mqtt_host, strlen(mqtt_host));
 			if (ret == BSD_SUCCESS) {
 				int optVal = 1;

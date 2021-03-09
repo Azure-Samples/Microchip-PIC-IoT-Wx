@@ -175,8 +175,8 @@ static const az_span error_property_name_span          = AZ_SPAN_LITERAL_FROM_ST
 static const az_span empty_payload_span                = AZ_SPAN_LITERAL_FROM_STR("\"\"");
 static const az_span error_no_payload_getmaxmin_span   = AZ_SPAN_LITERAL_FROM_STR("Start Time not found");
 static const az_span error_command_not_supported_span  = AZ_SPAN_LITERAL_FROM_STR("{\"Status\":\"Unsupported Command\"}");
-static const az_span error_no_payload_reboot_span      = AZ_SPAN_LITERAL_FROM_STR("Delay time not specified. Please specify parameter 'delay' in period format (e.g. PT5S for 5 sec)");
-static const az_span command_empty_payload_maxmin_span = AZ_SPAN_LITERAL_FROM_STR("Payload Empty. Please specify parameter 'since'");
+static const az_span error_no_payload_reboot_span      = AZ_SPAN_LITERAL_FROM_STR("Delay time not found. Specify 'delay' in period format (PT5S for 5 sec)");
+static const az_span command_empty_payload_maxmin_span = AZ_SPAN_LITERAL_FROM_STR("Payload Empty. Specify parameter 'since'");
 
 // IoT Plug and Play Device Values for telemetry
 
