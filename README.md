@@ -588,93 +588,101 @@ The PIC-IoT board can also be provisioned to connect to Azure IoT Central, where
 
 4. Enter the desired settings for your IOT Central application and click on the `Create` button.  Refer to the online tutorial for additional details: [Create an Azure IoT Central application](https://docs.microsoft.com/en-us/azure/iot-central/core/quick-deploy-iot-central)
 
-5. Open a Git Bash window (e.g. in Windows, open the Start menu by clicking on the Windows icon and typing `Git Bash` into the search bar).  Navigate to the `.microchip-iot` directory that was created earlier by Microchip’s IoT Provisioning Tool.  Run the following commands:
+5. Create an X.509 enrollment group for your IoT Central application.  Open your IoT Central application and navigate to `Administration` in the left pane and select `Device connection`
 
-    ```bash
-    git clone https://github.com/Azure/azure-iot-sdk-node.git
-    cd azure-iot-sdk-node/provisioning/tools
-    npm install
-    ```
-
-    NOTE: If the `npm` command is not recognized, you will most likely need to install [Microsoft Build Tools for Visual Studio](https://visualstudio.microsoft.com/downloads/) and/or [Node.js](https://nodejs.org/en/download/)
-
-6. In the `.microchip-iot` folder, copy the `root-ca.pem` and `root-ca.key` files into the `./azure-iot-sdk-node/provisioning/tools/` folder
-
-7. Create an X.509 enrollment group for your IoT Central application.  Open your IoT Central application and navigate to `Administration` in the left pane and select `Device connection`
-
-8. Select `+ Create enrollment group`, and create a new enrollment group using any name (Group type = IoT devices, attestation type = Certificates (X.509)).  Hit Save when finished:
+6. Select `+ Create enrollment group`, and create a new enrollment group using any name (Group type = IoT devices, attestation type = Certificates (X.509)).  Hit Save when finished:
 
     <img src=".//media/image81.png" style="width:6.5.in;height:4.43506in" alt="A screenshot of a cell phone Description automatically generated" />
 
-9. Now that the new enrollment group has been created, select `Manage Primary`.
+7. Now that the new enrollment group has been created, select `+ Manage Primary`.
 
-10. Select the file/folder icon and upload the root certificate file `root-ca.pem`.  The `Subject` and `Thumbprint` fields will automatically populate themselves.
+8. Select the file/folder icon associated with the `Primary` field and upload the root certificate file `root-ca.crt`.  The message `(!) Needs verification` should appear.  The `Subject` and `Thumbprint` fields will automatically populate themselves.
 
-11.	Click `Generate verification code` (this code should be copied to the clipboard for the next step)
+9.	Click `Generate verification code` (this code will be copied to the clipboard which will be needed in a future step)
 
-12. Execute the following command in the Git Bash window used previously (and make sure to use your specific `{verification-code}` at the end of the command line):
+10. Open a Git Bash window: Start menu &gt; type `Git Bash`, a window like this will pop out:
+
+    <img src=".//media/image15.png" style="width:3.21739in;height:0.94745in" alt="A picture containing ball, clock Description automatically generated" />
+
+11. Change to your generated certification folder:
 
     ```bash
-    node create_test_cert.js verification --ca root-ca.pem --key root-ca.key --nonce {verification-code}
+    cd drive\[your path\.microchip-iot
+
+    For example: cd /C/Users/john5/Azure/.microchip-iot
     ```
 
-13. Click `Verify` and select the `verification_cert.pem` file to upload.  Confirm that the `Primary` certificate has been verified and that a Thumbprint has been generated for your certificate.  The X.509 enrollment group should be ready to go!
+12. Execute the below command in the Git Bash window (copy and paste for best results):
+
+    **Note**: Once you enter the below command, you will then be asked to enter information for various fields that will be incorporated into your certificate request. Enter the verification code (which was just generated previously) when prompted for the `Common Name`. It's recommended to just copy the Verification code to the clipboard and paste it when it's time to enter the `Common Name`.  For the rest of the fields, you can enter anything you want (or just hit `[ENTER]` to keep them blank which is fine for basic demonstration purposes).  If you accidentally hit [ENTER] when asked for the `Common Name`, you will need to run the command again...
+
+    ```bash
+    openssl req -new -key root-ca.key -out azure_root_ca_verification.csr
+    ```
+
+13. Generate the verification certificate by executing the following command (copy and paste for best results):
+
+    ```bash
+    openssl x509 -req -in azure_root_ca_verification.csr -CA root-ca.crt -CAkey root-ca.key -CAcreateserial -out azure_signer_verification.cer -days 365 -sha256
+    ```
+
+14. Click `Verify` and select the `azure_signer_verification.cer` file to upload.  Confirm that the `Primary` certificate has been verified and that a `Thumbprint` has been generated for your certificate.  Click on `Close` to exit the window.  The X.509 enrollment group should be ready to go!
 
     <img src=".//media/image82.png" style="width:5.in;height:2.18982in" alt="A screenshot of a cell phone Description automatically generated" />
 
-14. Launch a terminal emulator window and connect to the COM port corresponding to the PIC-IoT board at 9600 bps.  In the terminal window, hit [RETURN] to get the list of available commands for the Command Line Interface (CLI). 
+15. Launch a terminal emulator window and connect to the COM port corresponding to the PIC-IoT board at 9600 bps.  In the terminal window, hit [RETURN] to get the list of available commands for the Command Line Interface (CLI). 
 
     <img src=".//media/image83.png" style="width:5.in;height:3.18982in" alt="A screenshot of a cell phone Description automatically generated" />
 
-15.	Look up the ID Scope for the DPS created/used by your IoT Central application (using the left-hand navigation pane, select Administration -> Device connection).  The ID Scope will be programmed/saved into the PIC-IoT board in the next step
+16.	Look up the ID Scope for the DPS created/used by your IoT Central application (using the left-hand navigation pane, select Administration -> Device connection).  The ID Scope will be programmed/saved into the PIC-IoT board in the next step
 
     <img src=".//media/image84.png" style="width:5.in;height:3.18982in" alt="A screenshot of a cell phone Description automatically generated" />
 
-16. In the terminal emulator window, confirm that “local echo” is enabled in the terminal settings.  At the CLI prompt, type in the `idscope <ID-scope>` command to set it (which gets saved in the ATECC608A secure element on the PIC-IoT board) and then hit `[ENTER]`.  The ID Scope can be read out from the board by issuing the `idscope` command without any parameter
+17. In the terminal emulator window, confirm that “local echo” is enabled in the terminal settings.  At the CLI prompt, type in the `idscope <ID-scope>` command to set it (which gets saved in the ATECC608A secure element on the PIC-IoT board) and then hit `[ENTER]`.  The ID Scope can be read out from the board by issuing the `idscope` command without any parameter
 
     <img src=".//media/image85.png" style="width:5.in;height:3.18982in" alt="A screenshot of a cell phone Description automatically generated" />
 
-17. Using the CLI prompt, type in the command `reset` and hit `[ENTER]`.
+18. Using the CLI prompt, type in the command `reset` and hit `[ENTER]`.
 
-18. Wait for the PIC-IoT board to connect to your IoT Central’s DPS (allow up to 2 minutes); eventually the Blue and Green LEDs should both stay constantly on.  If the Red LED comes on, then something was incorrectly programmed (e.g. ID scope was entered incorrectly).
+19. Wait for the PIC-IoT board to connect to your IoT Central’s DPS (allow up to 2 minutes); eventually the Blue and Green LEDs should both stay constantly on.  If the Red LED comes on, then something was incorrectly programmed (e.g. ID scope was entered incorrectly).
 
-19. Go back to your web browser to access the Azure IoT Central application.  Use the left-hand side pane and select Devices -> All Devices.  Confirm that your device is listed – the device name & ID is the Common Name of the device certificate (which should be `sn + {17-digit device ID}`):
+20. Go back to your web browser to access the Azure IoT Central application.  Use the left-hand side pane and select Devices -> All Devices.  Confirm that your device is listed – the device name & ID is the Common Name of the device certificate (which should be `sn + {17-digit device ID}`):
 
     <img src=".//media/image86.png" style="width:5.in;height:1.58982in" alt="A screenshot of a cell phone Description automatically generated" />
 
-20. Change the Device name to something friendlier by clicking on it and then editing the box at the top of the page
+21. Change the Device name to something friendlier by clicking on it and then editing the box at the top of the page
 
     <img src=".//media/image87.png" style="width:5.in;height:1.18982in" alt="A screenshot of a cell phone Description automatically generated" />
 
-21. Confirm that the Blue & Green LED states are both set to `Turn On`
+22. Confirm that the Blue & Green LED states are both set to `Turn On`
 
     <img src=".//media/image88.png" style="width:5.in;height:3.18982in" alt="A screenshot of a cell phone Description automatically generated" />
 
-22. Click on `Overview` under your device name to see the telemetry displays being updated every few seconds:
+23. Click on `Overview` under your device name to see the telemetry displays being updated every few seconds:
 
     <img src=".//media/image89.png" style="width:5.in;height:3.18982in" alt="A screenshot of a cell phone Description automatically generated" />
 
-23. Click on `Commands` under your device name.  Go to the `Get Max-Min report` box and click on the calendar icon
+24. Click on `Commands` under your device name.  Go to the `Get Max-Min report` box and click on the calendar icon
 
     <img src=".//media/image90.png" style="width:5.in;height:0.58982in" alt="A screenshot of a cell phone Description automatically generated" />
 
-24. Select today’s date, then click `Run`
+25. Select today’s date, then click `Run`
 
     <img src=".//media/image91.png" style="width:5.in;height:1.78982in" alt="A screenshot of a cell phone Description automatically generated" />
 
-25. Click on `command history`, then `View Payload`
+26. Click on `command history`, then `View Payload`
 
     <img src=".//media/image92.png" style="width:5.in;height:1.18982in" alt="A screenshot of a cell phone Description automatically generated" />
 
-26. Confirm that valid data shows up in the `Response payload`:
+27. Confirm that valid data shows up in the `Response payload`:
 
     <img src=".//media/image93.png" style="width:5.in;height:1.84982in" alt="A screenshot of a cell phone Description automatically generated" />
 
-27. Click on `Raw data` under your device name to see the raw telemetry messages being received every few seconds:
+28. Click on `Raw data` under your device name to see the raw telemetry messages being received every few seconds:
 
     <img src=".//media/image94.png" style="width:5.in;height:1.84982in" alt="A screenshot of a cell phone Description automatically generated" />
 
-28. Follow the procedure [Configure the IoT Central application dashboard](https://docs.microsoft.com/en-us/azure/iot-central/core/howto-add-tiles-to-your-dashboard) to create a customized dashboard for your IoT Central application.  The below screen captures show various examples of dashboard components that highlight the telemetry data and properties facilitated by the PIC-IoT Wx Development Board based on its Plug and Play interface:
+29. Follow the procedure [Configure the IoT Central application dashboard](https://docs.microsoft.com/en-us/azure/iot-central/core/howto-add-tiles-to-your-dashboard) to create a customized dashboard for your IoT Central application.  The below screen captures show various examples of dashboard components that highlight the telemetry data and properties facilitated by the PIC-IoT Wx Development Board based on its Plug and Play interface:
 
     <img src=".//media/image95.png" style="width:5.in;height:3.34982in" alt="A screenshot of a cell phone Description automatically generated" />
 
