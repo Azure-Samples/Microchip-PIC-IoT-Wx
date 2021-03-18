@@ -50,7 +50,7 @@
 #define MAX_PUB_KEY_LEN     200
 #define NEWLINE "\r\n"
 
-//#define LED_CLI
+#define LED_CLI
 #ifdef LED_CLI
 #include "../led.h"
 #endif

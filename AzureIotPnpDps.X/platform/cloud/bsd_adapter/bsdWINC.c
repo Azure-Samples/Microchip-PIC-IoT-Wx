@@ -803,7 +803,7 @@ void BSD_SocketHandler(int8_t sock, uint8_t msgType, void *pMsg)
 				}
 				else
 				{
-					debug_printError("   BSD: SH closing Socket in MSG_CONNECT error (%d)", pstrConnect->s8Error);
+					debug_printError("   BSD: SH closing Socket in MSG_CONNECT:%d", pstrConnect->s8Error);
 					BSD_close(sock);
 				}
 			}
@@ -835,7 +835,7 @@ void BSD_SocketHandler(int8_t sock, uint8_t msgType, void *pMsg)
 					bsdSocketInfo->recvCallBack(pstrRecv->pu8Buffer, pstrRecv->s16BufferSize);
 					bsdSocketInfo->socketState = SOCKET_CONNECTED;
 				}  else {
-				debug_printError("   BSD: SH socket (%d) Closed", sock);
+				debug_printError("   BSD: SH socket (%d) closed", sock);
 					BSD_close(sock);
 				}
 			}
