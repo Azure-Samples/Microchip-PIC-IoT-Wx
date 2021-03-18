@@ -79,13 +79,13 @@ void application_init() {
 		switch (retValCryptoClientSerialNumber)
 		{
 		case ATCA_GEN_FAIL:
-			debug_printError("   APP: DeviceID generation failed, unspecified error");
+			debug_printError("   APP: DeviceID generation fail, unspecified error");
 			break;
 		case ATCA_BAD_PARAM:
-			debug_printError("   APP: DeviceID generation failed, bad argument");
+			debug_printError("   APP: DeviceID generation fail, bad arg");
 			break;
 		default:
-			debug_printError("   APP: DeviceID generation failed");
+			debug_printError("   APP: DeviceID generation fail");
 			break;
 		}
 	}
@@ -124,10 +124,13 @@ void application_init() {
 		//SW0 and SW1
 		sprintf((char*)authType, "%d", CFG_MAIN_WLAN_AUTH);
 	}
-#ifdef CFG_MAIN_WLAN_SSID
-	strcpy(ssid, CFG_MAIN_WLAN_SSID);
-	strcpy(pass, CFG_MAIN_WLAN_PSK);
-#endif
+
+	if (strlen(CFG_MAIN_WLAN_SSID) > 0)
+	{
+		strcpy(ssid, CFG_MAIN_WLAN_SSID);
+		strcpy(pass, CFG_MAIN_WLAN_PSK);
+	}
+
 	wifi_init(wifiConnectionStateChanged, mode);
 
 	if (mode == WIFI_DEFAULT) {

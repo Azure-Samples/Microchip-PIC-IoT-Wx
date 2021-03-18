@@ -112,12 +112,13 @@ bool wifi_connectToAp(uint8_t passed_wifi_creds)
 	m2m_wifi_configure_sntp((char*)"time.nist.gov", 18, SNTP_ENABLE_DHCP);
 	//e = m2m_wifi_set_device_name((uint8*)"01233EAD58E86797FE", strlen("01233EAD58E86797FE"));
 
-#ifdef CFG_MAIN_WLAN_SSID
-	passed_wifi_creds = NEW_CREDENTIALS;
-	sprintf(authType, "%d", CFG_MAIN_WLAN_AUTH);
-	strcpy(ssid, CFG_MAIN_WLAN_SSID);
-	strcpy(pass, CFG_MAIN_WLAN_PSK);
-#endif
+	if (strlen(CFG_MAIN_WLAN_SSID) > 0)
+	{
+		passed_wifi_creds = NEW_CREDENTIALS;
+		sprintf(authType, "%d", CFG_MAIN_WLAN_AUTH);
+		strcpy(ssid, CFG_MAIN_WLAN_SSID);
+		strcpy(pass, CFG_MAIN_WLAN_PSK);
+	}
 
 	if (passed_wifi_creds == NEW_CREDENTIALS)
 	{
@@ -205,7 +206,7 @@ static void wifiCallback(uint8_t msgType, void* pMsg)
 					application_post_provisioning();
 				}
 				shared_networking_params.haveAPConnection = 1;
-				debug_printGood("  WiFi: M2M_WIFI_RESP_CON_STATE_CHANGED: CONNECTED");
+				debug_printGood("  WiFi: CONNECTED");
 				CREDENTIALS_STORAGE_clearWifiCredentials();
 
 				if (!isSoftAP)
@@ -217,7 +218,7 @@ static void wifiCallback(uint8_t msgType, void* pMsg)
 			}
 			else if (pstrWifiState->u8CurrState == M2M_WIFI_DISCONNECTED)
 			{
-				debug_printWarn("  WiFi: M2M_WIFI_RESP_CON_STATE_CHANGED: DISCONNECTED: Err %d", pstrWifiState->u8ErrCode);
+				debug_printWarn("  WiFi: DISCONNECTED: %d", pstrWifiState->u8ErrCode);
 				
 				if (!isSoftAP)
 				{

@@ -175,8 +175,8 @@ static const az_span error_property_name_span          = AZ_SPAN_LITERAL_FROM_ST
 static const az_span empty_payload_span                = AZ_SPAN_LITERAL_FROM_STR("\"\"");
 static const az_span error_no_payload_getmaxmin_span   = AZ_SPAN_LITERAL_FROM_STR("Start Time not found");
 static const az_span error_command_not_supported_span  = AZ_SPAN_LITERAL_FROM_STR("{\"Status\":\"Unsupported Command\"}");
-static const az_span error_no_payload_reboot_span      = AZ_SPAN_LITERAL_FROM_STR("Delay time not specified. Please specify parameter 'delay' in period format (e.g. PT5S for 5 sec)");
-static const az_span command_empty_payload_maxmin_span = AZ_SPAN_LITERAL_FROM_STR("Payload Empty. Please specify parameter 'since'");
+static const az_span error_no_payload_reboot_span      = AZ_SPAN_LITERAL_FROM_STR("Delay time not found. Specify 'delay' in period format (PT5S for 5 sec)");
+static const az_span command_empty_payload_maxmin_span = AZ_SPAN_LITERAL_FROM_STR("Payload Empty. Specify parameter 'since'");
 
 // IoT Plug and Play Device Values for telemetry
 
@@ -488,7 +488,7 @@ void sendToCloud(void)
 #ifdef CFG_MQTT_PROVISIONING_HOST
 void iot_provisioning_completed(void)
 {
-	debug_printGood("  MAIN: IoT Provisioning Completed");
+	debug_printGood("  MAIN: Provisioning Complete");
 	application_cloud_mqtt_connect(hub_hostname, &pf_mqtt_pnp_client, sendToCloud);
 }
 #endif //CFG_MQTT_PROVISIONING_HOST
@@ -672,7 +672,7 @@ static void handle_command_message(
 		// Send command response with report as JSON payload
 		if ((ret = send_command_response(command_request, return_code, command_response_span)) != 0)
 		{
-			debug_printError("  MAIN: Unable to send command response, az_result 0x%08x status %d", az_ret, ret);
+			debug_printError("  MAIN: Fail send command response, az_ret 0x%08x status %d", az_ret, ret);
 		}
 	}
 	else if (az_span_is_content_equal(command_reboot_span, command_request->command_name))
@@ -681,13 +681,13 @@ static void handle_command_message(
 
 		if (az_ret != AZ_OK)
 		{
-			debug_printError("  MAIN: process_reboot() failed.  AZ Result 0x%08x span size %d", az_ret, az_span_size(command_response_span));
+			debug_printError("  MAIN: Fail process_reboot, az_ret 0x%08x span size %d", az_ret, az_span_size(command_response_span));
 			if(az_span_size(command_response_span) == 0)
 			{
 				// if response is empty, payload was not in the right format.
 				if (az_result_failed(az_ret = build_error_response_payload(command_response_span, error_no_payload_reboot_span, &command_response_span)))
 				{
-					debug_printError("  MAIN: Failed to build error response. AZ Result 0x%08x", az_ret);
+					debug_printError("  MAIN: Fail build error response. (0x%08x)", az_ret);
 				}
 
 			}
@@ -728,7 +728,7 @@ static void handle_command_message(
 **********************************************/
 void receivedFromCloud_commands(uint8_t* topic, uint8_t* payload)
 {
-	debug_printInfo("  MAIN: %s() : Command Received");
+	debug_printInfo("  MAIN: Command Received");
 
 	az_iot_pnp_client_command_request command_request;
 	az_span command_topic_span = az_span_create_from_str((char*)topic);
@@ -746,7 +746,7 @@ static int send_reported_property(
 {
 	az_result az_ret;
 
-	debug_printInfo("  MAIN: %s() : Enter", __func__);
+	debug_printInfo("  MAIN: send property");
 
 	// Get the topic used to send a reported property update
 	az_span request_id_span = get_request_id();
@@ -758,7 +758,7 @@ static int send_reported_property(
 					sizeof(reported_property_topic),
 					NULL)))
 	{
-		debug_printError("  MAIN: Unable to get twin document publish topic, return code 0x%08x", az_ret);
+		debug_printError("  MAIN: Fail get twin document publish topic:0x%08x", az_ret);
 		return az_ret;
 	}
 
@@ -769,7 +769,7 @@ static int send_reported_property(
 
 	if (az_result_failed(az_ret = start_json_object(&jw, az_span_buffer)))
 	{
-		debug_printError("  MAIN: Unable to initialize json_builder, return code 0x%08x", az_ret);
+		debug_printError("  MAIN: Fail initialize json_builder (0x%08x)", az_ret);
 		return az_ret;
 	}
 
@@ -784,7 +784,7 @@ static int send_reported_property(
 						twin_properties->version_num,
 						AZ_SPAN_FROM_STR("Success"))))
 		{
-			debug_printError("  MAIN: Unable to add property for telemetry interval, return code 0x%08x", az_ret);
+			debug_printError("  MAIN: Fail add property for telemetry interval:0x%08x", az_ret);
 			return az_ret;
 		}
 	}
@@ -817,7 +817,7 @@ static int send_reported_property(
 						twin_properties->version_num,
 						AZ_SPAN_FROM_STR("Success"))))
 		{
-			debug_printError("  MAIN: Unable to add property for Yellow LED, return code 0x%08x", az_ret);
+			debug_printError("  MAIN: Unable to add property LED(y):0x%08x", az_ret);
 			return az_ret;
 		}
 	}
@@ -849,7 +849,7 @@ static int send_reported_property(
 				led_red_property_name_span,
 				red_led_value_span)))
 		{
-			debug_printError("  MAIN: Unable to add property for Red LED, return code  0x%08x", az_ret);
+			debug_printError("  MAIN: Unable to add property LED(r):0x%08x", az_ret);
 			return az_ret;
 		}
 	}
@@ -863,7 +863,7 @@ static int send_reported_property(
 				led_blue_property_name_span,
 				twin_properties->reported_led_blue)))
 		{
-			debug_printError("  MAIN: Unable to add property for Blue LED, return code  0x%08x", az_ret);
+			debug_printError("  MAIN: Unable to add property LED(b):0x%08x", az_ret);
 			return az_ret;
 		}
 	}
@@ -877,7 +877,7 @@ static int send_reported_property(
 				led_green_property_name_span,
 				twin_properties->reported_led_green)))
 		{
-			debug_printError("  MAIN: Unable to add property for Green LED, return code  0x%08x", az_ret);
+			debug_printError("  MAIN: Unable to add property LED(g):0x%08x", az_ret);
 			return az_ret;
 		}
 	}
@@ -890,7 +890,7 @@ static int send_reported_property(
 				property_max_temp_span,
 				device_max_temp)))
 		{
-			debug_printError("  MAIN: Unable to add property for Max Temp, return code  0x%08x", az_ret);
+			debug_printError("  MAIN: Unable to add property Max Temp:0x%08x)", az_ret);
 			return az_ret;
 		}
 	}
@@ -898,14 +898,14 @@ static int send_reported_property(
 	// Close JSON Payload (appends "}")
 	if (az_result_failed(az_ret = end_json_object(&jw)))
 	{
-		debug_printError("  MAIN: Unable to append end object, return code  0x%08x", az_ret);
+		debug_printError("  MAIN: Unable to append end object:0x%08x", az_ret);
 		return az_ret;
 	}
 
 	az_span json_payload_span = az_json_writer_get_bytes_used_in_destination(&jw);
 
 	// Publish the reported property payload to IoT Hub
-	debug_printInfo("IOTHUB: Sending twin reported property : %s", az_span_ptr(json_payload_span));
+	debug_printInfo("IOTHUB: Sending twin reported property:%s", az_span_ptr(json_payload_span));
 
 	// Send the reported property
 	if ((az_ret = mqtt_publish_message(reported_property_topic, json_payload_span, 0)) == 0)
@@ -1007,7 +1007,7 @@ static void handle_property_message(
 		// A response from a twin GET publish message with the twin document as a payload.
 		case AZ_IOT_PNP_CLIENT_PROPERTY_RESPONSE_TYPE_GET:
 
-			debug_printGood("  MAIN: A twin GET response received");
+			debug_printGood("  MAIN: twin GET response received");
 			is_get_received = true;
 			twin_properties.flag.isGet = 1;
 			break;
@@ -1015,7 +1015,7 @@ static void handle_property_message(
 		// An update to the desired properties with the properties as a JSON payload.
 		case AZ_IOT_PNP_CLIENT_PROPERTY_RESPONSE_TYPE_DESIRED_PROPERTIES:
 
-			debug_printInfo("  MAIN: A twin desired properties patch message received");
+			debug_printInfo("  MAIN: twin desired property patch message received");
 			twin_properties.flag.isGet = 0;
 			break;
 
@@ -1023,14 +1023,14 @@ static void handle_property_message(
 		// the reported properties, the payload will be empty and the status will be 204.
 		case AZ_IOT_PNP_CLIENT_PROPERTY_RESPONSE_TYPE_REPORTED_PROPERTIES:
 
-			debug_printInfo("  MAIN: A twin reported properties response message was received");
+			debug_printInfo("  MAIN: twin reported property response message received");
 			return;
 	}
 
 	if (az_result_failed(az_ret = parse_twin_property(payload_span, &twin_properties, property_response->response_type)))
 	{
 		// If the item can't be found, the desired temp might not be set so take no action
-		debug_printError("  MAIN: Could not parse desired property, return code 0x%08x\n", az_ret);
+		debug_printError("  MAIN: Couldn't parse desired property (0x%08x)\n", az_ret);
 	}
 	else
 	{
@@ -1061,7 +1061,7 @@ void receivedFromCloud_property(uint8_t* topic, uint8_t* payload)
 	{
 		char request_id_buf[50];
 		az_span_to_str(request_id_buf, sizeof(request_id_buf), property_response.request_id);
-		debug_printInfo("  MAIN: Property request, request_id:%s, status: %d", request_id_buf, property_response.status);
+		debug_printInfo("  MAIN: Property request, id:%s, status:%d", request_id_buf, property_response.status);
 	}
 
 	if (payload == NULL)
@@ -1126,13 +1126,13 @@ void check_button_status(void)
 
 	if (sw0_pressed == true)
 	{
-		debug_printGood("  MAIN: Button SW0 Press Count %lu", button_press_data.sw0_press_count);
+		debug_printGood("  MAIN: Button SW0 Count %lu", button_press_data.sw0_press_count);
 		RETURN_IF_FAILED(append_button_press_telemetry(&jw, event_name_button_sw0_span, button_press_data.sw0_press_count));
 	}
 
 	if (sw1_pressed == true)
 	{
-		debug_printGood("  MAIN: Button SW1 Press Count %lu", button_press_data.sw1_press_count);
+		debug_printGood("  MAIN: Button SW1 Count %lu", button_press_data.sw1_press_count);
 		RETURN_IF_FAILED(append_button_press_telemetry(&jw, event_name_button_sw1_span, button_press_data.sw1_press_count));
 	}
 

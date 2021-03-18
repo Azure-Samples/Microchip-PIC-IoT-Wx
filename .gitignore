@@ -1,7 +1,5 @@
 # Project specified
-/.vs
-/myiot.X/dist
-/myiot.X/nbproject/private
+.vs
 
 # Prerequisites
 *.d
@@ -51,9 +49,14 @@
 *.mod*
 *.cmd
 .tmp_versions/
+
 modules.order
 Module.symvers
 Mkfile.old
 dkms.conf
-/AzureIotPnpDps.X/.vs
-/AzureIotDps.X/.vs
+
+.generated_files
+
+/AzureIoTPnpDps.X/dist
+/AzureIotPnpDps.X/nbproject/Makefile-*
+/AzureIoTPnPDps.X/nbproject/private
