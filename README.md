@@ -1,14 +1,14 @@
-# Repurpose PIC-IoT Wx Development Board to Connect to Azure through IoT Hub Device Provisioning Service (DPS) with "Plug and Play" Model Interface
+# Provisioning the Microchip PIC-IoT Wx Development Board for Connecting to Azure IoT Services
 
 ## Introduction
 
- This document describes how to connect the PIC-IoT Wx Development Board (featuring a 16-bit PIC24F MCU, ATECC608A secure element, and ATWINC1510 Wi-Fi module) to an Azure IoT Hub via Device Provisioning Service (DPS) while leveraging Microsoft’s Azure IoT Embedded C SDK. The PIC-IoT is provisioned for use with Azure using self-signed X.509 certificate-based authentication.
+ This document describes how to connect the PIC-IoT Wx Development Board (featuring a 16-bit PIC24F MCU, ATECC608A secure element, and ATWINC1510 Wi-Fi module) to Azure IoT Hub and IoT Central via Device Provisioning Service (DPS) while leveraging Microsoft’s Azure IoT Embedded C SDK. The PIC-IoT is provisioned for use with Azure using self-signed X.509 certificate-based authentication.
 
 <img src=".//media/image1.png" />
 
 ## Table of Contents
 
-- [Repurpose PIC-IoT Wx Development Board to Connect to Azure through IoT Hub Device Provisioning Service (DPS)](#repurpose-pic-iot-wx-development-board-to-connect-to-azure-through-iot-hub-device-provisioning-service-dps)
+- [Provisioning the Microchip PIC-IoT Wx Development Board for Connecting to Azure IoT Services](#provisioning-the-microchip-pic-iot-wx-development-board-for-connecting-to-azure-iot-services)
   - [Introduction](#introduction)
   - [Table of Contents](#table-of-contents)
   - [Background Knowledge](#background-knowledge)
@@ -19,25 +19,26 @@
     - [TLS connection](#tls-connection)
     - [MQTT Connection](#mqtt-connection)
   - [Checklist](#checklist)
-  - [Procedure](#instruction)
-    - [Section 1: Prepare your development environment](#step-1-prepare-your-development-environment)
-      - [1. Set up Microchip’s MPLAB X IDE Tool Chain](#1-set-up-microchips-mplab-x-ide-tool-chain)
+  - [Procedure](#procedure)
+    - [Section 1: Prepare your Development Environment](#section-1-prepare-your-development-environment)
+      - [1. Set up Microchip MPLAB X Tool Chain](#1-set-up-microchip-mplab-x-tool-chain)
       - [2. Set up Azure cloud resources](#2-set-up-azure-cloud-resources)
       - [3. Set up Git](#3-set-up-git)
-    - [Section 2: Prepare your PIC-IoT board to connect to Azure](#step-2-prepare-your-pic-iot-board-to-connect-to-azure)
-    - [Section 3: Enroll device into DPS](#step-3-enroll-device-into-dps)
-      - [1. Preparing your environment for the certification verifying process:](#1-preparing-your-environment-for-the-certification-verifying-process)
+    - [Section 2: Prepare your PIC-IoT board to Connect to Azure](#section-2-prepare-your-pic-iot-board-to-connect-to-azure)
+    - [Section 3: Enroll Device into DPS](#section-3-enroll-device-into-dps)
+      - [1. Set up certificates for the verification process:](#1-set-up-certificates-for-the-verification-process)
       - [2. In Azure portal, upload the root CA cert “root-ca.pem” in DPS and do proof-of-possession for X.509 CA certificates with your Device Provisioning Service](#2-in-azure-portal-upload-the-root-ca-cert-root-capem-in-dps-and-do-proof-of-possession-for-x509-ca-certificates-with-your-device-provisioning-service)
         - [a. Register the public part of an X.509 certificate and get a verification code](#a-register-the-public-part-of-an-x509-certificate-and-get-a-verification-code)
         - [b. Digitally sign the verification code to create a verification certificate](#b-digitally-sign-the-verification-code-to-create-a-verification-certificate)
         - [c. Upload the signed verification certificate to DPS](#c-upload-the-signed-verification-certificate-to-dps)
         - [STOP! Quick summary of this step](#stop-quick-summary-of-this-step)
-      - [3. Add a new enrollment group using the signer-ca.pem file](#3-add-a-new-enrollment-group-using-the-signer-capem-file)
+      - [3. Add a new enrollment group using the "signer-ca.pem" file](#3-add-a-new-enrollment-group-using-the-"signer-capem"-file)
       - [STOP! Sanity checks:](#stop-sanity-checks)
-    - [Section 4: Connect the PIC-IoT device to Azure](#step-4-connect-the-pic-iot-device-to-azure)
-    - [Section 5: Verify the connection between PIC-IoT and Azure](#step-5-verify-the-connection-between-pic-iot-and-azure)
-    - [Section 6: View PIC-IoT board telemetry on Azure IoT Explorer](#step-6-view-pic-iot-board-telemetry-on-azure-iot-explorer)
-  - [Future Considerations](#further-consideration)
+    - [Section 4: Connect the PIC-IoT Device to Azure IoT Hub](#section-4-connect-the-pic-iot-device-to-azure-iot-hub)
+    - [Section 5: Verify the Connection between PIC-IoT and Azure IoT Hub/DPS](#section-5-verify-the-connection-between-pic-iot-and-azure-iot-hub/dps)
+    - [Section 6: PIC-IoT Board Interaction with Azure IoT Explorer](#section-6-pic-iot-board-interaction-with-azure-iot-explorer)
+    - [Section 7: Connect the PIC-IoT Device to Azure IoT Central](#section-7-connect-the-pic-iot-device-to-azure-iot-central)
+  - [References](#references)
   - [Conclusion](#conclusion)
 
 ## Background Knowledge
@@ -117,7 +118,7 @@ stored in the ATWINC1510 Wi-Fi module used for the TLS handshake.
 
 This is the high-level view of the Embedded C SDK which translates the application code into an Azure-friendly logic that can be easily understood by Azure IoT Hub. Note that Microsoft is only responsible for the logic in the green box; it is up to the IoT Developer to provide the remaining layers of application code, Transport Client, TLS, and Socket. In the provided demo project, Microchip provides the layers in blue. Please the [Azure SDK for Embedded C](https://github.com/Azure/azure-sdk-for-c/tree/78a280b7160201cf10a106e8499e03eec88ea582) document for more details.
 
-<img src=".//media/image7.png" style="width:2in;height:2in"/>
+<img src=".//media/image7.png" style="width:4in;height:4in"/>
 
 ### TLS connection
 
@@ -151,22 +152,20 @@ list as you complete each stage:
 
 ## Procedure
 
-### Section 1: Prepare your development environment
+### Section 1: Prepare your Development Environment
 
-#### 1. Set up Microchip’s MPLAB X IDE Tool Chain
+#### 1. Set up Microchip MPLAB X Tool Chain
 
-- [MPLAB X IDE V5.30 or
-    later](https://www.microchip.com/mplab/mplab-x-ide)
+- [MPLAB X IDE](https://www.microchip.com/mplab/mplab-x-ide)
 
-- [XC16 Compiler v1.50 or
-    later](https://www.microchip.com/mplab/compilers)
+- [MPLAB XC16 Compiler v1.61 or later](https://www.microchip.com/en-us/development-tools-tools-and-software/mplab-xc-compilers#tabs)
 
 - MPLAB Code Configurator 3.95 or later (once you finish the
     installation of the previous items, launch MPLAB X IDE &gt; click on
     Tools &gt; Plugins Download &gt; search for MPLAB Code Configurator
     and install it)
 
-    <img src=".//media/image10.png" style="width:4.17917in;height:2.98149in"/>
+    <img src=".//media/image10.png" style="width:5.17917in;height:3.98149in"/>
 
 #### 2. Set up Azure Cloud resources
 
@@ -285,9 +284,9 @@ Procedure:
     openssl req -new -key root-ca.key -out azure_root_ca_verification.csr
     ```
 
-    As the result, you should see the file `azure_root_ca_verification.csr` appear in the \\.microchip-iot folder: 
+    As a result, you should see the file `azure_root_ca_verification.csr` appear in the \\.microchip-iot folder: 
 
-    <img src=".//media/image16.png" style="width:5.12286in;height:2.47003in" alt="A screenshot of a cell phone Description automatically generated" />
+    <img src=".//media/image16.png" style="width:6.12286in;height:3.47003in" alt="A screenshot of a cell phone Description automatically generated" />
 
 4. Generate a verification certificate by executing the following command:
 
@@ -295,7 +294,7 @@ Procedure:
     openssl x509 -req -in azure_root_ca_verification.csr -CA root-ca.crt -CAkey root-ca.key -CAcreateserial -out azure_signer_verification.cer -days 365 -sha256
     ```
 
-    As the result, you should see the file `azure_signer_verification.cer` appear in the \\.microchip-iot folder:
+    As a result, you should see the file `azure_signer_verification.cer` appear in the \\.microchip-iot folder:
 
     <img src=".//media/image17.png" style="width:5.14375in;height:0.784in" alt="A screenshot of a computer screen Description automatically generated" />
 
@@ -328,7 +327,7 @@ can assign to &gt; leave the rest as their existing defaults &gt; hit
 
 Once this has been done, your enrollment group name should show up in the Enrollment Groups tab:
 
-<img src=".//media/image20.png" style="width:2in;height:4in" alt="A screenshot of a cell phone Description automatically generated" />
+<img src=".//media/image20.png" style="width:3in;height:5in" alt="A screenshot of a cell phone Description automatically generated" />
 
 #### STOP! Sanity checks:
 
@@ -369,11 +368,11 @@ In this section, we will flash the PIC-IoT board and connect it to Azure.
 
     <img src=".//media/image40.png" style="width:5.in;height:3.18982in" alt="A screenshot of a cell phone Description automatically generated" />
 
-   If the "load error" message in red appears, click on the “Resolve DFP for configuration: default” link: 
+   If the `load error` message in red appears, click on the `Resolve DFP for configuration: default` link: 
 
     <img src=".//media/image21.png" style="width:6.5in;height:1.00833in" alt="A screenshot of a cell phone Description automatically generated" />
 
-3. Set the AzureIotPnpDps project as the main (currently focused/active) project by right-clicking on it and selecting "Set as Main Project"
+3. Set the `AzureIotPnpDps` project as the main (currently focused/active) project by right-clicking on it and selecting `Set as Main Project`
 
     <img src=".//media/image41.png" style="width:5.in;height:3.18982in" alt="A screenshot of a cell phone Description automatically generated" />
 
@@ -386,18 +385,21 @@ In this section, we will flash the PIC-IoT board and connect it to Azure.
     ```
 
     > [!TIP]  
-    > You may also configure WiFi SSID and WiFI Password through CLI
+    > You may also configure the WiFi SSID and password using the `wifi` command via the Command Line Interface (CLI); e.g.
+    ```bash
+    wifi <MY_WIFI_AP_SSID>,<MY_WIFI_AP_PSWD>,2
+    ```
 
 5. Verify the project properties are set correctly before building the
    project:
 
-    - Connect the board to PC, then make sure “CURIOSITY” device shows up as a disk drive in a File Explorer window
+    - Connect the board to PC, then make sure `CURIOSITY` device shows up as a disk drive in a File Explorer window
 
-    - Right-click the project AzureIotPnPDps &gt; select “Properties” &gt; Verify
+    - Right-click the project `AzureIotPnPDps` &gt; select `Properties` &gt; Verify
     that all Configuration settings are at least the minimum versions as
     shown in the below screenshot (and that your PIC-IoT board is
     selected as the Connected Hardware Tool). If any changes were made in the project properties window,
-    make sure to hit the “Apply” button before hitting “OK”.
+    make sure to hit the `Apply` button before hitting `OK`.
 
     <img src=".//media/image26.png" style="width:5.88652in;height:2.68981in" alt="A screenshot of a social media post Description automatically generated" />
 
@@ -405,11 +407,11 @@ In this section, we will flash the PIC-IoT board and connect it to Azure.
 
     - Open a serial terminal (e.g. PuTTY, TeraTerm, etc.) and connect to the COM port corresponding to your board at 9600 baud (e.g. open PuTTY Configuration window &gt; choose “session” &gt; choose “Serial”&gt; Enter the right COMx port). You can find the COM info by opening your PC’s Device Manager &gt; expand Ports(COM & LPT) &gt; take note of Curiosity Virtual COM Port. 
 
-        <img src=".//media/image27.png" style="width:2in;height:2in" alt="A screenshot of a cell phone Description automatically generated" />
+        <img src=".//media/image27.png" style="width:3in;height:3in" alt="A screenshot of a cell phone Description automatically generated" />
 
-    - Right-click the AzureIotPnPDps project and select “Make and Program Device”.  This operation will automatically clean and build the project before attempting to program the target device. After the “BUILD SUCCESSFUL” message appears in the Output window, the application HEX file will be programmed onto the PIC-IoT board. Once programming has finished, the board will automatically reset and start running its application code.
+    - Right-click the `AzureIotPnPDps` project and select `Make and Program Device`.  This operation will automatically clean and build the project before attempting to program the target device. After the “BUILD SUCCESSFUL” message appears in the Output window, the application HEX file will be programmed onto the PIC-IoT board. Once programming has finished, the board will automatically reset and start running its application code.
 
-7. In the terminal emulator window, hit [RETURN] to get the list of available commands for the Command Line Interface (CLI).  The Command Line Interface allows you to send simple ASCII-string commands to set or get the user-configurable operating parameters of the application while it is running.  The CLI prompt is simply the '.' character
+7. In the terminal emulator window, hit [RETURN] to get the list of available commands for the Command Line Interface (CLI).  The Command Line Interface allows you to send simple ASCII-string commands to set or get the user-configurable operating parameters of the application while it is running.  The CLI prompt is simply the `.` (period) character
 
     <img src=".//media/image44.png" style="width:5.in;height:3.18982in" alt="A screenshot of a cell phone Description automatically generated" />
 
@@ -417,17 +419,17 @@ In this section, we will flash the PIC-IoT board and connect it to Azure.
 
     <img src=".//media/image23.png" style="width:6.5.in;height:1.43506in" alt="A screenshot of a cell phone Description automatically generated" />
 
-9. In the terminal emulator window, confirm that “local echo” is enabled in the terminal settings.  At the CLI prompt, type in the command "idscope <MY_ID_SCOPE>" to set the ID Scope (which gets saved in the ATECC608A secure element on the PIC-IoT board) and then hit [ENTER].  To confirm it was set correctly, the ID Scope can be read out from the board by issuing the "idscope" command (i.e. without specifying an ID Scope value as the parameter on the command line)
+9. In the terminal emulator window, confirm that “local echo” is enabled in the terminal settings.  At the CLI prompt, type in the command `idscope <MY_ID_SCOPE>` to set the ID Scope (which gets saved in the ATECC608A secure element on the PIC-IoT board) and then hit [ENTER].  To confirm it was set correctly, the ID Scope can be read out from the board by issuing the `idscope` command (i.e. without specifying an ID Scope value as the parameter on the command line)
 
     <img src=".//media/image46.png" style="width:5.in;height:3.18982in" alt="A screenshot of a cell phone Description automatically generated" />
 
-10. At the CLI prompt, type in the command "reset" and hit [ENTER] to restart the application using the updated ID Scope to establish a connection to your DPS.
+10. At the CLI prompt, type in the command `reset` and hit `[ENTER]` to restart the application using the updated ID Scope to establish a connection to your DPS.
 
 11.	Wait for the PIC-IoT board to connect to your DPS and stabilize (allow up to 2 minutes); eventually the Blue and Green LEDs should both stay constantly on (which signifies a successful & stable DPS connection).  If the Red LED comes on and stays lit, then something was incorrectly programmed (e.g. application firmware, Wi-Fi credentials, ID Scope).  If the Blue LED is not constantly on, then there is an issue with connecting to your wireless access point.
 
-12. To enable the “full” debug messaging output to the terminal emulator window, execute the command "debug 4" on the Command Line Interface (CLI).  To disable the debug messages at any time, execute the command "debug 0" (debug levels range from 0 to 4).  The CLI is always active, even while debug messages are being continuously displayed on the terminal window.
+12. To enable the “full” debug messaging output to the terminal emulator window, execute the command `debug 4` on the Command Line Interface (CLI).  To disable the debug messages at any time, execute the command `debug 0` (debug levels range from 0 to 4).  The CLI is always active, even while debug messages are being continuously displayed on the terminal window.
 
-### Section 5: Verify the Connection between PIC-IoT and Azure
+### Section 5: Verify the Connection between PIC-IoT and Azure IoT Hub/DPS
 
 A successful PIC-IoT to Azure DPS connection can be verified two ways:
 
@@ -452,9 +454,7 @@ Procedure:
 
  Once the PIC-IoT connection to Azure has been verified in the previous section, the device can be monitored & controlled using Microsoft's Azure IoT Explorer. The Azure IoT Explorer is a graphical tool for interacting with and testing your IoT device on Azure. View [this document](https://docs.microsoft.com/azure/iot-pnp/howto-install-iot-explorer#install-azure-iot-explorer) for more details.
 
-1. Connect Azure IoT Explorer to IoT Hub by providing your IoT Hub’s connection string.  
-
-    From the Azure Portal: click on your IoT Hub &gt;Shared access polices &gt; iothubowner &gt; connection string-primary key &gt; Copy to clipboard
+1. Connect Azure IoT Explorer to IoT Hub by providing your IoT Hub’s connection string.  From the Azure Portal: click on your IoT Hub &gt; Shared access polices &gt; iothubowner &gt; connection string-primary key &gt; Copy to clipboard
 
     <img src=".//media/image30.png" style="width:2in;height:4in" alt="A screenshot of a cell phone Description automatically generated" />
 
@@ -473,7 +473,7 @@ Procedure:
 
 5. Please make sure "Public repository" is in the list
 
-    If "Public repository" is not listed, add it from "Add" menu
+    If "Public repository" is not listed, add it using the "Add" icon
 
     <img src=".//media/image49.png" style="width:5.in;height:3.18982in" alt="A screenshot of a cell phone Description automatically generated" />
 
@@ -483,7 +483,7 @@ Procedure:
 
 7. On the left-hand side of the IoT Explorer window, click on "IoT hubs"
 
-    <img src=".//media/image51.png" style="width:5.in;height:3.18982in" alt="A screenshot of a cell phone Description automatically generated" />
+    <img src=".//media/image51.png" style="width:5.in;height:2.18982in" alt="A screenshot of a cell phone Description automatically generated" />
 
 8. Verify that the name of your IoT hub is displayed, then click on "View devices in this hub"
 
@@ -491,7 +491,7 @@ Procedure:
 
 9. Verify that your device ID is displayed (and status is enabled), then click on it
 
-    <img src=".//media/image53.png" style="width:5.in;height:3.18982in" alt="A screenshot of a cell phone Description automatically generated" />
+    <img src=".//media/image53.png" style="width:5.in;height:2.18982in" alt="A screenshot of a cell phone Description automatically generated" />
   
 10. On the left-hand side of the IoT Explorer window, click on "IoT Plug and Play components"
 
@@ -499,7 +499,7 @@ Procedure:
 
 11.	Click on "Default component" near the bottom of the IoT Explorer window
 
-    <img src=".//media/image55.png" style="width:5.in;height:3.18982in" alt="A screenshot of a cell phone Description automatically generated" />
+    <img src=".//media/image55.png" style="width:5.in;height:2.18982in" alt="A screenshot of a cell phone Description automatically generated" />
  
 12.	Click on "Properties (read-only)" near the top of the IoT Explorer window
 
@@ -511,15 +511,15 @@ Procedure:
 
 15. Click on the input field labeled "led_yellow" and select "Blink"
 
-    <img src=".//media/image59.png" style="width:5.in;height:3.18982in" alt="A screenshot of a cell phone Description automatically generated" />
+    <img src=".//media/image59.png" style="width:5.in;height:1.48982in" alt="A screenshot of a cell phone Description automatically generated" />
 
 16. Click on "Update desired value"
 
-    <img src=".//media/image60.png" style="width:5.in;height:3.18982in" alt="A screenshot of a cell phone Description automatically generated" />
+    <img src=".//media/image60.png" style="width:5.in;height:1.48982in" alt="A screenshot of a cell phone Description automatically generated" />
 
 17. Observe the notification that the request to write the property was accepted by your device, and that the Yellow LED on the PIC-IoT board is blinking/toggling/flashing
 
-    <img src=".//media/image61.png" style="width:5.in;height:3.18982in" alt="A screenshot of a cell phone Description automatically generated" />
+    <img src=".//media/image61.png" style="width:5.in;height:1.48982in" alt="A screenshot of a cell phone Description automatically generated" />
 
 18. Click on "Commands" near the top of the IoT Explorer window
 
@@ -531,11 +531,11 @@ Procedure:
 
 21. Type in the current time
 
-    <img src=".//media/image65.png" style="width:4.in;height:2.18982in" alt="A screenshot of a cell phone Description automatically generated" />
+    <img src=".//media/image65.png" style="width:4.in;height:1.18982in" alt="A screenshot of a cell phone Description automatically generated" />
 
 22. Click on "Send command"
 
-    <img src=".//media/image66.png" style="width:4.in;height:2.18982in" alt="A screenshot of a cell phone Description automatically generated" />
+    <img src=".//media/image66.png" style="width:4.in;height:1.78982in" alt="A screenshot of a cell phone Description automatically generated" />
 
 23. Confirm that the command was successfully invoked and that both the max & min temperatures are reported in the message that appears in the pop-up window (once the message window disappears, it can be read again by clicking on "Notifications")
 
@@ -545,25 +545,25 @@ Procedure:
 
 25. Observe the telemetry data (for the temperature and light sensors) is updating every few seconds
 
-    <img src=".//media/image69.png" style="width:5.in;height:3.18982in" alt="A screenshot of a cell phone Description automatically generated" />
+    <img src=".//media/image69.png" style="width:5.in;height:2.18982in" alt="A screenshot of a cell phone Description automatically generated" />
 
 26. Increase the ambient light shining on top of the board and observe that the value of the light sensor increases within a few seconds
 
-    <img src=".//media/image70.png" style="width:5.in;height:3.18982in" alt="A screenshot of a cell phone Description automatically generated" />
+    <img src=".//media/image70.png" style="width:5.in;height:2.18982in" alt="A screenshot of a cell phone Description automatically generated" />
 
 27. On the PIC-IoT Wx development board, press and release user buttons SW0 and/or SW1 
 
-    <img src=".//media/image71.png" style="width:5.in;height:3.18982in" alt="A screenshot of a cell phone Description automatically generated" />
+    <img src=".//media/image71.png" style="width:5.in;height:1.18982in" alt="A screenshot of a cell phone Description automatically generated" />
 
 28. Observe the button event message (telemetry) that is generated each time a user button has been pressed/released
 
-    <img src=".//media/image72.png" style="width:5.in;height:3.18982in" alt="A screenshot of a cell phone Description automatically generated" />
+    <img src=".//media/image72.png" style="width:5.in;height:2.18982in" alt="A screenshot of a cell phone Description automatically generated" />
 
 29. Click on "Commands" near the top of the IoT Explorer window
 
 30. Click on the input field for "delay" and type "PT10S", then click "Send command".  Confirm that the command was successfully invoked via a notification message, and then the board resets itself in approximately 10 seconds (the LEDs on the board will cycle and re-initialize)
 
-    <img src=".//media/image74.png" style="width:5.in;height:3.18982in" alt="A screenshot of a cell phone Description automatically generated" />
+    <img src=".//media/image74.png" style="width:5.in;height:2.18982in" alt="A screenshot of a cell phone Description automatically generated" />
 
 31. Experiment with the CLI commands to control the LED’s from the terminal emulator window by issuing the led command (usage: "led [led],[state]")
 [led] : {1 = blue, 2 = green, 3 = yellow, 4 = red}
@@ -571,17 +571,150 @@ Procedure:
 
     <img src=".//media/image75.png" style="width:8.in;height:6.18982in" alt="A screenshot of a cell phone Description automatically generated" />	
 
-## Future Considerations
+### Section 7: Connect the PIC-IoT Device to Azure IoT Central
 
-Instead of connecting to IoT Hub and viewing the telemetry on Azure IoT
-Explorer, the PIC-IoT board can be provisioned to connect to Azure IoT Central instead, which has a built-in dashboard to monitor the telemetry. Using IoT Central should be strongly considered for future projects.
+The PIC-IoT board can also be provisioned to connect to Azure IoT Central, where an application dashboard can be created to monitor the telemetry and take appropriate actions based on customized rules.
+
+1. Create a custom IoT Central application from scratch [Azure IoT Central - My apps](https://apps.azureiotcentral.com/myapps)  
+
+    > `[!TIP]`  
+    > Instead of creating an application from scratch, get a jump start by using the existing application template provided for the PIC-IoT Development Board [PIC-IoT Application Template](https://apps.azureiotcentral.com/build/new/1f71e467-74da-4554-8444-c650de86e4df) and skip forward to Step 4
+
+2. Click on the button `Build an app` (or `+ New application`)
+
+3. Click on the image titled `Custom apps`
+
+    <img src=".//media/image80.png" style="width:5.in;height:3.18982in" alt="A screenshot of a cell phone Description automatically generated" />
+
+4. Enter the desired settings for your IOT Central application and click on the `Create` button.  Refer to the online tutorial for additional details: [Create an Azure IoT Central application](https://docs.microsoft.com/en-us/azure/iot-central/core/quick-deploy-iot-central)
+
+5. Create an X.509 enrollment group for your IoT Central application.  Open your IoT Central application and navigate to `Administration` in the left pane and select `Device connection`
+
+6. Select `+ Create enrollment group`, and create a new enrollment group using any name (Group type = IoT devices, attestation type = Certificates (X.509)).  Hit Save when finished:
+
+    <img src=".//media/image81.png" style="width:6.5.in;height:4.43506in" alt="A screenshot of a cell phone Description automatically generated" />
+
+7. Now that the new enrollment group has been created, select `+ Manage Primary`.
+
+8. Select the file/folder icon associated with the `Primary` field and upload the root certificate file `root-ca.crt`.  The message `(!) Needs verification` should appear.  The `Subject` and `Thumbprint` fields will automatically populate themselves.
+
+9.	Click `Generate verification code` (this code will be copied to the clipboard which will be needed in a future step)
+
+10. Open a Git Bash window: Start menu &gt; type `Git Bash`, a window like this will pop out:
+
+    <img src=".//media/image15.png" style="width:3.21739in;height:0.94745in" alt="A picture containing ball, clock Description automatically generated" />
+
+11. Change to your generated certification folder:
+
+    ```bash
+    cd drive\[your path\.microchip-iot
+
+    For example: cd /C/Users/john5/Azure/.microchip-iot
+    ```
+
+12. Execute the below command in the Git Bash window (copy and paste for best results):
+
+    **Note**: Once you enter the below command, you will then be asked to enter information for various fields that will be incorporated into your certificate request. Enter the verification code (which was just generated previously) when prompted for the `Common Name`. It's recommended to just copy the Verification code to the clipboard and paste it when it's time to enter the `Common Name`.  For the rest of the fields, you can enter anything you want (or just hit `[ENTER]` to keep them blank which is fine for basic demonstration purposes).  If you accidentally hit [ENTER] when asked for the `Common Name`, you will need to run the command again...
+
+    ```bash
+    openssl req -new -key root-ca.key -out azure_root_ca_verification.csr
+    ```
+
+13. Generate the verification certificate by executing the following command (copy and paste for best results):
+
+    ```bash
+    openssl x509 -req -in azure_root_ca_verification.csr -CA root-ca.crt -CAkey root-ca.key -CAcreateserial -out azure_signer_verification.cer -days 365 -sha256
+    ```
+
+14. Click `Verify` and select the `azure_signer_verification.cer` file to upload.  Confirm that the `Primary` certificate has been verified and that a `Thumbprint` has been generated for your certificate.  Click on `Close` to exit the window.  The X.509 enrollment group should be ready to go!
+
+    <img src=".//media/image82.png" style="width:5.in;height:2.18982in" alt="A screenshot of a cell phone Description automatically generated" />
+
+15. Launch a terminal emulator window and connect to the COM port corresponding to the PIC-IoT board at 9600 bps.  In the terminal window, hit [RETURN] to get the list of available commands for the Command Line Interface (CLI). 
+
+    <img src=".//media/image83.png" style="width:5.in;height:3.18982in" alt="A screenshot of a cell phone Description automatically generated" />
+
+16.	Look up the ID Scope for the DPS created/used by your IoT Central application (using the left-hand navigation pane, select Administration -> Device connection).  The ID Scope will be programmed/saved into the PIC-IoT board in the next step
+
+    <img src=".//media/image84.png" style="width:5.in;height:3.18982in" alt="A screenshot of a cell phone Description automatically generated" />
+
+17. In the terminal emulator window, confirm that “local echo” is enabled in the terminal settings.  At the CLI prompt, type in the `idscope <ID-scope>` command to set it (which gets saved in the ATECC608A secure element on the PIC-IoT board) and then hit `[ENTER]`.  The ID Scope can be read out from the board by issuing the `idscope` command without any parameter
+
+    <img src=".//media/image85.png" style="width:5.in;height:3.18982in" alt="A screenshot of a cell phone Description automatically generated" />
+
+18. Using the CLI prompt, type in the command `reset` and hit `[ENTER]`.
+
+19. Wait for the PIC-IoT board to connect to your IoT Central’s DPS (allow up to 2 minutes); eventually the Blue and Green LEDs should both stay constantly on.  If the Red LED comes on, then something was incorrectly programmed (e.g. ID scope was entered incorrectly).
+
+20. Go back to your web browser to access the Azure IoT Central application.  Use the left-hand side pane and select Devices -> All Devices.  Confirm that your device is listed – the device name & ID is the Common Name of the device certificate (which should be `sn + {17-digit device ID}`):
+
+    <img src=".//media/image86.png" style="width:5.in;height:1.58982in" alt="A screenshot of a cell phone Description automatically generated" />
+
+21. Change the Device name to something friendlier by clicking on it and then editing the box at the top of the page
+
+    <img src=".//media/image87.png" style="width:5.in;height:1.18982in" alt="A screenshot of a cell phone Description automatically generated" />
+
+22. Confirm that the Blue & Green LED states are both set to `Turn On`
+
+    <img src=".//media/image88.png" style="width:5.in;height:3.18982in" alt="A screenshot of a cell phone Description automatically generated" />
+
+23. Click on `Overview` under your device name to see the telemetry displays being updated every few seconds:
+
+    <img src=".//media/image89.png" style="width:5.in;height:3.18982in" alt="A screenshot of a cell phone Description automatically generated" />
+
+24. Click on `Commands` under your device name.  Go to the `Get Max-Min report` box and click on the calendar icon
+
+    <img src=".//media/image90.png" style="width:5.in;height:0.58982in" alt="A screenshot of a cell phone Description automatically generated" />
+
+25. Select today’s date, then click `Run`
+
+    <img src=".//media/image91.png" style="width:5.in;height:1.78982in" alt="A screenshot of a cell phone Description automatically generated" />
+
+26. Click on `command history`, then `View Payload`
+
+    <img src=".//media/image92.png" style="width:5.in;height:1.18982in" alt="A screenshot of a cell phone Description automatically generated" />
+
+27. Confirm that valid data shows up in the `Response payload`:
+
+    <img src=".//media/image93.png" style="width:5.in;height:1.84982in" alt="A screenshot of a cell phone Description automatically generated" />
+
+28. Click on `Raw data` under your device name to see the raw telemetry messages being received every few seconds:
+
+    <img src=".//media/image94.png" style="width:5.in;height:1.84982in" alt="A screenshot of a cell phone Description automatically generated" />
+
+29. Follow the procedure [Configure the IoT Central application dashboard](https://docs.microsoft.com/en-us/azure/iot-central/core/howto-add-tiles-to-your-dashboard) to create a customized dashboard for your IoT Central application.  The below screen captures show various examples of dashboard components that highlight the telemetry data and properties facilitated by the PIC-IoT Wx Development Board based on its Plug and Play interface:
+
+    <img src=".//media/image95.png" style="width:5.in;height:3.34982in" alt="A screenshot of a cell phone Description automatically generated" />
+
+    <img src=".//media/image96.png" style="width:5.in;height:4.4182in" alt="A screenshot of a cell phone Description automatically generated" />
+
+    <img src=".//media/image97.png" style="width:5.in;height:3.34982in" alt="A screenshot of a cell phone Description automatically generated" />
+
+    <img src=".//media/image98.png" style="width:5.in;height:3.34982in" alt="A screenshot of a cell phone Description automatically generated" />
+
+## References
+
+Please refer to the below links for additional information for IoT Explorer, IoT Hub, DPS, Plug and Play model, and IoT Central
+
+•	[Manage cloud device messaging with Azure-IoT-Explorer](https://github.com/Azure/azure-iot-explorer/releases)
+
+•	[Import the Plug and Play model](https://docs.microsoft.com/en-us/azure/iot-pnp/concepts-model-repository)
+
+•	[Configure to connect to IoT Hub](https://docs.microsoft.com/en-us/azure/iot-pnp/quickstart-connect-device-c)
+
+•	[How to use IoT Explorer to interact with the device](https://docs.microsoft.com/en-us/azure/iot-pnp/howto-use-iot-explorer#install-azure-iot-explorer)
+
+•	[Create an Azure IoT Central application](https://docs.microsoft.com/en-us/azure/iot-central/core/quick-deploy-iot-central)
+
+•	[Manage devices in your Azure IoT Central application](https://docs.microsoft.com/en-us/azure/iot-central/core/howto-manage-devices)
+
+•	[How to connect devices with X.509 certificates for IoT Central](https://docs.microsoft.com/en-us/azure/iot-central/core/how-to-connect-devices-x509)
+
+•	[Configure the IoT Central application dashboard](https://docs.microsoft.com/en-us/azure/iot-central/core/howto-add-tiles-to-your-dashboard)
+
+•	[Customize the IoT Central UI](https://docs.microsoft.com/en-us/azure/iot-central/core/howto-customize-ui)
 
 ## Conclusion
 
-You are now able to connect PIC-IoT to Azure using self-signed cert base
-authentication and have deeper knowledge of how all the pieces of the puzzle
-fit together from the ATECC608A secure element, ATWINC1510 Wi-Fi, Azure
-Embedded C SDK, and Azure IoT Hub/DPS. Let’s start thinking out of the
-box and see how you can apply this project to provision securely and
-quickly a massive number of Microchip devices to Azure and safely manage
-them through the whole device life cycle.
+You are now able to connect PIC-IoT to Azure IoT services (Hub, Central, DPS) using self-signed cert base
+authentication and have deeper knowledge of how all the pieces of the puzzle fit together from the ATECC608A secure element, ATWINC1510 Wi-Fi, Azure Embedded C SDK, and Azure IoT Hub/Central/DPS. Let’s start thinking out of the box and see how you can apply this project to provision securely and quickly a massive number of Microchip devices to Azure and safely manage them through the whole device life cycle.
