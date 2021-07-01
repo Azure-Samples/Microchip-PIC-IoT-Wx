@@ -91,7 +91,7 @@ Embedded software development tools from Microchip need to be pre-installed in o
 
 Click this link for the setup procedure: [Development Tools Installation](Dev_Tools_Install.md)
 
-### Connecting to Azure IoT Central (Preferred Method)
+### Connecting to Azure IoT Central `(Preferred Method)`
 
 [Azure IoT Central](https://docs.microsoft.com/en-us/azure/iot-central/core/overview-iot-central) is an IoT application platform that reduces the burden and cost of developing, managing, and maintaining enterprise-grade IoT solutions. Choosing to build with IoT Central gives you the opportunity to focus time, money, and energy on transforming your business with IoT data, rather than just maintaining and updating a complex and continually evolving IoT infrastructure.
 
