@@ -60,13 +60,13 @@ The web UI lets you quickly connect devices, monitor device conditions, create r
 
     <img src=".//media/image44.png" style="width:5.in;height:3.18982in" alt="A screenshot of a cell phone Description automatically generated" />
 
-## Create an IoT Central Application for your Device
+## Create an IoT Central Application
 
 IoT Central allows you to create an application dashboard to monitor the telemetry and take appropriate actions based on customized rules.
 
-1. Create an IoT Central application by using the existing application template provided for the PIC-IoT Wx Development Board [PIC-IoT Application Template](https://apps.azureiotcentral.com/build/new/1f71e467-74da-4554-8444-c650de86e4df)
+1. Create a custom IoT Central application by starting with an existing [Microchip IoT Development Board Template](https://apps.azureiotcentral.com/build/new/bc6e29a0-963d-45e1-9037-b0e780e3943f) (if there is a problem with loading the template, refer to the [Create an application](https://docs.microsoft.com/en-us/azure/iot-central/core/quick-deploy-iot-central) section to create your IoT Central application from scratch)
 
-2. Review the settings for your IoT Central application (refer to [Create an Azure IoT Central application](https://docs.microsoft.com/en-us/azure/iot-central/core/quick-deploy-iot-central) for additional details).  Click the `Create` button to save your application
+2. Review and select the settings for your IoT Central application (refer to [Create an application](https://docs.microsoft.com/en-us/azure/iot-central/core/quick-deploy-iot-central) for additional guidance on selecting the settings for your application).  When finished configuring all the settings, click the `Create` button to save your application
 
 3. Create an X.509 enrollment group for your IoT Central application.  Open your IoT Central application and navigate to `Administration` in the left pane and select `Device connection`
 
@@ -123,50 +123,89 @@ IoT Central allows you to create an application dashboard to monitor the telemet
 
 16. Using the CLI prompt, type in the command `reset` and hit `[RETURN]`
 
-17. Wait for the PIC-IoT board to connect to your IoT Central’s DPS (allow up to 2 minutes); eventually the Blue and Green LEDs should both stay constantly on.  If the Red LED comes on, then something was incorrectly programmed (e.g. ID scope was entered incorrectly)
+17. Wait for the PIC-IoT board to connect to your IoT Central’s DPS (it can take a few minutes for the LED's to stop flashing); eventually the Blue and Green LEDs should both stay constantly ON
 
-18. Go back to your web browser to access the Azure IoT Central application.  Use the left-hand side pane and select Devices -> All Devices.  Confirm that your device is listed – the device name & ID is the Common Name of the device certificate (which should be `sn + {17-digit device ID}`)
+    NOTE: If the Red LED comes on, then something was incorrectly programmed (e.g. ID scope was entered incorrectly)
 
-    <img src=".//media/image86.png" style="width:5.in;height:1.58982in" alt="A screenshot of a cell phone Description automatically generated" />
+18. Go back to your web browser to access the Azure IoT Central application.  Use the left-hand side pane and select `Devices` > `All Devices`.  Confirm that your device is listed – the device name & ID is the Common Name of the device certificate (which should be `sn + {17-digit device ID}`)
 
-19. Change the Device name to something friendlier by clicking on it and then editing the box at the top of the page
+    <img src=".//media/image86.png" style="width:5.in;height:1.38982in" alt="A screenshot of a cell phone Description automatically generated" />
+
+19. If desired, change the Device name by clicking on `Manage device` > `Rename`
 
     <img src=".//media/image87.png" style="width:5.in;height:1.18982in" alt="A screenshot of a cell phone Description automatically generated" />
 
-20. Confirm that the Blue & Green LED states are both set to `Turn On`
+20. Click on the `Command` tab; type `PT5S` in the `Reboot delay` field and then click on `Run` to send the command to the device to reboot in 5 seconds
 
-    <img src=".//media/image88.png" style="width:5.in;height:3.18982in" alt="A screenshot of a cell phone Description automatically generated" />
+    <img src=".//media/image88.png" style="width:5.in;height:1.58982in" alt="A screenshot of a cell phone Description automatically generated" />
 
-21. Click on `Overview` under your device name to see the telemetry displays being updated every few seconds
+21. Within 5 seconds of sending the Reboot command, the PIC-IoT development board should reset itself.  Once the Blue and Green LED's stay constantly ON, press the SW0 and SW1 buttons
 
-    <img src=".//media/image89.png" style="width:5.in;height:3.18982in" alt="A screenshot of a cell phone Description automatically generated" />
+    <img src=".//media/image89.png" style="width:5.in;height:1.28982in" alt="A screenshot of a cell phone Description automatically generated" />
 
-22. Click on `Commands` under your device name.  Go to the `Get Max-Min report` box and click on the calendar icon
+22. Click on the `Raw data` tab and confirm that the button press telemetry messages were received
 
-    <img src=".//media/image90.png" style="width:5.in;height:0.58982in" alt="A screenshot of a cell phone Description automatically generated" />
+    <img src=".//media/image90.png" style="width:5.in;height:1.98982in" alt="A screenshot of a cell phone Description automatically generated" />
 
-23. Select today’s date, then click `Run`
+23. Click on the `Refresh` icon to display all messages received since the previous page refresh operation.  Confirm that periodic telemetry messages are being continuously received approximately every 10 seconds (the default interval value for the `telemetryInterval` property)
 
-    <img src=".//media/image91.png" style="width:5.in;height:1.78982in" alt="A screenshot of a cell phone Description automatically generated" />
+    <img src=".//media/image91.png" style="width:5.in;height:1.58982in" alt="A screenshot of a cell phone Description automatically generated" />
 
-24. Click on `command history`, then `View Payload`
+    <img src=".//media/image92.png" style="width:5.in;height:2.12982in" alt="A screenshot of a cell phone Description automatically generated" />
 
-    <img src=".//media/image92.png" style="width:5.in;height:1.18982in" alt="A screenshot of a cell phone Description automatically generated" />
+24. Increase the ambient light source shining on top of the board. Wait approximately 30 seconds.  Click on the `Refresh` icon to confirm that the light sensor value has increased
 
-25. Confirm that valid data shows up in the `Response payload`
+    <img src=".//media/image93.png" style="width:5.in;height:2.18982in" alt="A screenshot of a cell phone Description automatically generated" />
 
-    <img src=".//media/image93.png" style="width:5.in;height:1.84982in" alt="A screenshot of a cell phone Description automatically generated" />
+## Connect Device to the Dashboard for Data Visualization
 
-26. Click on `Raw data` under your device name to see the raw telemetry messages being received every few seconds
+1. Navigate to the left-hand vertical toolbar and click on the `Dashboards` icon
 
-    <img src=".//media/image94.png" style="width:5.in;height:1.84982in" alt="A screenshot of a cell phone Description automatically generated" />
+    <img src=".//media/image100.png" style="width:5.in;height:0.98982in" alt="A screenshot of a cell phone Description automatically generated" />
 
-27. Follow the procedure [Configure the IoT Central application dashboard](https://docs.microsoft.com/en-us/azure/iot-central/core/howto-add-tiles-to-your-dashboard) to create additional tiles for your IoT Central application.  The below screen captures show various examples of dashboard components that highlight the telemetry data and properties facilitated by the `Plug and Play` interface
+2. Towards the top of the web page, click on the `Edit` icon
 
-    <img src=".//media/image95.png" style="width:5.in;height:3.34982in" alt="A screenshot of a cell phone Description automatically generated" />
+    <img src=".//media/image101.png" style="width:5.in;height:0.48982in" alt="A screenshot of a cell phone Description automatically generated" />
 
-    <img src=".//media/image96.png" style="width:5.in;height:4.4182in" alt="A screenshot of a cell phone Description automatically generated" />
+3. For **all** of the existing tiles named `Light` or `Temperature`, click on the upper right-hand corner of the tile to select `Configure`
 
-    <img src=".//media/image97.png" style="width:5.in;height:3.34982in" alt="A screenshot of a cell phone Description automatically generated" />
+    <img src=".//media/image102a.png" style="width:5.in;height:2.18982in" alt="A screenshot of a cell phone Description automatically generated" />
+    <img src=".//media/image102b.png" style="width:5.in;height:2.18982in" alt="A screenshot of a cell phone Description automatically generated" />
 
-    <img src=".//media/image98.png" style="width:5.in;height:3.34982in" alt="A screenshot of a cell phone Description automatically generated" />
+4. Select `Device Group` > `PIC-IoT WM - All devices` and then check the box for your specific device name for `Devices`
+
+    <img src=".//media/image103.png" style="width:5.in;height:2.08982in" alt="A screenshot of a cell phone Description automatically generated" />
+
+5. Under the `Telemetry` category, click on `+ Capability` and select the parameter pertaining to the title of the tile (e.g. `Brightness from light sensor` for each of the `Light` tiles or `Temperature` for each of the `Temperature` tiles)
+
+    <img src=".//media/image104a.png" style="width:5.in;height:0.89082in" alt="A screenshot of a cell phone Description automatically generated" />
+    <img src=".//media/image104b.png" style="width:5.in;height:2.18982in" alt="A screenshot of a cell phone Description automatically generated" />
+    <img src=".//media/image104c.png" style="width:5.in;height:1.18982in" alt="A screenshot of a cell phone Description automatically generated" />
+
+6. Click on `Update` and repeat the process for the remainder of the existing tiles
+
+    <img src=".//media/image105.png" style="width:5.in;height:0.48982in" alt="A screenshot of a cell phone Description automatically generated" />
+
+7. After every tile has been configured to visualize your device's sensor data, click on the `Save` icon to save the latest changes to the dashboard
+
+    <img src=".//media/image106.png" style="width:5.in;height:0.38982in" alt="A screenshot of a cell phone Description automatically generated" />
+
+8. Confirm that the dashboard is being continuously updated with the expected telemetry data received from the device.  For example, adjust the ambient light source directed at the board and observe that the light sensor values are changing accordingly
+
+    <img src=".//media/image107.png" style="width:5.in;height:2.58982in" alt="A screenshot of a cell phone Description automatically generated" />
+
+9. To access your IoT Central application(s) in the future, go to [Azure IoT Central](https://apps.azureiotcentral.com) and click on `My apps`
+
+    <img src=".//media/image108.png" style="width:5.in;height:1.98982in" alt="A screenshot of a cell phone Description automatically generated" />
+
+## Expand the Dashboard with Additional Tiles
+
+To create additional tiles for your IoT Central dashboard, refer to [Configure the IoT Central application dashboard](https://docs.microsoft.com/en-us/azure/iot-central/core/howto-add-tiles-to-your-dashboard). The below screen captures show additional possibilities of dashboard components that can highlight the telemetry data and properties facilitated by the `Plug and Play` interface.  Note that multiple devices can be selected for each tile to allow groups of devices to be visualized within a single tile. 
+
+<img src=".//media/image95.png" style="width:5.in;height:3.34982in" alt="A screenshot of a cell phone Description automatically generated" />
+
+<img src=".//media/image96.png" style="width:5.in;height:4.4182in" alt="A screenshot of a cell phone Description automatically generated" />
+
+<img src=".//media/image97.png" style="width:5.in;height:3.34982in" alt="A screenshot of a cell phone Description automatically generated" />
+
+<img src=".//media/image98.png" style="width:5.in;height:3.34982in" alt="A screenshot of a cell phone Description automatically generated" />

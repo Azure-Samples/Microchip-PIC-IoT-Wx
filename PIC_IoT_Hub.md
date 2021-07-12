@@ -6,7 +6,7 @@
 
 IoT Hub supports communications both from the device to the cloud and from the cloud to the device. IoT Hub supports multiple messaging patterns such as device-to-cloud telemetry, file upload from devices, and request-reply methods to control your devices from the cloud. IoT Hub monitoring helps you maintain the health of your solution by tracking events such as device creation, device failures, and device connections.
 
-IoT Hub capabilities help you build scalable, full-featured IoT solutions such as managing industrial equipment used in manufacturing, tracking valuable assets in healthcare, and monitoring office building usage.
+IoT Hub's capabilities help you build scalable, full-featured IoT solutions such as managing industrial equipment used in manufacturing, tracking valuable assets in healthcare, and monitoring office building usage.
 
 ## Procedure
 
@@ -89,18 +89,12 @@ Select `Enrollment Groups` tab:
 
     <img src=".//media/image19.png" style="width:4.86246in;height:3.09722in" alt="A screenshot of a cell phone Description automatically generated" />
 
-2. Add enrollment group &gt; Enter `Group name` &gt; Choose Certificate
-as `Attestation Type` &gt; Choose `False` for IoT Edge Device &gt;
-Choose `Intermediate Certificate` as Certificate Type &gt; Upload
-`\[path]\.microchip-iot\signer-ca.pem` to Primary Certificate &gt;
-select `Evenly weighted distribution` for how you want to assign
-devices to hub &gt; select your IoT Hub that this new enrollment group
-can assign to &gt; leave the rest as their existing defaults &gt; hit
-`Save`
+2. Add enrollment group &gt; Enter `Group name` &gt; Choose Certificate as `Attestation Type` &gt; Choose `False` for IoT Edge Device &gt; Choose `Intermediate Certificate` as Certificate Type &gt; Upload
+`\[path]\.microchip-iot\signer-ca.pem` to Primary Certificate &gt; select `Evenly weighted distribution` for how you want to assign devices to hub &gt; select your IoT Hub that this new enrollment group can assign to &gt; leave the rest as their existing defaults &gt; hit `Save`
 
-Once this has been done, your enrollment group name should show up in the Enrollment Groups tab:
-
-<img src=".//media/image20.png" style="width:3in;height:5in" alt="A screenshot of a cell phone Description automatically generated" />
+    <img src=".//media/image20.png" style="width:3.0in;height:5.0in" alt="A screenshot of a cell phone Description automatically generated" />
+    
+    Once this has been done, your enrollment group name should show up in the Enrollment Groups tab
 
 ### **Program the Plug and Play Demo**
 

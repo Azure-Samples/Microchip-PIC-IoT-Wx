@@ -4,7 +4,7 @@
 
  This document describes how to connect the PIC-IoT Wx Development Board (featuring a 16-bit PIC24F MCU, ATECC608A secure element, and ATWINC1510 Wi-Fi module) to Azure IoT Central and/or Hub which leverages Microsoft’s Azure IoT Embedded C SDK. The PIC-IoT Wx Development Board will be provisioned for use with Azure IoT services using self-signed X.509 certificate-based authentication.
 
-![](media/image1.png)
+<img src=".//media/image1.png" />
 
 ## Table of Contents
 
@@ -17,9 +17,10 @@
   - [TLS Connection](#tls-connection)
   - [MQTT Connection](#mqtt-connection)
 - [Programming the PIC-IoT Wx Development Board](#programming-the-pic-iot-wx-development-board)
-  - [Installing the Development Tools](#installing-the-development-tools)
-  - [Connecting to Azure IoT Central](#connecting-to-azure-iot-central-preferred-method) `(Preferred Method)`
-  - [Connecting to Azure IoT Hub](#connecting-to-azure-iot-hub)
+  - [1. Installing the Development Tools](#1-installing-the-development-tools)
+  - [2. Connecting to Azure IoT Services](#2-connecting-to-azure-iot-services)
+      - a. IoT Central (`Preferred Method`)
+      - b. IoT Hub
 - [References](#references)
 - [Conclusion](#conclusion)
 
@@ -27,7 +28,7 @@
 
 ### PIC-IoT Wx Development Board Overview & Features (SMART \| CONNECTED \| SECURE)
 
-![](media/image2.png)
+<img src=".//media/image2.png"/>
 
  Download the [PIC-IoT Wx HW User Guide](http://ww1.microchip.com/downloads/en/DeviceDoc/PIC-IoT-Wx-Hardware-User-Guide-DS50002964A.pdf) for more details
 
@@ -37,7 +38,7 @@ The term “provisioning” will be use throughout this document (e.g. IoT Provi
 context of Microsoft, provisioning is defined in the relationship between the hardware and the cloud, Azure. [Azure IoT Hub Device Provisioning Service (DPS)](https://docs.microsoft.com/azure/iot-dps/#:~:text=The%20IoT%20Hub%20Device%20Provisioning%20Service%20%28DPS%29%20is,of%20devices%20in%20a%20secure%20and%20scalable%20manner.)
 allows the hardware to be provisioned securely to the right IoT Hub.
 
-![](media/image3.png)
+<img src=".//media/image3.png"/>
 
 ### High Level Architecture between the Client (PIC-IoT) and the Cloud (Azure)
 
@@ -57,7 +58,7 @@ This high-level architecture description summarizes the interactions between the
 
 - [Device Provisioning Service (DPS)](https://docs.microsoft.com/en-us/azure/iot-dps/): a helper service for IoT Hub that enables zero-touch, just-in-time provisioning to the right IoT hub without requiring human intervention, allowing customers to automatically provision millions of devices in a secure and scalable manner
 
-![](media/image4.png)
+ <img src=".//media/image4.png"/>
 
 In a nutshell, we will use Microchip’s IoT Provisioning Tool to send a Certificate Signing Request (CSR) to the ATECC608A to generate a self-signed certificate chain which is then obtained by the ATWINC1510 Wi-Fi module to perform a TLS mutual handshake between the client (PIC-IoT board) and the server (Azure), specifically using DPS.
 
@@ -67,7 +68,7 @@ On successful authentication, the PIC-IoT board will be provisioned to the corre
 
 This is the high-level view of the Embedded C SDK which translates the application code into an Azure-friendly logic that can be easily understood by Azure IoT Hub. Note that Microsoft is only responsible for the logic in the green box; it is up to the IoT Developer to provide the remaining layers of application code, Transport Client, TLS, and Socket. In the provided demo project, Microchip provides the layers in blue. Please reference the [Azure SDK for Embedded C](https://github.com/Azure/azure-sdk-for-c/tree/78a280b7160201cf10a106e8499e03eec88ea582) document for more details.
 
-![](media/image7.png)
+<img src=".//media/image7.png" style="width:4in;height:4in"/>
 
 ### TLS connection
 
@@ -85,29 +86,31 @@ After successfully connecting on the TLS level, the board starts establishing th
 
 ## Programming the PIC-IoT Wx Development Board
 
-### Installing the Development Tools
+### 1. Install the Development Tools
 
 Embedded software development tools from Microchip need to be pre-installed in order to properly program the PIC-IoT Wx Development Board and provision it for use with Microsoft Azure IoT services.
 
-Click this link for the setup procedure: [Development Tools Installation](Dev_Tools_Install.md)
+Click this link for the setup procedure: [Development Tools Installation](./Dev_Tools_Install.md)
 
-### Connecting to Azure IoT Central `(Preferred Method)`
+### 2. Connect Device to Azure IoT Services
 
-[Azure IoT Central](https://docs.microsoft.com/en-us/azure/iot-central/core/overview-iot-central) is an IoT application platform that reduces the burden and cost of developing, managing, and maintaining enterprise-grade IoT solutions. Choosing to build with IoT Central gives you the opportunity to focus time, money, and energy on transforming your business with IoT data, rather than just maintaining and updating a complex and continually evolving IoT infrastructure.
+- a. IoT Central (`Preferred Method`)
 
-The web UI lets you quickly connect devices, monitor device conditions, create rules, and manage millions of devices and their data throughout their life cycle. Furthermore, it enables you to act on device insights by extending IoT intelligence into line-of-business applications.
+    [Azure IoT Central](https://docs.microsoft.com/en-us/azure/iot-central/core/overview-iot-central) is an IoT application platform that reduces the burden and cost of developing, managing, and maintaining enterprise-grade IoT solutions. Choosing to build with IoT Central gives you the opportunity to focus time, money, and energy on transforming your business with IoT data, rather than just maintaining and updating a complex and continually evolving IoT infrastructure.
 
-Click this link for the programming procedure: [Connecting the PIC-IoT Wx Development Board to Azure IoT Central](PIC_IoT_Central.md)
+    The web UI lets you quickly connect devices, monitor device conditions, create rules, and manage millions of devices and their data throughout their life cycle. Furthermore, it enables you to act on device insights by extending IoT intelligence into line-of-business applications.
 
-### Connecting to Azure IoT Hub
+    Click this link for the programming procedure: [Connecting the PIC-IoT Wx Development Board to Azure IoT Central](./PIC_IoT_Central.md)
 
-[Azure IoT Hub](https://docs.microsoft.com/en-us/azure/iot-hub/about-iot-hub) is a managed service, hosted in the cloud, that acts as a central message hub for bi-directional communication between your IoT application and the devices it manages. You can use Azure IoT Hub to build IoT solutions with reliable and secure communications between millions of IoT devices and a cloud-hosted solution backend. You can connect virtually any device to IoT Hub.
+- b. IoT Hub
 
-IoT Hub supports communications both from the device to the cloud and from the cloud to the device. IoT Hub supports multiple messaging patterns such as device-to-cloud telemetry, file upload from devices, and request-reply methods to control your devices from the cloud. IoT Hub monitoring helps you maintain the health of your solution by tracking events such as device creation, device failures, and device connections.
+    [Azure IoT Hub](https://docs.microsoft.com/en-us/azure/iot-hub/about-iot-hub) is a managed service, hosted in the cloud, that acts as a central message hub for bi-directional communication between your IoT application and the devices it manages. You can use Azure IoT Hub to build IoT solutions with reliable and secure communications between millions of IoT devices and a cloud-hosted solution backend. You can connect virtually any device to IoT Hub.
 
-IoT Hub capabilities help you build scalable, full-featured IoT solutions such as managing industrial equipment used in manufacturing, tracking valuable assets in healthcare, and monitoring office building usage.
+    IoT Hub supports communications both from the device to the cloud and from the cloud to the device. IoT Hub supports multiple messaging patterns such as device-to-cloud telemetry, file upload from devices, and request-reply methods to control your devices from the cloud. IoT Hub monitoring helps you maintain the health of your solution by tracking events such as device creation, device failures, and device connections.
 
-Click this link for the programming procedure: [Connecting the Microchip PIC-IoT Wx Development Board to Azure IoT Hub](PIC_IoT_Hub.md)
+    IoT Hub's capabilities help you build scalable, full-featured IoT solutions such as managing industrial equipment used in manufacturing, tracking valuable assets in healthcare, and monitoring office building usage.
+
+    Click this link for the programming procedure: [Connecting the Microchip PIC-IoT Wx Development Board to Azure IoT Hub](./PIC_IoT_Hub.md)
 
 ## References
 
