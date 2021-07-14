@@ -17,8 +17,8 @@
   - [TLS Connection](#tls-connection)
   - [MQTT Connection](#mqtt-connection)
 - [Programming the PIC-IoT Wx Development Board](#programming-the-pic-iot-wx-development-board)
-  - [1. Installing the Development Tools](#1-installing-the-development-tools)
-  - [2. Connecting to Azure IoT Services](#2-connecting-to-azure-iot-services)
+  - [1. Install the Development Tools](#1-install-the-development-tools)
+  - [2. Connect to Azure IoT Services](#2-connect-device-to-azure-iot-services)
       - a. IoT Central (`Preferred Method`)
       - b. IoT Hub
 - [References](#references)
