@@ -18,9 +18,9 @@
   - [MQTT Connection](#mqtt-connection)
 - [Create an Azure Account and Subscription](#create-an-azure-account-and-subscription)
 - [Program the PIC-IoT Wx Development Board](#program-the-pic-iot-wx-development-board)
-  - [1. Installing the Development Tools](#1-installing-the-development-tools)
-  - [2. Connecting to Azure IoT Services](#2-connecting-to-azure-iot-services)
-      - a. IoT Central (`Preferred Method`)
+  - [1. Install the Development Tools](#1-install-the-development-tools)
+  - [2. Connect Device to Azure IoT Services](#2-connect-device-to-azure-iot-services)
+      - a. IoT Central (Recommended)
       - b. IoT Hub
 - [References](#references)
 - [Conclusion](#conclusion)
@@ -107,7 +107,19 @@ Click this link for the setup procedure: [Development Tools Installation](./Dev_
 
 ### 2. Connect Device to Azure IoT Services
 
-- a. IoT Central (`Preferred Method`)
+Azure IoT technologies and services provide you with options to create a wide variety of IoT solutions that enable digital transformation for your organization. For example, you can choose to use one of the following paths:
+
+- Use [Azure IoT Central](https://docs.microsoft.com/en-us/azure/iot-central/core/overview-iot-central), a managed IoT application platform, to build and deploy a secure, enterprise-grade IoT solution. IoT Central features a collection of industry-specific application templates, such as retail and healthcare, to accelerate your solution development process
+
+- Use Azure IoT platform services such as [Azure IoT Hub](https://docs.microsoft.com/en-us/azure/iot-hub/about-iot-hub) and the Azure IoT device SDKs to build a custom IoT solution from scratch
+
+Click [here](https://docs.microsoft.com/en-us/azure/iot-central/overview-iot-options) for a good overview of the different IoT options on Azure.  In summary, here are a couple of tables highlighting the differences between IoT Central and IoT Hub:
+
+<img src=".//media/image109.png" style="width:5.in;height:4.68982in" alt="A screenshot of a cell phone Description automatically generated" />
+ 
+<img src=".//media/image110.png"/>
+
+- a. IoT Central (Recommended)
 
     [Azure IoT Central](https://docs.microsoft.com/en-us/azure/iot-central/core/overview-iot-central) is an IoT application platform that reduces the burden and cost of developing, managing, and maintaining enterprise-grade IoT solutions. Choosing to build with IoT Central gives you the opportunity to focus time, money, and energy on transforming your business with IoT data, rather than just maintaining and updating a complex and continually evolving IoT infrastructure.
 
