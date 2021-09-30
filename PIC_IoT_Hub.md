@@ -144,13 +144,8 @@ Select `Enrollment Groups` tab:
 
     - Connect the board to PC, then make sure `CURIOSITY` device shows up as a disk drive in a File Explorer window
 
-    - Right-click the project `AzureIotPnPDps` &gt; select `Properties` &gt; Verify
-    that all Configuration settings are at least the minimum versions as
-    shown in the below screenshot (and that your PIC-IoT board is
-    selected as the Connected Hardware Tool). If any changes were made in the project properties window,
-    make sure to hit the `Apply` button before hitting `OK`.
-
-    <img src=".//media/image26.png" style="width:5.88652in;height:2.68981in" alt="A screenshot of a social media post Description automatically generated" />
+    - Right-click the project `AzureIotPnPDps` and select `Properties`. Verify
+    that `Packs` and `Compiler Toolchain` each have the highest versions selected. Select your PIC-IoT board for the `Connected Hardware Tool`. If any changes were made in the project properties window, make sure to hit the `Apply` button before hitting `OK`
 
 6. Build the project and set up a Command Line Interface (CLI) to the board:
 
