@@ -56,7 +56,7 @@ The web UI lets you quickly connect devices, monitor device conditions, create r
 
     - Right-click the `AzureIotPnPDps` project and select `Make and Program Device`.  This operation will automatically clean and build the project before attempting to program the target device. After the `BUILD SUCCESSFUL` message appears in the Output window, the application HEX file will be programmed onto the PIC-IoT board. Once programming has finished, the board will automatically reset and start running its application code.
 
-7. In the terminal emulator window, hit `[RETURN]` to get the list of available commands for the Command Line Interface (CLI).  The Command Line Interface allows you to send simple ASCII-string commands to set or get the user-configurable operating parameters of the application while it is running.  The CLI prompt is simply the `.` (period) character
+7. In the terminal emulator window, hit `[RETURN]` to get the list of available commands for the CLI.  The Command Line Interface allows you to send simple ASCII-string commands to set or get the user-configurable operating parameters of the application while it is running.  The CLI prompt is simply the `.` (period) character
 
     <img src=".//media/image44.png" style="width:5.in;height:3.18982in" alt="A screenshot of a cell phone Description automatically generated" />
 
@@ -121,7 +121,7 @@ IoT Central allows you to create an application dashboard to monitor the telemet
 
     <img src=".//media/image82.png" style="width:5.in;height:2.18982in" alt="A screenshot of a cell phone Description automatically generated" />
 
-13. Launch a terminal emulator window and connect to the COM port corresponding to the PIC-IoT board at `9600` baud.  In the terminal window, hit `[RETURN]` to get the list of available commands for the Command Line Interface (CLI)
+13. Launch a terminal emulator window and connect to the COM port corresponding to the PIC-IoT board at `9600` baud.  In the terminal window, hit `[RETURN]` to get the list of available commands for the CLI
 
     <img src=".//media/image83.png" style="width:5.in;height:3.18982in" alt="A screenshot of a cell phone Description automatically generated" />
 
