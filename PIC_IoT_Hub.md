@@ -133,24 +133,13 @@ Select `Enrollment Groups` tab:
     #define CFG_MAIN_WLAN_PSK  "MY_WIFI_AP_PSWD"
     ```
 
-    > [!TIP]  
-    > You may also configure the WiFi SSID and password using the `wifi` command via the Command Line Interface (CLI); e.g.
-    ```bash
-    wifi <MY_WIFI_AP_SSID>,<MY_WIFI_AP_PSWD>,2
-    ```
-
 5. Verify the project properties are set correctly before building the
    project:
 
     - Connect the board to PC, then make sure `CURIOSITY` device shows up as a disk drive in a File Explorer window
 
-    - Right-click the project `AzureIotPnPDps` &gt; select `Properties` &gt; Verify
-    that all Configuration settings are at least the minimum versions as
-    shown in the below screenshot (and that your PIC-IoT board is
-    selected as the Connected Hardware Tool). If any changes were made in the project properties window,
-    make sure to hit the `Apply` button before hitting `OK`.
-
-    <img src=".//media/image26.png" style="width:5.88652in;height:2.68981in" alt="A screenshot of a social media post Description automatically generated" />
+    - Right-click the project `AzureIotPnPDps` and select `Properties`. Verify
+    that `Packs` and `Compiler Toolchain` each have the highest versions selected. Select your PIC-IoT board for the `Connected Hardware Tool`. If any changes were made in the project properties window, make sure to hit the `Apply` button before hitting `OK`
 
 6. Build the project and set up a Command Line Interface (CLI) to the board:
 
@@ -160,7 +149,7 @@ Select `Enrollment Groups` tab:
 
     - Right-click the `AzureIotPnPDps` project and select `Make and Program Device`.  This operation will automatically clean and build the project before attempting to program the target device. After the `BUILD SUCCESSFUL` message appears in the Output window, the application HEX file will be programmed onto the PIC-IoT board. Once programming has finished, the board will automatically reset and start running its application code.
 
-7. In the terminal emulator window, hit `[RETURN]` to get the list of available commands for the Command Line Interface (CLI).  The Command Line Interface allows you to send simple ASCII-string commands to set or get the user-configurable operating parameters of the application while it is running.  The CLI prompt is simply the `.` (period) character
+7. In the terminal emulator window, hit `[RETURN]` to get the list of available commands for the CLI.  The Command Line Interface allows you to send simple ASCII-string commands to set or get the user-configurable operating parameters of the application while it is running.  The CLI prompt is simply the `.` (period) character
 
     <img src=".//media/image44.png" style="width:5.in;height:3.18982in" alt="A screenshot of a cell phone Description automatically generated" />
 
@@ -176,9 +165,13 @@ Select `Enrollment Groups` tab:
 
 11.	Wait for the PIC-IoT board to connect to your DPS and stabilize (allow up to 2 minutes); eventually the Blue and Green LEDs should both stay constantly on (which signifies a successful & stable DPS connection).  If the Red LED comes on and stays lit, then something was incorrectly programmed (e.g. application firmware, Wi-Fi credentials, ID Scope).  If the Blue LED is not constantly on, then there is an issue with connecting to your wireless access point.
 
-12. To enable the “full” debug messaging output to the terminal emulator window, execute the command `debug 4` on the Command Line Interface (CLI).  To disable the debug messages at any time, execute the command `debug 0` (debug levels range from 0 to 4).  The CLI is always active, even while debug messages are being continuously displayed on the terminal window.
+12. To enable the “full” debug messaging output to the terminal emulator window, execute the command `debug 4` on the CLI.  To disable the debug messages at any time, execute the command `debug 0` (debug levels range from 0 to 4).  The CLI is always active, even while debug messages are being continuously displayed on the terminal window.
 
-13. Experiment with the CLI commands to control the LED’s from the terminal emulator window by issuing the led command (usage: "led [led],[state]")
+13. In the future, without having to rebuild the project and reprogram the board, you may also reconfigure the WiFi SSID and password credentials during run time of the application by using the `wifi` CLI command
+    ```bash
+    wifi <MY_WIFI_AP_SSID>,<MY_WIFI_AP_PSWD>,2
+    ```
+14. Experiment with the CLI commands to control the LED’s from the terminal emulator window by issuing the `led` command (usage: "led [led],[state]")
 [led] : {1 = blue, 2 = green, 3 = yellow, 4 = red}
 [state] : {1 = on, 2 = off, 3 = start blinking, 4 = stop blinking}
 
