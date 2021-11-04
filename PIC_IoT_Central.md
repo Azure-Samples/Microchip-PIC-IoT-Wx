@@ -64,7 +64,7 @@ The web UI lets you quickly connect devices, monitor device conditions, create r
 
 IoT Central allows you to create an application dashboard to monitor the telemetry and take appropriate actions based on customized rules.
 
-1. Create a custom IoT Central application by starting with an existing [Microchip IoT Development Board Template](https://apps.azureiotcentral.com/build/new/bc6e29a0-963d-45e1-9037-b0e780e3943f) (if there is a problem with loading the template, refer to the [Create an application](https://docs.microsoft.com/en-us/azure/iot-central/core/quick-deploy-iot-central) section to create your IoT Central application from scratch)
+1. Create a custom IoT Central application by starting with an existing [Microchip IoT Development Board Template](https://apps.azureiotcentral.com/build/new/97343355-9171-4059-a68e-ae2383db6d01) (if there is a problem with loading the template, refer to the [Create an application](https://docs.microsoft.com/en-us/azure/iot-central/core/quick-deploy-iot-central) section to create your IoT Central application from scratch)
 
 2. Review and select the settings for your IoT Central application (if needed, refer to [Create an application](https://docs.microsoft.com/en-us/azure/iot-central/core/quick-deploy-iot-central) for additional guidance on selecting the settings for your application). Click the `Create` button only after taking into consideration the following recommendations:
   
