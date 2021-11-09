@@ -57,6 +57,5 @@ dkms.conf
 
 .generated_files
 
-/AzureIoTPnpDps.X/dist
 /AzureIotPnpDps.X/nbproject/Makefile-*
 /AzureIoTPnPDps.X/nbproject/private
