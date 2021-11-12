@@ -29,6 +29,7 @@
         ```shell
         .\iotprovision-bin.exe -c azure -m custom
         ```
+    - NOTE: You might notice one of the output messages displayed is "`Hexfile for 'Bundled Demo for azure' not found`" - this is expected and should be ignored
 
 4. Install the Microsoft [Azure Command Line Interface (CLI)](https://docs.microsoft.com/en-us/cli/azure/?view=azure-cli-latest). The Azure CLI is a set of commands used to create and manage Azure resources. The Azure CLI is available across Azure services and is designed to get you working quickly with Azure, with an emphasis on automation
 
