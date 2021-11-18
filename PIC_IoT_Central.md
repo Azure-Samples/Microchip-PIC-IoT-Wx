@@ -6,6 +6,16 @@
 
 The web UI lets you quickly connect devices, monitor device conditions, create rules, and manage millions of devices and their data throughout their life cycle. Furthermore, it enables you to act on device insights by extending IoT intelligence into line-of-business applications.
 
+[IoT Plug and Play](https://docs.microsoft.com/en-us/azure/iot-develop/overview-iot-plug-and-play) enables solution builders to integrate IoT devices with their solutions without any manual configuration. At the core of IoT Plug and Play, is a device model that a device uses to advertise its capabilities to an IoT Plug and Play-enabled application. This model is structured as a set of elements that define:
+
+- `Properties` that represent the read-only or writable state of a device or other entity. For example, a device serial number may be a read-only property and a target temperature on a thermostat may be a writable property
+
+- `Telemetry` that's the data emitted by a device, whether the data is a regular stream of sensor readings, an occasional error, or an information message
+
+- `Commands` that describe a function or operation that can be done on a device. For example, a command could reboot a gateway or take a picture using a remote camera
+
+As a solution builder, you can use IoT Central to develop a cloud-hosted IoT solution that uses IoT Plug and Play devices. IoT Plug and Play devices connect directly to an IoT Central application where you can use customizable dashboards to monitor and control your devices. You can also use device templates in the IoT Central web UI to create and edit [Device Twins Definition Language (DTDL)](https://github.com/Azure/opendigitaltwins-dtdl) models.
+
 ## Program the Plug and Play Demo
 
 1. Clone/download the MPLAB X demo project by issuing the following commands in a `Command Prompt` or `PowerShell` window
@@ -16,158 +26,145 @@ The web UI lets you quickly connect devices, monitor device conditions, create r
     git submodule update --init
     ```
 
-2. Launch the MPLAB X IDE and navigate to the main toolbar's `File` > `Open Project` operation to load the demo project folder (\*.X) located at \Microchip-PIC-IoT-Wx\AzureIotPnpDps
+2. Connect the board to PC, then make sure `CURIOSITY` device shows up as a disk drive on the `Desktop` or in a `File Explorer` window. Drag and drop (i.e. copy) the pre-built `*.hex` file (located in the folder at `Microchip-PIC-IoT-Wx` > `AzurePnPDps.X` > `dist` > `default` > `production`) to the `CURIOSITY` drive 
 
-    <img src=".//media/image40.png" style="width:5.in;height:3.18982in" alt="A screenshot of a cell phone Description automatically generated" />
+    <img src=".//media/image115.png">
 
-   If the `load error` message in red appears, click on the `Resolve DFP for configuration: default` link
+    NOTE: If this file copy operation fails for any reason, [Make and Program Device](./AzurePnP_MPLABX.md) by building the MPLAB X source code project that was used to generate the `*.hex` file
 
-    <img src=".//media/image21.png" style="width:6.5in;height:1.00833in" alt="A screenshot of a cell phone Description automatically generated" />
+3. Set up a Command Line Interface (CLI) to the board
 
-3. Set the `AzureIotPnpDps` project as the main (currently focused/active) project by right-clicking on it and selecting `Set as Main Project`
+    - Open a serial terminal window (e.g. PuTTY, TeraTerm, etc.) and connect to the COM port corresponding to your board at `9600 baud` (e.g. open PuTTY Configuration window &gt; choose `session` &gt; choose `Serial`&gt; Enter the right COMx port). You can find the COM info by opening your PC’s `Device Manager` &gt; expand `Ports(COM & LPT)` &gt; take note of the `Curiosity Virtual COM Port`
 
-    <img src=".//media/image41.png" style="width:5.in;height:3.18982in" alt="A screenshot of a cell phone Description automatically generated" />
+    - In your `Terminal Options`, enable `Local Echo` to allow your keystrokes to be displayed in the terminal window
 
-4. Modify `AzureIotPnPDps/Header Files/platform/config/conf_winc.h` with your
-    wireless router’s SSID and password (keeping the surrounding quotation marks for each); for example
+        <img src=".//media/image27.png">
 
-    ```c
-    #define CFG_MAIN_WLAN_SSID "MY_WIFI_AP_SSID"
-    #define CFG_MAIN_WLAN_PSK  "MY_WIFI_AP_PSWD"
+4. In the terminal emulator window, hit `[RETURN]` to get the list of available commands for the CLI.  The Command Line Interface allows you to send simple ASCII-string commands to set or get the user-configurable operating parameters of the application while it is running.  The CLI prompt is simply the `.` (period) character
+
+    <img src=".//media/image44.png">
+
+5. In the terminal emulator window, set the debug messaging level to 0 to temporarily disable the output messages. The debug level can be set anywhere from 0 to 4.  Use the `debug <level>` command by manually typing it into the CLI.  The complete command must be followed by hitting `[RETURN]`
+    ```bash
+    >debug 0
     ```
 
-5. Verify the project properties are set correctly before building the
-   project
+6. Set the Wi-Fi credentials used by your board whenever it tries to connect to an Access Point.  Execute the following `wifi` command on the CLI
 
-    - Connect the board to PC, then make sure `CURIOSITY` device shows up as a disk drive in a `File Explorer` window
+    ```bash
+    wifi <NETWORK_SSID>,<PASSWORD>,<SECURITY_OPTION[1=Open|2=WPA|3=WEP]>
+    ```
+    For example, if the SSID of the router is "MyWirelessRouter" and the WPA/WPA2 key is "MyRoutersPassword", the exact command to type into the CLI (followed by `[RETURN]`) would be
+    ```bash
+    wifi MyWirelessRouter,MyRoutersPassword,2
+    ```
 
-    - Right-click the project `AzureIotPnPDps` &gt; select `Properties` &gt; Verify
-    that all Configuration settings are at least the minimum versions as
-    shown in the below screenshot (and that your PIC-IoT board is
-    selected as the Connected Hardware Tool). If any changes were made in the project properties window, make sure to hit the `Apply` button before hitting `OK`
+    Once these credentials have been used to successfully connect to Wi-Fi once, they will be stored in the board and will be used in all subsequent Wi-Fi connection attempts.  In other words, the `wifi` command only needs to be executed successfully one time for your Access Point.
 
-        <img src=".//media/image26.png" style="width:5.88652in;height:2.68981in" alt="A screenshot of a social media post Description automatically generated" />
-
-6. Build the project and set up a Command Line Interface (CLI) to the board
-
-    - Open a serial terminal (e.g. PuTTY, TeraTerm, etc.) and connect to the COM port corresponding to your board at 9600 baud (e.g. open PuTTY Configuration window &gt; choose `session` &gt; choose `Serial`&gt; Enter the right COMx port). You can find the COM info by opening your PC’s `Device Manager` &gt; expand `Ports(COM & LPT)` &gt; take note of `Curiosity Virtual COM Port` 
-
-        <img src=".//media/image27.png" style="width:3in;height:3in" alt="A screenshot of a cell phone Description automatically generated" />
-
-    - Right-click the `AzureIotPnPDps` project and select `Make and Program Device`.  This operation will automatically clean and build the project before attempting to program the target device. After the `BUILD SUCCESSFUL` message appears in the Output window, the application HEX file will be programmed onto the PIC-IoT board. Once programming has finished, the board will automatically reset and start running its application code.
-
-7. In the terminal emulator window, hit `[RETURN]` to get the list of available commands for the CLI.  The Command Line Interface allows you to send simple ASCII-string commands to set or get the user-configurable operating parameters of the application while it is running.  The CLI prompt is simply the `.` (period) character
-
-    <img src=".//media/image44.png" style="width:5.in;height:3.18982in" alt="A screenshot of a cell phone Description automatically generated" />
+7. At the CLI prompt, type in the `reset` command and hit `[RETURN]` to restart the host application.  The application will try to connect to Wi-Fi using the credentials that were specified in the last accepted `wifi` command.  The Blue LED should eventually stay solidly ON to signify that the SAM-IoT board has successfully connected to the wireless router
 
 ## Create an IoT Central Application
 
-IoT Central allows you to create an application dashboard to monitor the telemetry and take appropriate actions based on customized rules.
+IoT Central allows you to create an application dashboard to monitor the telemetry and take appropriate actions based on customized rules.  To access all of your custom applications, you must be signed into the [Azure IoT Central Portal](https://apps.azureiotcentral.com) (it is recommended to bookmark this link for later use).
 
-1. Create a custom IoT Central application by starting with an existing [Microchip IoT Development Board Template](https://apps.azureiotcentral.com/build/new/97343355-9171-4059-a68e-ae2383db6d01) (if there is a problem with loading the template, refer to the [Create an application](https://docs.microsoft.com/en-us/azure/iot-central/core/quick-deploy-iot-central) section to create your IoT Central application from scratch)
+1. Create a custom IoT Central application by starting with an existing [Microchip IoT Development Board Template](https://apps.azureiotcentral.com/build/new/97343355-9171-4059-a68e-ae2383db6d01) (if there is a problem with loading the template after clicking the link, refer to the [Create an application](https://docs.microsoft.com/en-us/azure/iot-central/core/quick-deploy-iot-central) section to create your IoT Central application from scratch). If you are not currently logged into your [Microsoft account](https://account.microsoft.com/account), you will be prompted to sign in with your credentials to proceed. If you do not have an existing Microsoft account, go ahead and create one now by clicking on the `Create one!` link
 
-2. Review and select the settings for your IoT Central application (if needed, refer to [Create an application](https://docs.microsoft.com/en-us/azure/iot-central/core/quick-deploy-iot-central) for additional guidance on selecting the settings for your application). Click the `Create` button only after taking into consideration the following recommendations:
+2. Azure IoT Builder will guide you through the process of creating your application. Review and select the settings for your IoT Central application (if needed, refer to [Create an application](https://docs.microsoft.com/en-us/azure/iot-central/core/quick-deploy-iot-central) for additional guidance on selecting the settings for your application). Do not click the `Create` button just yet - only after reviewing and taking into consideration the following recommendations:
   
-    - Choose a unique `Application name` which will result in a unique `URL` for accessing your application. Azure IoT Builder will populate a suggested unique `Application name` which can/should be leveraged, resulting in a unique `URL`
+    - Selecting a name for your application: Azure IoT Builder will generate a suggested randomly-generated unique name for your application.  You are free to make modifications to the name, but it must be a **unique** `Application name` **without** using any spaces (which will then automatically result in a corresponding unique `URL` for accessing your application from a web browser).  Take note of the custom `Application name` assigned to your IoT Central application as it will be needed when it becomes time to register the device with the Device Provisioning Service (DPS) associated with your custom IoT Central application
 
-        <img src=".//media/image80a.png" style="width:5.5.in;height:2.53506in" alt="A screenshot of a cell phone Description automatically generated" />
+        NOTE: Make sure the `Application name` does **not** contain any spaces
 
-    - If you select the **Free** plan, you can connect up to 5 devices.  However, the free trial period will expire after 7 days which means a [paid pricing plan](https://azure.microsoft.com/en-us/pricing/details/iot-central/) will need to be selected to continue using the application.  Of course, there is nothing to stop you from creating a new free trial application but the device will need to be configured for the app from scratch.  Since the **Standard** plans each allow 2 free devices with no time-restricted trial period, if you only plan on evaluating 1 or 2 devices for connecting to the IoT Central app, then it's best to choose the **Standard 2** plan to get the highest total allowable number of messages (30K per month)
+        <img src=".//media/image80a.png">
+
+    - `Pricing plan` selection: If you select the **Free** plan, you can connect up to 5 devices.  However, the free trial period will expire after 7 days which means a [paid pricing plan](https://azure.microsoft.com/en-us/pricing/details/iot-central/) will need to be selected to continue using the application.  Of course, there is nothing to stop you from creating a new free trial application but the device will need to be configured for the new app from scratch.  Since the **Standard** plans each allow 2 free devices with no time-restricted trial period, if you only plan on evaluating 1 or 2 devices for connecting to the IoT Central app, then it's best to choose the **Standard 2** plan to get the highest total allowable number of messages (30K per month)
 
         <img src=".//media/image80b.png" style="width:6.5.in;height:3.63506in" alt="A screenshot of a cell phone Description automatically generated" />
 
-    - `Billing info` section: If there is an issue with selecting an existing subscription in the drop-down list (or no subscriptions appear in the list at all), click on the `Create subscription` link to create a new subscription to use for the creation of this application
+    - `Billing info` section: If there is an issue with selecting an existing subscription in the drop-down list (or no subscriptions appear in the list at all), click on the `Create subscription` link to create a new subscription to use for the creation of this application (you will be asked to create an Azure account and provide credit card information but don't worry - you will not be charged since you are only connecting one device to the application)
     
         <img src=".//media/image80c.png" style="width:6.5.in;height:2.53506in" alt="A screenshot of a cell phone Description automatically generated" />
 
-3. Create an X.509 enrollment group for your IoT Central application. If not already opened, launch your IoT Central application and navigate to `Administration` in the left pane and select `Device connection`
+3. Register the device certificate with your custom IoT Central application by running the [pyazureutils](https://pypi.org/project/pyazureutils/) utility supplied by Microchip (which should already be installed).
 
-4. Select `+ Create enrollment group`, and create a new enrollment group using any name (Group type = `IoT devices`, attestation type = `Certificates (X.509)`).  Hit `Save` when finished
+    - Refer to the [Dev Tools Installation](./Dev_Tools_Install.md) procedure and confirm that `Azure CLI`, `Python`, and `pyazureutils` have all been installed. The device certificate should reside in the `.microchip_iot` folder which was generated by the IoT Provisioning Tool, so `pyazureutils` will look in that folder to grab the correct certificate used during the attestation process required for connecting a device to your IoT Central application
+    
+    - Launch a `Command Prompt` or `PowerShell` window and then execute the following command (where <YOUR_CUSTOM_APP_NAME> is the unique `Application name` which was set in the previous step).  You will be prompted to log into your Microsoft Azure account if you are not currently signed in
 
-    <img src=".//media/image81.png" style="width:6.5.in;height:4.43506in" alt="A screenshot of a cell phone Description automatically generated" />
+        ```bash
+        pyazureutils iotcentral register-device --application-name <YOUR_CUSTOM_APP_NAME>
+        ```
 
-5. Now that the new enrollment group has been created, select `+ Manage Primary`.
+    - The final output messages should look something like the following:
 
-6. Select the file/folder icon associated with the `Primary` field and upload the root certificate file `root-ca.crt` (located in the `.microchip_iot` folder that was created when you ran the `IoT Provisioning Tool`).  The message `(!) Needs verification` should appear.  The `Subject` and `Thumbprint` fields will automatically populate themselves.
+        ```bash
+        Using kit 'MCHP3261021800002492'
+        Using certificate file '/Users/c14166/.microchip-iot/MCHP3261021800002492/device.crt'
+        Certificate loaded
+        Extracting common name from certificate (to use as device ID)
+        Device ID will be: 'sn01234CB4D6759E60FE'
+        Retrieving device templates
+        Using device template: SAM-IoT WM (dtmi:modelDefinition:dftia5bwj:un5msohpx)
+        Creating device 'sn01234CB4D6759E60FE' from template 'dtmi:modelDefinition:dftia5bwj:un5msohpx'
+        Checking device
+        Creating device attestation using certificate
+        Checking device attestation
+        Registration complete!
+        ```
 
-7.	Click `Generate verification code` (this code will be copied to the clipboard which will be needed in a future step)
+    NOTE: This command will fail if the custom application name contains one or more spaces. To resolve it, go back to the `Your application` page (accessed by clicking `Administration` under `App settings` in the navigation pane of your [IoT Central application](https://apps.azureiotcentral.com)) and rename your application (removing all spaces).  If the `pyazureutils` command continues to fail, follow the procedure for [Creating an X.509 Enrollment Group](./IoT_Central_Enrollment_Group.md) to get your device connected using the group enrollment method
 
-8. Open a Git Bash window (Start menu &gt; type `Git Bash`)
+    **Future Consideration**: An enrollment group is an entry for a group of devices that share a common attestation mechanism. Using an enrollment group is recommended for a large number of devices that share an initial configuration, or for devices that go to the same tenant. Devices that use either symmetric key or X.509 certificates attestation are supported. [Create an X.509 Enrollment Group](./IoT_Central_Enrollment_Group.md) for your IoT Central application should the need ever arise in the future, when tens, hundreds, thousands, or even millions of devices (that are all derived from the same root certificate) need to connect to an application...
 
-    <img src=".//media/image15.png" style="width:3.21739in;height:0.94745in" alt="A picture containing ball, clock Description automatically generated" />
+4. Launch a terminal emulator window and connect to the COM port corresponding to the PIC-IoT board at `9600 baud`.  In the terminal window, hit `[RETURN]` to get the list of available commands for the CLI
 
-9. Using the Git Bash command line, navigate to your certificates folder (which was generated by the `IoT Provisioning Tool`)
+    <img src=".//media/image83.png">
 
-    ```bash
-    cd <path>\.microchip-iot
-    ```
+5.	Look up the `ID Scope` for the DPS created/used by your IoT Central application (using the left-hand navigation pane, select `Administration` > `Device connection`).  The `ID Scope` will be programmed/saved into the [ATECC608A](https://www.microchip.com/wwwproducts/en/atecc608a) secure element on the board in the next step
 
-10. Execute the below command in the Git Bash window (copy and paste for best results)
+    <img src=".//media/image84.png">
 
-    **Note**: Once you enter the below command, you will then be asked to enter information for various fields that will be incorporated into your certificate request. Enter the verification code (which was just generated previously) when prompted for the `Common Name`. It's recommended to just copy the Verification code to the clipboard and paste it when it's time to enter the `Common Name`.  For the rest of the fields, you can enter anything you want (or just hit `[RETURN]` to keep them blank which is fine for basic demonstration purposes).  If you accidentally hit `[RETURN]` when asked for the `Common Name`, you will need to run the command again...
+6. In the terminal emulator window, confirm that `local echo` is enabled in the terminal settings.  At the CLI prompt, type in the `idscope <ID-scope>` command to set it (which gets saved in the [ATECC608A](https://www.microchip.com/wwwproducts/en/atecc608a) secure element on the board) and then hit `[RETURN]`.  The ID Scope can be read out from the board by issuing the `idscope` command without specifying any parameter on the command line
 
-    ```bash
-    openssl req -new -key root-ca.key -out azure_root_ca_verification.csr
-    ```
-    <img src=".//media/image16.png" style="width:5.in;height:3.18982in" alt="A screenshot of a cell phone Description automatically generated" />
+    <img src=".//media/image85.png">
 
-11. Generate the verification certificate by executing the following command (copy and paste for best results)
+7. Using the CLI prompt, type in the `reset` command and hit `[RETURN]`
 
-    ```bash
-    openssl x509 -req -in azure_root_ca_verification.csr -CA root-ca.crt -CAkey root-ca.key -CAcreateserial -out azure_signer_verification.cer -days 365 -sha256
-    ```
+8. Wait for the PIC-IoT board to connect to your IoT Central’s DPS (it can take a few minutes for the LED's to stop flashing); eventually the Blue and Green LEDs should both stay constantly ON
 
-12. Click `Verify` and select the `azure_signer_verification.cer` file to upload.  Confirm that the `Primary` certificate has been verified and that a `Thumbprint` has been generated for your certificate.  Click on `Close` to exit the window.  The X.509 enrollment group should be ready to go!
+    NOTE: If the Red LED comes on, then something was incorrectly programmed (e.g. ID scope is invalid or was entered/saved incorrectly)
 
-    <img src=".//media/image82.png" style="width:5.in;height:2.18982in" alt="A screenshot of a cell phone Description automatically generated" />
+9. Go back to your web browser to access the Azure IoT Central application.  Use the left-hand side pane and select `Devices` > `All Devices`.  Confirm that your device is listed – the device name & ID should both be equal to the Common Name of the device certificate (which should be `sn + {17-digit device ID}`)
 
-13. Launch a terminal emulator window and connect to the COM port corresponding to the PIC-IoT board at `9600` baud.  In the terminal window, hit `[RETURN]` to get the list of available commands for the CLI
+    <img src=".//media/image86.png">
 
-    <img src=".//media/image83.png" style="width:5.in;height:3.18982in" alt="A screenshot of a cell phone Description automatically generated" />
+    NOTE: The device ID can be read out from the board at any time using the CLI `device` command.  This value is basically the serial number which has been pre-programmed into the [ATECC608A](https://www.microchip.com/wwwproducts/en/atecc608a) secure element by Microchip
 
-14.	Look up the `ID Scope` for the DPS created/used by your IoT Central application (using the left-hand navigation pane, select `Administration` > `Device connection`).  The `ID Scope` will be programmed/saved into the [ATECC608A](https://www.microchip.com/wwwproducts/en/atecc608a) secure element on the board in the next step
+10. If desired, change the Device name by clicking on `Manage device` > `Rename`
 
-    <img src=".//media/image84.png" style="width:5.in;height:3.18982in" alt="A screenshot of a cell phone Description automatically generated" />
+    <img src=".//media/image87.png">
 
-15. In the terminal emulator window, confirm that `local echo` is enabled in the terminal settings.  At the CLI prompt, type in the `idscope <ID-scope>` command to set it (which gets saved in the [ATECC608A](https://www.microchip.com/wwwproducts/en/atecc608a) secure element on the board) and then hit `[RETURN]`.  The ID Scope can be read out from the board by issuing the `idscope` command without specifying any parameter on the command line
-
-    <img src=".//media/image85.png" style="width:5.in;height:3.18982in" alt="A screenshot of a cell phone Description automatically generated" />
-
-16. Using the CLI prompt, type in the command `reset` and hit `[RETURN]`
-
-17. Wait for the PIC-IoT board to connect to your IoT Central’s DPS (it can take a few minutes for the LED's to stop flashing); eventually the Blue and Green LEDs should both stay constantly ON
-
-    NOTE: If the Red LED comes on, then something was incorrectly programmed (e.g. ID scope was entered incorrectly)
-
-18. Go back to your web browser to access the Azure IoT Central application.  Use the left-hand side pane and select `Devices` > `All Devices`.  Confirm that your device is listed – the device name & ID is the Common Name of the device certificate (which should be `sn + {17-digit device ID}`)
-
-    <img src=".//media/image86.png" style="width:5.in;height:1.38982in" alt="A screenshot of a cell phone Description automatically generated" />
-
-19. If desired, change the Device name by clicking on `Manage device` > `Rename`
-
-    <img src=".//media/image87.png" style="width:5.in;height:1.18982in" alt="A screenshot of a cell phone Description automatically generated" />
-
-20. Click on the `Command` tab; type `PT5S` in the `Reboot delay` field and then click on `Run` to send the command to the device to reboot in 5 seconds
+11. Click on the `Command` tab; type `PT5S` in the `Reboot delay` field and then click on `Run` to send the command to the device to reboot in 5 seconds
 
     <img src=".//media/image88.png" style="width:5.in;height:1.58982in" alt="A screenshot of a cell phone Description automatically generated" />
 
-21. Within 5 seconds of sending the Reboot command, the PIC-IoT development board should reset itself.  Once the Blue and Green LED's stay constantly ON, press the SW0 and SW1 buttons
+12. Within 5 seconds of sending the Reboot command, the PIC-IoT development board should reset itself.  Once the Blue and Green LED's stay constantly ON, press the SW0 and SW1 buttons
 
     <img src=".//media/image89.png" style="width:5.in;height:1.28982in" alt="A screenshot of a cell phone Description automatically generated" />
 
-22. Click on the `Raw data` tab and confirm that the button press telemetry messages were received
+13. Click on the `Raw data` tab and confirm that the button press telemetry messages were received
 
     <img src=".//media/image90.png" style="width:5.in;height:1.98982in" alt="A screenshot of a cell phone Description automatically generated" />
 
-23. Click on the `Refresh` icon to display all messages received since the previous page refresh operation.  Confirm that periodic telemetry messages are being continuously received approximately every 10 seconds (the default interval value for the `telemetryInterval` property)
+14. Click on the `Refresh` icon to display all messages received since the previous page refresh operation.  Confirm that periodic telemetry messages are being continuously received approximately every 10 seconds (the default interval value for the `telemetryInterval` property)
 
     <img src=".//media/image91.png" style="width:5.in;height:1.58982in" alt="A screenshot of a cell phone Description automatically generated" />
 
     <img src=".//media/image92.png" style="width:5.in;height:2.12982in" alt="A screenshot of a cell phone Description automatically generated" />
 
-24. Increase the ambient light source shining on top of the board. Wait approximately 30 seconds.  Click on the `Refresh` icon to confirm that the light sensor value has increased
+15. Increase the ambient light source shining on top of the board. Wait approximately 30 seconds.  Click on the `Refresh` icon to confirm that the light sensor value has increased
 
-    <img src=".//media/image93.png" style="width:5.in;height:2.18982in" alt="A screenshot of a cell phone Description automatically generated" />
+    <img src=".//media/image93.png">
 
 ## Connect Device to the Dashboard for Data Visualization
 

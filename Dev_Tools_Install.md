@@ -1,30 +1,48 @@
 # Development Tools Installation
 
-1. Install the Microchip `MPLAB X` Tool Chain
+1. Install the Microchip `MPLAB X` tool chain for embedded code development
 
 - [MPLAB X IDE](https://www.microchip.com/mplab/mplab-x-ide)
 
 - [MPLAB XC16 Compiler](https://www.microchip.com/en-us/development-tools-tools-and-software/mplab-xc-compilers#tabs)
 
-- `MPLAB Code Configurator` (launch MPLAB X IDE &gt; click on `Tools` &gt; `Plugins Download` &gt; search for `MPLAB Code Configurator` and install it)
+- `MPLAB Code Configurator` (launch MPLAB X IDE &gt; click on `Tools` &gt; `Plugins Download` &gt; `Go to MPLAB X Plugin Manager` &gt; `Available Plugins` &gt; search for `mcc` and install it)
 
-    <img src=".//media/image10.png" style="width:5.17917in;height:3.98149in"/>
+    <img src=".//media/image10.png"/>
 
 2. Install [Git](https://git-scm.com)
 
-- Download/install the latest version of [Git for Windows](https://git-scm.com/download/win)
+- Download/install the latest version of [Git for Windows, macOS, or Linux](https://git-scm.com/downloads)
 
-- Verify working operation of the `Git Bash` prompt (click `Start` > type `Git Bash`)
+- Verify working operation of the `Git Bash` prompt (e.g. for Windows: click `Start` > type `Git Bash`)
 
     <img src=".//media/image15.png"/>
 
-3. Download the Microchip [IoT Provisioning Tool](https://www.microchip.com/design-centers/internet-of-things/iot-dev-kits/iot-provision-tool)
+3. Download the Microchip [IoT Provisioning Tool](https://www.microchip.com/design-centers/internet-of-things/iot-dev-kits/iot-provision-tool) which is used to generate the security certificates used for authentication and then store them into the [ATWINC1510](https://www.microchip.com/en-us/product/ATWINC1510) Wi-Fi controller module
 
-   - Connect the Microchip IoT Development Board to the Host PC using a standard micro-USB cable
-   - Launch `PowerShell` (click on `Start` > type `PowerShell` in the Search field > `Open`)
-   - Using the command line, go to the directory where the `iotprovision-bin` executable file resides (`\iotprovision-bin-1\windows64\`)
+   - Connect the Microchip PIC-IoT Development Board to the Host PC using a standard micro-USB cable
+   - Confirm that a device named `CURIOSITY` shows up as a disk drive on the `Desktop` or in a `File Explorer` window
+   - Launch a `Command Prompt` or `PowerShell` window (click on `Start` > type `PowerShell` in the Search field > `Open`)
+   - Using the command line, navigate to the directory where the `iotprovision-bin` executable file resides (`<my_path>\iotprovision-bin-1\windows64\`)
    - Execute the command
 
         ```shell
         .\iotprovision-bin.exe -c azure -m custom
         ```
+    - NOTE: You might notice one of the output messages displayed is "`Hexfile for 'Bundled Demo for azure' not found`" - this is expected and should be ignored
+
+4. Install the Microsoft [Azure Command Line Interface (CLI)](https://docs.microsoft.com/en-us/cli/azure/?view=azure-cli-latest). The Azure CLI is a set of commands used to create and manage Azure resources. The Azure CLI is available across Azure services and is designed to get you working quickly with Azure, with an emphasis on automation
+
+5. Install [Python](https://www.python.org)
+
+6. Install [pyazureutils](https://pypi.org/project/pyazureutils/) (a Microchip utility for interacting with Microsoft Azure web services via the Azure CLI)
+
+   - Launch a `Command Prompt` or `PowerShell` window (e.g. for Windows: click on `Start` > type `PowerShell` in the Search field > `Open`)
+   - Execute the following command
+
+        ```shell
+        pip install pyazureutils
+        ```
+
+7. Search for the location of the `pyazureutils.exe` program and add the absolute path to the Windows `PATH` environment variable
+
