@@ -18,13 +18,13 @@
 
     <img src=".//media/image15.png"/>
 
-3. Download and run Microchip's [IoT Provisioning Tool v2.5.16](https://github.com/microchip-pic-avr-tools/iotprovision-bin/releases/tag/v2.5.15) which is used to (1) generate the security certificates used for authentication and (2) store them into the [ATWINC1510](https://www.microchip.com/en-us/product/ATWINC1510) Wi-Fi controller module
+3. Download and run Microchip's [IoT Provisioning Tool](https://github.com/microchip-pic-avr-tools/iotprovision-bin/releases/latest) which is used to (1) generate the security certificates used for authentication and (2) store them into the [ATWINC1510](https://www.microchip.com/en-us/product/ATWINC1510) Wi-Fi controller module by executing the following steps:
 
    - Connect the Microchip PIC-IoT Development Board to the Host PC using a standard micro-USB cable
    - Confirm that a device named `CURIOSITY` shows up as a disk drive on the `Desktop` or in a `File Explorer` window
    - Launch a `Command Prompt` or `PowerShell` window (click on `Start` > type `PowerShell` in the Search field > `Open`)
    - Using the command line, navigate to the directory where the `iotprovision-bin` executable file resides (`<my_path>\iotprovision-bin-2\windows64\`)
-   - Execute the command
+   - Execute the following command line
 
         ```shell
         .\iotprovision-bin.exe -c azure
@@ -35,14 +35,13 @@
 
 5. Install [Python](https://www.python.org)
 
-6. Install [pyazureutils](https://pypi.org/project/pyazureutils/) (a Microchip utility for interacting with Microsoft Azure web services via the Azure CLI)
+6. Install [pyazureutils](https://pypi.org/project/pyazureutils/) (a Microchip utility for interacting with Microsoft Azure web services via the Azure CLI) by executing the following steps:
 
    - Launch a `Command Prompt` or `PowerShell` window (e.g. for Windows: click on `Start` > type `PowerShell` in the Search field > `Open`)
-   - Execute the following command
+   - Execute the following command line
 
         ```shell
         pip install pyazureutils
         ```
-
-7. Search for the location of the `pyazureutils.exe` program and add the absolute path to the Windows `PATH` environment variable
+   - Search for the location of the `pyazureutils.exe` program and add the absolute path to the Windows `PATH` environment variable
 
