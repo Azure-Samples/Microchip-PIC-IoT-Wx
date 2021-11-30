@@ -16,6 +16,7 @@ The web UI lets you quickly connect devices, monitor device conditions, create r
 
 As a solution builder, you can use IoT Central to develop a cloud-hosted IoT solution that uses IoT Plug and Play devices. IoT Plug and Play devices connect directly to an IoT Central application where you can use customizable dashboards to monitor and control your devices. You can also use device templates in the IoT Central web UI to create and edit [Device Twins Definition Language (DTDL)](https://github.com/Azure/opendigitaltwins-dtdl) models.
 
+**NOTE**: If you run into issues, please see the below [FAQ](#faq) section for possible solutions.
 ## Program the Plug and Play Demo
 
 1. Clone/download the MPLAB X demo project by issuing the following commands in a `Command Prompt` or `PowerShell` window
@@ -218,3 +219,13 @@ To create additional tiles for your IoT Central dashboard, refer to [Configure t
 <img src=".//media/image97.png" style="width:5.in;height:3.34982in" alt="A screenshot of a cell phone Description automatically generated" />
 
 <img src=".//media/image98.png" style="width:5.in;height:3.34982in" alt="A screenshot of a cell phone Description automatically generated" />
+
+## FAQ
+
+- The board isn't showing up on my computer as a drive?
+
+> Try using a different cable. Some micro USB cables are power only and you need a power and data cable.
+
+- My board won't connect to the WiFi?
+
+> Make sure your WiFi doesn't have spaces in the SSID or password. Also, this board can only connect to 2.4GHz bands. Make sure the network you are connected to isn't 5GHz.
