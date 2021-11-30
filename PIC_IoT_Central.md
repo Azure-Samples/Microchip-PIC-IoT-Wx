@@ -245,3 +245,7 @@ To create additional tiles for your IoT Central dashboard, refer to [Configure t
 - The `pyazureutils` utility can't be found when I invoke it?
 
 > Make sure the path to the util is added to your `PATH` environment variable. [Link here for Windows instructions](https://docs.microsoft.com/previous-versions/office/developer/sharepoint-2010).
+
+- I am getting an error similar to `sn0123342F748ACFD3FE ERROR ERROR BSD: BSD_send() wincSendReturn (-14)`?
+
+> Try issuing the `reset` CLI command. A networking configuration might need to be initialized via a reboot.
