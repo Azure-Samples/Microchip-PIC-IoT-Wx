@@ -10,7 +10,7 @@
 
     <img src=".//media/image10.png"/>
 
-2. Install [Git](https://git-scm.com)
+2. Install [Git](https://git-scm.com) (a free and open source distributed version control system)
 
 - Download/install the latest version of [Git for Windows, macOS, or Linux](https://git-scm.com/downloads)
 
@@ -29,7 +29,6 @@
         ```shell
         .\iotprovision-bin.exe -c azure
         ```
- 
 
 4. Install the Microsoft [Azure Command Line Interface (CLI)](https://docs.microsoft.com/en-us/cli/azure/?view=azure-cli-latest). The Azure CLI is a set of commands used to create and manage Azure resources. The Azure CLI is available across Azure services and is designed to get you working quickly with Azure, with an emphasis on automation
 
