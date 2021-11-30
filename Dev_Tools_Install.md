@@ -24,7 +24,7 @@
    - Confirm that a device named `CURIOSITY` shows up as a disk drive on the `Desktop` or in a `File Explorer` window
    - Launch a `Command Prompt` or `PowerShell` window (click on `Start` > type `PowerShell` in the Search field > `Open`)
    - Using the command line, navigate to the directory where the `iotprovision-bin` executable file resides (`<my_path>\iotprovision-bin-2\windows64\`)
-   - Execute the following command line
+   - Execute the following command line to launch the provisioning script
 
         ```shell
         .\iotprovision-bin.exe -c azure
@@ -37,10 +37,16 @@
 6. Install [pyazureutils](https://pypi.org/project/pyazureutils/) (a Microchip utility for interacting with Microsoft Azure web services via the Azure CLI) by executing the following steps:
 
    - Launch a `Command Prompt` or `PowerShell` window (e.g. for Windows: click on `Start` > type `PowerShell` in the Search field > `Open`)
-   - Execute the following command line
+   - Execute the following command line to install the utility program
 
         ```shell
         pip install pyazureutils
         ```
-   - Search for the location of the `pyazureutils.exe` program and add the absolute path to the Windows `PATH` environment variable
+   - Bring up the help menu to verify that the `pyazureutils.exe` program can be found
+ 
+        ```shell
+        pyazureutils --help
+        ```
+
+        NOTE: If the `pyazureutils` command cannot be found/executed, search for the location of the `pyazureutils.exe` program and add the absolute path of its location to the Windows `PATH` environment variable. Launch a new command line window and try bringing up the help menu again
 
