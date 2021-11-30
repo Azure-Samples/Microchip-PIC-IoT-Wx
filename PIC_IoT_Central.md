@@ -233,3 +233,7 @@ To create additional tiles for your IoT Central dashboard, refer to [Configure t
 - How do I know that my board is connected to WiFi?
 
 > The blue LED should be constantly on. A possible tip is to use your phone as a hotspot. Generally phones will let you know with a notification that a device connected to it. Note that if you are using an iPhone, make sure "Maximize Compatibility" is turned on.
+
+- I can't see my commands being typed on the terminal?
+
+> Try using [TeraTerm](https://osdn.net/projects/ttssh2/releases/). The defaults settings seem to work the best and it has additional features like session resumption and auto-finding serial connections.
