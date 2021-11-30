@@ -232,7 +232,7 @@ To create additional tiles for your IoT Central dashboard, refer to [Configure t
 
 - How do I know that my board is connected to WiFi?
 
-> The blue LED should be constantly on. A possible tip is to use your phone as a hotspot. Generally phones will let you know with a notification that a device connected to it. Note that if you are using an iPhone, make sure "Maximize Compatibility" is turned on.
+> The blue LED should be constantly on. A possible tip is to use your phone as a hotspot. Generally phones will let you know with a notification that a device connected to it. Note that if you are using an iPhone, make sure "Maximize Compatibility" is turned on. You can also change the name of your WiFi hotspot on an iPhone by going to `Settings -> General -> About` and the top option `Name` can be update to a name without spaces.
 
 - I can't see my commands being typed on the terminal?
 
