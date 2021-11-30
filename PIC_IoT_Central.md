@@ -241,3 +241,7 @@ To create additional tiles for your IoT Central dashboard, refer to [Configure t
 - The provisioning tool doesn't seem to be working?
 
 > Make sure MPLAB X is **NOT** open while running the provisioning tool.
+
+- The `pyazureutils` utility can't be found when I invoke it?
+
+> Make sure the path to the util is added to your `PATH` environment variable. [Link here for Windows instructions](https://docs.microsoft.com/previous-versions/office/developer/sharepoint-2010).
