@@ -229,3 +229,7 @@ To create additional tiles for your IoT Central dashboard, refer to [Configure t
 - My board won't connect to the WiFi?
 
 > Make sure your WiFi doesn't have spaces in the SSID or password. Also, this board can only connect to 2.4GHz bands. Make sure the network you are connected to isn't 5GHz.
+
+- How do I know that my board is connected to WiFi?
+
+> The blue LED should be constantly on. A possible tip is to use your phone as a hotspot. Generally phones will let you know with a notification that a device connected to it. Note that if you are using an iPhone, make sure "Maximize Compatibility" is turned on.
