@@ -237,3 +237,7 @@ To create additional tiles for your IoT Central dashboard, refer to [Configure t
 - I can't see my commands being typed on the terminal?
 
 > Try using [TeraTerm](https://osdn.net/projects/ttssh2/releases/). The defaults settings seem to work the best and it has additional features like session resumption and auto-finding serial connections.
+
+- The provisioning tool doesn't seem to be working?
+
+> Make sure MPLAB X is **NOT** open while running the provisioning tool.
