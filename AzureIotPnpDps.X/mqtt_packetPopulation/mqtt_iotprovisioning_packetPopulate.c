@@ -20,7 +20,7 @@
 #include "azure/iot/az_iot_hub_client.h"
 
 #ifdef CFG_MQTT_PROVISIONING_HOST
-#define HALF_SECOND timeout_mSecToTicks(500L)
+#define HALF_SECOND_MS timeout_mSecToTicks(500L)
 
 /**
 * @brief Provisioning polling interval.
@@ -131,7 +131,7 @@ void dps_client_register(uint8_t* topic, uint8_t* payload)
         }
 
         debug_printInfo("   DPS: ASSIGNING");
-        timeout_create(&dps_assigning_timer, HALF_SECOND * 2 * dps_register_response.retry_after_seconds);
+        timeout_create(&dps_assigning_timer, HALF_SECOND_MS * 2 * dps_register_response.retry_after_seconds);
     }
 }
 
@@ -187,7 +187,7 @@ static uint32_t dps_retry_task(void* payload)
         MQTT_CLIENT_iotprovisioning_connect((char* )device_id_buf);
         dps_retryTimer = 0;
     }
-    return HALF_SECOND;
+    return HALF_SECOND_MS;
 }
 
 /** \brief MQTT publish handler call back table.
@@ -336,7 +336,7 @@ void MQTT_CLIENT_iotprovisioning_connected()
 
         // keep retrying connecting to DPS
         dps_retryTimer = 0;
-        timeout_create(&dps_retry_timer, HALF_SECOND);
+        timeout_create(&dps_retry_timer, HALF_SECOND_MS);
     }
 
     if (!bRet)
