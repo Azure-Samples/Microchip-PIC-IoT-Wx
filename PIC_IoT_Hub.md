@@ -11,6 +11,56 @@ IoT Hub's capabilities help you build scalable, full-featured IoT solutions such
 ## Procedure
 
 ### **Enroll Device into DPS (Device Provisioning Service)**
+1. Generate certificates by running the Microchip IoT Provision tool
+        
+    `.\iotprovision-bin.exe -c azure`
+        
+    Output example:
+
+    ```
+    WARNING - Account setup for 'azure' not yet implemented
+
+    Upgrade debugger firmware if required...
+    Debugger firmware already up to date (1.22.73)
+
+    Upgrade WINC firmware if required...
+    Firmware 'iotprovision' version: 0.4.0
+    Querying current WINC firmware version
+    WINC firmware version: 19.6.5
+    WINC driver version: 19.3.0
+    WINC firmware is already up to date.
+    Skipping upgrade.
+
+    Generate certificates if required...
+    Creating root of trust...
+
+    Provisioning PIC-IoT WG for azure ...
+    Firmware 'iotprovision-azure' version: 0.4.0
+    Loading root CA certificate``
+        Loading from C:\Users\username\.microchip-iot\root-ca.crt       
+    Loading signer CA certificate
+        Loading from C:\Users\username\.microchip-iot\signer-ca.crt
+    Erase WINC TLS certificate sector
+    WINC erase TLS certificate sectors
+    WINC Erase sector at address 0x005000
+    WINC Erase sector at address 0x006000
+    Generating device certificate
+    Provisioning device with credentials
+    Send Device Certificate
+    Send Signer Certificate
+    Transfer certificates to WINC
+    WINC write 1470 bytes to address 0x5000
+    Replacing click-me link for 'azure'
+    Done provisioning device 'sn012377D2FE4C840CFE'
+
+    Programming application: Bundled Demo for azure...
+    Firmware 'demo-azure' version: v1.1.1
+
+
+    Rebooting debugger...
+
+    Done.
+    ```
 
 1. Set up certificates for the verification process:
 
@@ -18,7 +68,7 @@ IoT Hub's capabilities help you build scalable, full-featured IoT solutions such
 
     - Copy all `*.crt` files and rename them each to `*.pem`
 
-2. In the [Microsoft Azure Portal](https://portal.azure.com/#home), upload the root CA cert `root-ca.pem` in DPS and do proof-of-possession for X.509 CA certificates with your Device Provisioning Service
+1. In the [Microsoft Azure Portal](https://portal.azure.com/#home), upload the root CA cert `root-ca.pem` in DPS and do proof-of-possession for X.509 CA certificates with your Device Provisioning Service
 
 - Register the public part of an X.509 certificate and get a verification code
 
