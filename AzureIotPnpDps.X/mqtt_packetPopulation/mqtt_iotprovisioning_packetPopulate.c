@@ -20,7 +20,17 @@
 #include "azure/iot/az_iot_hub_client.h"
 
 #ifdef CFG_MQTT_PROVISIONING_HOST
-#define HALF_SECOND timeout_mSecToTicks(500L)
+#define HALF_SECOND_MS timeout_mSecToTicks(500L)
+
+/**
+* @brief Provisioning polling interval.
+*
+* @details This is used for cases where the service does not supply a retry-after hint during the 
+*          register and query operations.
+*/
+#ifndef PROVISIONING_POLLING_INTERVAL_S
+    #define PROVISIONING_POLLING_INTERVAL_S (3U)
+#endif
 
 extern void iot_provisioning_completed(void);
 pf_MQTT_CLIENT pf_mqtt_iotprovisioning_client = {
@@ -67,19 +77,21 @@ void dps_client_register(uint8_t* topic, uint8_t* payload)
                     az_span_create(payload, payload_len),
                     &dps_register_response)))
     {
-        debug_printError("   DPS: az_iot_provisioning_client_parse_received_topic_and_payload fail:%d\n", rc);
+        if ( rc != AZ_ERROR_IOT_TOPIC_NO_MATCH )
+        {
+            debug_printError("   DPS: az_iot_provisioning_client_parse_received_topic_and_payload fail:%d\n", rc);
+        }
+        else
+        {
+            debug_printWarn("   DPS: ignoring unknown topic.\n");
+        }
     }
-    else
+    else if (az_iot_provisioning_client_operation_complete (dps_register_response.operation_status))
     {
         switch (dps_register_response.operation_status)
         {
-            case AZ_IOT_PROVISIONING_STATUS_ASSIGNING:
-                debug_printInfo("   DPS: ASSIGNING");
-                timeout_create(&dps_assigning_timer, HALF_SECOND * 2 * dps_register_response.retry_after_seconds);
-                break;
-
             case AZ_IOT_PROVISIONING_STATUS_ASSIGNED:
-                debug_printInfo("   DPS: ASSIGNED");
+                debug_printGood("   DPS: ASSIGNED");
                 timeout_delete(&dps_retry_timer);
                 az_span_to_str(hub_hostname_buf, sizeof(hub_hostname_buf), dps_register_response.registration_state.assigned_hub_hostname);
                 hub_hostname = hub_hostname_buf;
@@ -90,18 +102,36 @@ void dps_client_register(uint8_t* topic, uint8_t* payload)
                 break;
 
             case AZ_IOT_PROVISIONING_STATUS_FAILED:
-                debug_printError("   DPS: FAILED");
+                debug_printError("   DPS: FAILED with error %lu: TrackingID: [%.*s] \"%.*s\"",
+                    (unsigned long)dps_register_response.registration_state.extended_error_code,
+                    (size_t)az_span_size(dps_register_response.registration_state.error_tracking_id),
+                    (char *)az_span_ptr(dps_register_response.registration_state.error_tracking_id),
+                    (size_t)az_span_size(dps_register_response.registration_state.error_message),
+                    (char *)az_span_ptr(dps_register_response.registration_state.error_message));
+
                 LED_SetRed(LED_STATE_BLINK_FAST);
                 break;
 
             case AZ_IOT_PROVISIONING_STATUS_DISABLED:
-                debug_printError("   DPS: DISABLED");
+                debug_printError("   DPS: device is DISABLED");
                 LED_SetRed(LED_STATE_BLINK_FAST);
                 break;
 
             default:
+                debug_printError("   DPS: unexpected status: %d\n", (int)dps_register_response.operation_status);
+                LED_SetRed(LED_STATE_BLINK_FAST);
                 break;
         }
+    }
+    else // Operation is not complete.
+    {
+        if (dps_register_response.retry_after_seconds == 0)
+        {
+            dps_register_response.retry_after_seconds = PROVISIONING_POLLING_INTERVAL_S;
+        }
+
+        debug_printInfo("   DPS: ASSIGNING");
+        timeout_create(&dps_assigning_timer, HALF_SECOND_MS * 2 * dps_register_response.retry_after_seconds);
     }
 }
 
@@ -157,7 +187,7 @@ static uint32_t dps_retry_task(void* payload)
         MQTT_CLIENT_iotprovisioning_connect((char* )device_id_buf);
         dps_retryTimer = 0;
     }
-    return HALF_SECOND;
+    return HALF_SECOND_MS;
 }
 
 /** \brief MQTT publish handler call back table.
@@ -306,7 +336,7 @@ void MQTT_CLIENT_iotprovisioning_connected()
 
         // keep retrying connecting to DPS
         dps_retryTimer = 0;
-        timeout_create(&dps_retry_timer, HALF_SECOND);
+        timeout_create(&dps_retry_timer, HALF_SECOND_MS);
     }
 
     if (!bRet)
