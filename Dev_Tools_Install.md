@@ -34,9 +34,7 @@ Please install the following software in the exact order listed:
 
 4. Install the Microsoft [Azure Command Line Interface (CLI)](https://docs.microsoft.com/en-us/cli/azure/?view=azure-cli-latest). The Azure CLI is a set of commands used to create and manage Azure resources. The Azure CLI is available across Azure services and is designed to get you working quickly with Azure, with an emphasis on automation
 
-5. Install [Python](https://www.python.org). During the installation setup, be sure to check the option to "Add Python <X.Y> to PATH"
-
-    <img src=".//media/image116.png"/>
+5. Install the latest [Python](https://www.python.org) release. During the installation setup, be sure to enable/check the option for `Add Python <X.Y> to PATH`
 
 6. Install [pyazureutils](https://pypi.org/project/pyazureutils/) (a Microchip utility for interacting with Microsoft Azure web services via the Azure CLI) by executing the following steps:
 
