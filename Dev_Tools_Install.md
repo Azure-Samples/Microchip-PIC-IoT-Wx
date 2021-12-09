@@ -1,5 +1,7 @@
 # Development Tools Installation
 
+Please install the following software in the exact order listed:
+
 1. Install the Microchip `MPLAB X` tool chain for embedded code development
 
 - [MPLAB X IDE](https://www.microchip.com/mplab/mplab-x-ide)
@@ -32,7 +34,7 @@
 
 4. Install the Microsoft [Azure Command Line Interface (CLI)](https://docs.microsoft.com/en-us/cli/azure/?view=azure-cli-latest). The Azure CLI is a set of commands used to create and manage Azure resources. The Azure CLI is available across Azure services and is designed to get you working quickly with Azure, with an emphasis on automation
 
-5. Install [Python](https://www.python.org)
+5. Install the latest [Python](https://www.python.org) release. During the installation setup, be sure to enable/check the option for `Add Python <X.Y> to PATH`
 
 6. Install [pyazureutils](https://pypi.org/project/pyazureutils/) (a Microchip utility for interacting with Microsoft Azure web services via the Azure CLI) by executing the following steps:
 
@@ -48,5 +50,5 @@
         pyazureutils --help
         ```
 
-        NOTE: If the `pyazureutils` command cannot be found/executed, search for the location of the `pyazureutils.exe` program and add the absolute path of its location to the Windows `PATH` environment variable. Launch a new command line window and try bringing up the help menu again
+        NOTE: If the `pyazureutils` command cannot be found nor executed, search for the location of the `pyazureutils.exe` program and add the absolute path of its location to the Windows `PATH` environment variable. Launch a new command line window and try bringing up the help menu again
 
