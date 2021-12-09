@@ -50,7 +50,7 @@ As a solution builder, you can use IoT Central to develop a cloud-hosted IoT sol
     >debug 0
     ```
 
-6. Set the Wi-Fi credentials used by your board whenever it tries to connect to an Access Point.  Execute the following `wifi` command on the CLI
+6. Set the Wi-Fi credentials used by your board whenever it tries to connect to an Access Point (which must be operating in the 2.4 GHz band). If an iPhone is being used as a hotspot, the `Maximize Compatibility` option must be enabled. Execute the following `wifi` command on the CLI
 
     ```bash
     wifi <NETWORK_SSID>,<PASSWORD>,<SECURITY_OPTION[1=Open|2=WPA|3=WEP]>
@@ -60,7 +60,7 @@ As a solution builder, you can use IoT Central to develop a cloud-hosted IoT sol
     wifi MyWirelessRouter,MyRoutersPassword,2
     ```
 
-    Once these credentials have been used to successfully connect to Wi-Fi once, they will be stored in the board and will be used in all subsequent Wi-Fi connection attempts.  In other words, the `wifi` command only needs to be executed successfully one time for your Access Point.
+    Once these credentials have been used to successfully connect to Wi-Fi once, they will be stored in the board and will be used in all subsequent Wi-Fi connection attempts.  In other words, the `wifi` command only needs to be executed successfully one time for your 2.4 GHz Access Point.  As an alternative, the Wi-Fi credentials can also be configured by using the [Wi-Fi Configuration online tool](https://iot.microchip.com/wificfg).
 
 7. At the CLI prompt, type in the `reset` command and hit `[RETURN]` to restart the host application.  The application will try to connect to Wi-Fi using the credentials that were specified in the last accepted `wifi` command.  The Blue LED should eventually stay solidly ON to signify that the SAM-IoT board has successfully connected to the wireless router
 

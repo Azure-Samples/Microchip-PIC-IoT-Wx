@@ -188,7 +188,7 @@ Select `Enrollment Groups` tab:
     >debug 0
     ```
 
-6. Set the Wi-Fi credentials used by your board whenever it tries to connect to an Access Point.  Execute the following `wifi` command on the CLI
+6. Set the Wi-Fi credentials used by your board whenever it tries to connect to an Access Point (which must be operating in the 2.4 GHz band). If an iPhone is being used as a hotspot, the `Maximize Compatibility` option must be enabled. Execute the following `wifi` command on the CLI
 
     ```bash
     wifi <NETWORK_SSID>,<PASSWORD>,<SECURITY_OPTION[1=Open|2=WPA|3=WEP]>
@@ -198,7 +198,7 @@ Select `Enrollment Groups` tab:
     wifi MyWirelessRouter,MyRoutersPassword,2
     ```
 
-    Once these credentials have been used to successfully connect to Wi-Fi once, they will be stored in the board and will be used in all subsequent Wi-Fi connection attempts.  In other words, the `wifi` command only needs to be executed successfully one time for your Access Point.
+    Once these credentials have been used to successfully connect to Wi-Fi once, they will be stored in the board and will be used in all subsequent Wi-Fi connection attempts.  In other words, the `wifi` command only needs to be executed successfully one time for your 2.4 GHz Access Point.  As an alternative, the Wi-Fi credentials can also be configured by using the [Wi-Fi Configuration online tool](https://iot.microchip.com/wificfg).
 
 7. Look up the ID Scope corresponding to your DPS in the Microsoft Azure Portal.  This value is displayed in a web browser when clicking on `Overview` on the DPS resource page (the DPS was created earlier using a web page on the Azure Portal).  The ID Scope is programmed/saved into the PIC-IoT board in the next step using a CLI command (allowing you to change the ID Scope for the board without having to reprogram the MCU's application firmware)
 
