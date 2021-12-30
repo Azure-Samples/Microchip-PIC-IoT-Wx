@@ -42,12 +42,12 @@ Please install the following software in the exact order listed:
    - Execute the following command line to install the utility program
 
         ```shell
-        pip install pyazureutils
+        pip install --upgrade pyazureutils
         ```
-   - Bring up the help menu to verify that the `pyazureutils.exe` program can be found
+   - Bring up the IoT Central's specific help menu to verify that the `pyazureutils.exe` program can be found
  
         ```shell
-        pyazureutils --help
+        pyazureutils iotcentral --help
         ```
 
         NOTE: If the `pyazureutils` command cannot be found nor executed, search for the location of the `pyazureutils.exe` program and add the absolute path of its location to the Windows `PATH` environment variable. Launch a new command line window and try bringing up the help menu again
