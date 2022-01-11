@@ -62,7 +62,7 @@ As a solution builder, you can use IoT Central to develop a cloud-hosted IoT sol
 
     Once these credentials have been used to successfully connect to Wi-Fi once, they will be stored in the board and will be used in all subsequent Wi-Fi connection attempts.  In other words, the `wifi` command only needs to be executed successfully one time for your 2.4 GHz Access Point.  As an alternative, the Wi-Fi credentials can also be configured by using the [Wi-Fi Configuration online tool](https://iot.microchip.com/wificfg).
 
-7. At the CLI prompt, type in the `reset` command and hit `[RETURN]` to restart the host application.  The application will try to connect to Wi-Fi using the credentials that were specified in the last accepted `wifi` command.  The Blue LED should eventually stay solidly ON to signify that the SAM-IoT board has successfully connected to the wireless router
+7. At the CLI prompt, type in the `reset` command and hit `[RETURN]` to restart the host application.  The application will try to connect to Wi-Fi using the credentials that were specified in the last accepted `wifi` command.  The Blue LED should eventually stay solidly ON to signify that the PIC-IoT board has successfully connected to the wireless router.
 
 ## Create an IoT Central Application
 
