@@ -126,9 +126,9 @@ IoT Central allows you to create an application dashboard to monitor the telemet
 
     <img src=".//media/image83.png">
 
-6.	Look up the `ID Scope` for the DPS created/used by your IoT Central application (using the left-hand navigation pane, select `Administration` > `Device connection`).  The `ID Scope` will be programmed/saved into the [ATECC608A](https://www.microchip.com/wwwproducts/en/atecc608a) secure element on the board in the next step
+6.	Look up the `ID Scope` for your IoT Central application (using the left-hand navigation pane, select `Permissions` > `Device connection groups`).  The `ID Scope` will be programmed/saved into the [ATECC608A](https://www.microchip.com/wwwproducts/en/atecc608a) secure element on the board in the next step
 
-    <img src=".//media/image84.png">
+    <img src=".//media/image84a.png">
 
 7. In the terminal emulator window, confirm that `local echo` is enabled in the terminal settings.  At the CLI prompt, type in the `idscope <ID-scope>` command to set it (which gets saved in the [ATECC608A](https://www.microchip.com/wwwproducts/en/atecc608a) secure element on the board) and then hit `[RETURN]`.  The ID Scope can be read out from the board by issuing the `idscope` command without specifying any parameter on the command line
 
