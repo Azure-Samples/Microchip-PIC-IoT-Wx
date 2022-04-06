@@ -1,5 +1,7 @@
 # Connecting the Microchip PIC-IoT Wx Development Board to Azure IoT Hub
 
+NOTE: Should you encounter any issues/obstacles with the following procedure, check out the [FAQ section](./FAQ.md)
+
 ## Introduction
 
 [Azure IoT Hub](https://docs.microsoft.com/en-us/azure/iot-hub/about-iot-hub) is a managed service, hosted in the Cloud, that acts as a central message hub for bi-directional communication between your IoT application and the devices it manages. You can use Azure IoT Hub to build IoT solutions with reliable and secure communications between millions of IoT devices and a cloud-hosted solution backend. You can connect virtually any device to IoT Hub.

@@ -22,6 +22,7 @@
   - [2. Connect Device to Azure IoT Services](#2-connect-device-to-azure-iot-services)
       - a. IoT Central (Recommended)
       - b. IoT Hub
+- [Frequently Asked Questions](#frequently-asked-questions)
 - [References](#references)
 - [Conclusion](#conclusion)
 
@@ -136,6 +137,10 @@ Click [here](https://docs.microsoft.com/en-us/azure/iot-central/overview-iot-opt
     IoT Hub's capabilities help you build scalable, full-featured IoT solutions such as managing industrial equipment used in manufacturing, tracking valuable assets in healthcare, and monitoring office building usage.
 
     Click this link for the programming procedure: [Connecting the Microchip PIC-IoT Wx Development Board to Azure IoT Hub](./PIC_IoT_Hub.md)
+
+## Frequently Asked Questions
+
+Having issues with connecting the board to Azure IoT Services? Check out the [FAQ section](./FAQ.md)
 
 ## References
 
