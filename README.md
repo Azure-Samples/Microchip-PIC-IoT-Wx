@@ -2,7 +2,7 @@
 
 ## Introduction
 
- This document describes how to connect the PIC-IoT Wx Development Board (featuring a 16-bit PIC24F MCU, ATECC608A secure element, and ATWINC1510 Wi-Fi module) to Azure IoT Central and/or Hub which leverages Microsoft’s Azure IoT Embedded C SDK. The PIC-IoT Wx Development Board will be provisioned for use with Azure IoT services using self-signed X.509 certificate-based authentication.
+ This document describes how to connect the PIC-IoT Wx Development Board (featuring a 16-bit PIC24F MCU, ATECC608B secure element, and ATWINC1510 Wi-Fi module) to Azure IoT Central and/or Hub which leverages Microsoft’s Azure IoT Embedded C SDK. The PIC-IoT Wx Development Board will be provisioned for use with Azure IoT services using self-signed X.509 certificate-based authentication.
 
 <img src=".//media/image1.png" />
 
@@ -46,11 +46,11 @@ allows the hardware to be provisioned securely to the right IoT Hub.
 
 This high-level architecture description summarizes the interactions between the PIC-IoT board and Azure. These are the major puzzle pieces that make up this enablement work of connecting PIC-IoT Wx Developoment Board to Azure through DPS using X.509-based authentication:
 
-- [ATECC608A](https://www.microchip.com/wwwproducts/en/ATECC608A): a secure element from the Microchip CryptoAuthentication portfolio. It securely stores a private key that is used to authenticate the hardware with cloud providers to uniquely identify every board
+- [ATECC608B](https://www.microchip.com/wwwproducts/en/ATECC608B): a secure element from the Microchip CryptoAuthentication portfolio. It securely stores a private key that is used to authenticate the hardware with cloud providers to uniquely identify every board
 
 - [ATWINC1510](https://www.microchip.com/wwwproducts/en/ATWINC1510): a low-power consumption Wi-Fi module that has access to the device certificate, signer CA certificate, and public key for mutual TLS handshaking between the board and the cloud
 
-- [IoT Provisioning Tool](https://www.microchip.com/design-centers/internet-of-things/iot-dev-kits/iot-provision-tool): Microchip-provided tool for provisioning self-signed certificate utilizing the unique serial number and private key stored in the ATECC608A secure element
+- [IoT Provisioning Tool](https://www.microchip.com/design-centers/internet-of-things/iot-dev-kits/iot-provision-tool): Microchip-provided tool for provisioning self-signed certificate utilizing the unique serial number and private key stored in the ATECC608B secure element
 
 - [Azure IoT Embedded C SDK](https://azure.microsoft.com/en-us/updates/embedded-c-sdk-general-availability/): Microsoft-provided API designed to allow small, low-cost embedded IoT devices to communicate with Azure services, serving as translation logic between the application code and transport client
 
@@ -62,9 +62,9 @@ This high-level architecture description summarizes the interactions between the
 
  <img src=".//media/image4.png"/>
 
-In a nutshell, we will use Microchip’s IoT Provisioning Tool to send a Certificate Signing Request (CSR) to the ATECC608A to generate a self-signed certificate chain which is then obtained by the ATWINC1510 Wi-Fi module to perform a TLS mutual handshake between the client (PIC-IoT board) and the server (Azure), specifically using DPS.
+In a nutshell, we will use Microchip’s IoT Provisioning Tool to send a Certificate Signing Request (CSR) to the ATECC608B to generate a self-signed certificate chain which is then obtained by the ATWINC1510 Wi-Fi module to perform a TLS mutual handshake between the client (PIC-IoT board) and the server (Azure), specifically using DPS.
 
-On successful authentication, the PIC-IoT board will be provisioned to the correct IoT Hub that is pre-linked to DPS during the setup process. We can then leverage the Azure IoT Central or IoT Explorer (web and graphical tools used for interacting with and testing your IoT devices). Note that the ATECC608A only contains the private key. The self-signed certificate chain including root CA, signer CA (or intermediate CA), and device is stored in the ATWINC1510 Wi-Fi module used for the TLS handshake.
+On successful authentication, the PIC-IoT board will be provisioned to the correct IoT Hub that is pre-linked to DPS during the setup process. We can then leverage the Azure IoT Central or IoT Explorer (web and graphical tools used for interacting with and testing your IoT devices). Note that the ATECC608B only contains the private key. The self-signed certificate chain including root CA, signer CA (or intermediate CA), and device is stored in the ATWINC1510 Wi-Fi module used for the TLS handshake.
 
 ### Azure IoT Embedded C SDK
 
@@ -80,7 +80,7 @@ Authentication consists of two parts:
 - Server authentication; the board authenticates the server
 - Client authentication; the server authenticates the board
 
-Server authentication happens transparently to the user since the ATWINC1510 on the PIC-IoT  board comes preloaded with the required CA certificate. During client authentication the client private key must be used, but since this is stored inside the ATECC608A chip and cannot be extracted, all calculations must be done inside the ATECC608A. The ATWINC1510 library offers an API to delegate the TLS calculations to the main application. The main application will in turn call the ATECC608A library API’s to perform the calculations. Before the TLS connection is complete, a shared secret key must be negotiated between the server and the client. This key is used to encrypt all future communications during the connection.
+Server authentication happens transparently to the user since the ATWINC1510 on the PIC-IoT  board comes preloaded with the required CA certificate. During client authentication the client private key must be used, but since this is stored inside the ATECC608B chip and cannot be extracted, all calculations must be done inside the ATECC608B. The ATWINC1510 library offers an API to delegate the TLS calculations to the main application. The main application will in turn call the ATECC608B library API’s to perform the calculations. Before the TLS connection is complete, a shared secret key must be negotiated between the server and the client. This key is used to encrypt all future communications during the connection.
 
 ### MQTT Connection
 
@@ -166,4 +166,4 @@ Refer to the following links for additional information for IoT Explorer, IoT Hu
 
 ## Conclusion
 
-You are now able to connect PIC-IoT to Azure IoT services using self-signed X.509 certificate-based authentication and have deeper knowledge of how all the pieces of the puzzle fit together from the ATECC608A secure element, ATWINC1510 Wi-Fi, Azure Embedded C SDK, and Azure IoT Hub/Central/DPS. Let’s start thinking out of the box and see how you can apply this project to provision securely and quickly a massive number of Microchip devices to Azure and safely manage them through the entire product life cycle.
+You are now able to connect PIC-IoT to Azure IoT services using self-signed X.509 certificate-based authentication and have deeper knowledge of how all the pieces of the puzzle fit together from the ATECC608B secure element, ATWINC1510 Wi-Fi, Azure Embedded C SDK, and Azure IoT Hub/Central/DPS. Let’s start thinking out of the box and see how you can apply this project to provision securely and quickly a massive number of Microchip devices to Azure and safely manage them through the entire product life cycle.
