@@ -206,7 +206,7 @@ Select `Enrollment Groups` tab:
 
     <img src=".//media/image23.png"/>
 
-8. In the terminal emulator window, confirm that `local echo` is enabled in the terminal settings.  At the CLI prompt, type in the command `idscope <MY_ID_SCOPE>` to set the ID Scope (which gets saved in the ATECC608A secure element on the PIC-IoT board) and then hit `[RETURN]`.  To confirm it was set correctly, the ID Scope can be read out from the board by issuing the `idscope` command (i.e. without specifying an ID Scope value as the parameter on the command line)
+8. In the terminal emulator window, confirm that `local echo` is enabled in the terminal settings.  At the CLI prompt, type in the command `idscope <MY_ID_SCOPE>` to set the ID Scope (which gets saved in the ATECC608B secure element on the PIC-IoT board) and then hit `[RETURN]`.  To confirm it was set correctly, the ID Scope can be read out from the board by issuing the `idscope` command (i.e. without specifying an ID Scope value as the parameter on the command line)
 
     <img src=".//media/image46.png"/>
 
