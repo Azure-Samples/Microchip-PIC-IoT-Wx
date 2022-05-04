@@ -6,7 +6,7 @@
 
 - My board won't connect to the WiFi?
 
-    > Make sure your WiFi doesn't have spaces in the SSID or password. Also, this board can only connect to 2.4GHz bands. Make sure the network you are connected to isn't 5GHz.
+    > Make sure your WiFi doesn't have spaces in the SSID or password. Also, this board can only connect to 2.4GHz bands. Make sure the network you are connected to isn't 5GHz. Check the serial output messages on the CLI for feedback on why connection to WiFi may be failing...
 
 - How do I know that my board is connected to WiFi?
 

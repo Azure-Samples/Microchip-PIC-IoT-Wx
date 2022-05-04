@@ -19,7 +19,8 @@
 - [Create an Azure Account and Subscription](#create-an-azure-account-and-subscription)
 - [Program the PIC-IoT Wx Development Board](#program-the-pic-iot-wx-development-board)
   - [1. Install the Development Tools](#1-install-the-development-tools)
-  - [2. Connect Device to Azure IoT Services](#2-connect-device-to-azure-iot-services)
+  - [2. Provision the Development Board](#2-provision-the-development-board)
+  - [3. Connect Device to Azure IoT Services](#3-connect-device-to-azure-iot-services)
       - a. IoT Central (Recommended)
       - b. IoT Hub
 - [Frequently Asked Questions](#frequently-asked-questions)
@@ -106,7 +107,21 @@ Embedded software development tools from Microchip need to be pre-installed in o
 
 Click this link for the setup procedure: [Development Tools Installation](./Dev_Tools_Install.md)
 
-### 2. Connect Device to Azure IoT Services
+### 2. Provision the Development Board
+
+Download and run Microchip's [IoT Provisioning Tool](https://github.com/microchip-pic-avr-tools/iotprovision-bin/releases/latest) which is used to (1) generate the security certificates used for authentication and (2) store them into the [ATWINC1510](https://www.microchip.com/en-us/product/ATWINC1510) Wi-Fi controller module by executing the following steps:
+
+   - Connect the Microchip PIC-IoT Development Board to the Host PC using a standard micro-USB cable
+   - Confirm that a device named `CURIOSITY` shows up as a disk drive on the `Desktop` or in a `File Explorer` window
+   - Launch a `Command Prompt` or `PowerShell` window (click on `Start` > type `PowerShell` in the Search field > `Open`)
+   - Using the command line, navigate to the directory where the `iotprovision-bin` executable file resides (`<my_path>\iotprovision-bin-2\windows64\`)
+   - Execute the following command line to launch the provisioning script
+
+        ```shell
+        .\iotprovision-bin.exe -c azure
+        ```
+
+### 3. Connect Device to Azure IoT Services
 
 Azure IoT technologies and services provide you with options to create a wide variety of IoT solutions that enable digital transformation for your organization. For example, you can choose to use one of the following paths:
 
