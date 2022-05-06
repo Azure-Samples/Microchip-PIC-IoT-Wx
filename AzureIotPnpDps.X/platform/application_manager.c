@@ -59,7 +59,7 @@ void application_init() {
 	CLI_setdeviceId(attDeviceID);
 #endif   
 	debug_init(attDeviceID);
-	debug_setSeverity(SEVERITY_NONE);
+	debug_setSeverity(SEVERITY_ERROR);
 
 	// Initialization of modules where the init needs interrupts to be enabled
 	cryptoauthlib_init();
