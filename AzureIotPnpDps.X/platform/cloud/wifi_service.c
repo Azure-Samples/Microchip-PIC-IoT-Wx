@@ -131,7 +131,7 @@ bool wifi_connectToAp(uint8_t passed_wifi_creds)
 
 	if (M2M_SUCCESS != e)
 	{
-		debug_printError("  WiFi: WiFi error = %d", e);
+		debug_printError("  WiFi: WiFi error = %d.  Check WiFi Credentials", e);
 		shared_networking_params.haveERROR = 1;
 		LED_SetRed(LED_STATE_HOLD);
 		return false;
@@ -218,7 +218,22 @@ static void wifiCallback(uint8_t msgType, void* pMsg)
 			}
 			else if (pstrWifiState->u8CurrState == M2M_WIFI_DISCONNECTED)
 			{
-				debug_printWarn("  WiFi: DISCONNECTED: %d", pstrWifiState->u8ErrCode);
+				switch (pstrWifiState->u8ErrCode)
+                {
+                    case M2M_ERR_SCAN_FAIL:
+                        debug_printError("  WiFi: DISCONNECTED. Failed to detect AP during scan. Check SSID & authType");
+                        break;
+                    case M2M_ERR_AUTH_FAIL:
+                        debug_printError("  WiFi: DISCONNECTED. Failed to authenticate. Check pass phrase");
+                        break;
+                    case M2M_ERR_CONN_INPROGRESS:
+                        break;
+                    case M2M_ERR_JOIN_FAIL:
+                    case M2M_ERR_ASSOC_FAIL:
+                    default:
+                        debug_printError("  WiFi: DISCONNECTED, Error Code: %d.  Check WiFi Credentials", pstrWifiState->u8ErrCode);
+                        break;
+                }
 				
 				if (!isSoftAP)
 				{
