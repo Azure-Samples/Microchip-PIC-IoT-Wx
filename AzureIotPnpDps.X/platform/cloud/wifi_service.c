@@ -223,17 +223,13 @@ static void wifiCallback(uint8_t msgType, void* pMsg)
                     case M2M_ERR_SCAN_FAIL:
                         debug_printError("  WiFi: DISCONNECTED. Failed to detect AP during scan. Check SSID & authType");
                         break;
-                    case M2M_ERR_JOIN_FAIL:
-                        debug_printError("  WiFi: DISCONNECTED, Error Code: %d.  Check WiFi Credentials", pstrWifiState->u8ErrCode);
-                        break;
                     case M2M_ERR_AUTH_FAIL:
                         debug_printError("  WiFi: DISCONNECTED. Failed to authenticate. Check pass phrase");
                         break;
-                    case M2M_ERR_ASSOC_FAIL:
-                        debug_printError("  WiFi: DISCONNECTED, Error Code: %d.  Check WiFi Credentials", pstrWifiState->u8ErrCode);
-                        break;
                     case M2M_ERR_CONN_INPROGRESS:
                         break;
+                    case M2M_ERR_JOIN_FAIL:
+                    case M2M_ERR_ASSOC_FAIL:
                     default:
                         debug_printError("  WiFi: DISCONNECTED, Error Code: %d.  Check WiFi Credentials", pstrWifiState->u8ErrCode);
                         break;
