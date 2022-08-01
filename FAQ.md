@@ -22,7 +22,8 @@
 
 - The `pyazureutils` utility can't be found when I invoke it?
 
-    > Make sure the path to the util is added to your `PATH` environment variable. [Link here for Windows instructions](https://docs.microsoft.com/previous-versions/office/developer/sharepoint-2010).
+    > Make sure the path to the util is added to your `PATH` environment variable.
+    [Link here for Windows instructions](https://docs.microsoft.com/en-us/previous-versions/office/developer/sharepoint-2010/ee537574(v=office.14))
 
 - I am getting an error similar to `sn0123342F748ACFD3FE ERROR ERROR BSD: BSD_send() wincSendReturn (-14)`?
 
