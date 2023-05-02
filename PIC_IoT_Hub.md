@@ -91,7 +91,7 @@ Select `Enrollment Groups` tab:
 
 3. Click on the `Registration + provisioning` tab and configure the following:
     - Attestation mechanism = X.509 certificates uploaded to this Device Provisioning Service instance
-    - Primary certificate = name of the signer certificate (e.g. signer.pem)
+    - Primary certificate = name of the signer certificate which was created earlier
     - Group name = any meaningful name
 
         <img src=".//media/image18c.png" width=500/>
