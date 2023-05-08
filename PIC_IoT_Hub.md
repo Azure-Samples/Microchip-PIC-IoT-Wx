@@ -12,7 +12,12 @@ IoT Hub's capabilities help you build scalable, full-featured IoT solutions such
 
 ## Procedure
 
-### **Enroll Device into DPS (Device Provisioning Service)**
+### **Create an IoT Hub and Device Provisioning Service (DPS)**
+
+Click [here](https://learn.microsoft.com/en-us/azure/iot-dps/quick-setup-auto-provision) and follow the procedure to create an IoT Hub, create a Device Provisioning Service (DPS), and link the IoT Hub to the DPS (do **not** do the section "Clean Up Resources").
+
+### **Create a Chain of Trust for the Device**
+
 1. Generate the certificates (and program them into the board) by running Microchip's [IoT Provisioning Tool](https://www.microchip.com/en-us/solutions/internet-of-things/iot-development-kits/iot-provisioning-tool) using the following command line:
         
     `.\iotprovision-bin.exe -c azure`
@@ -66,13 +71,13 @@ IoT Hub's capabilities help you build scalable, full-featured IoT solutions such
 
 2. Set up certificates for the upload process:
 
-    - Go to the folder containing the generated certificates at `\[your_path]\.microchip-iot`
+    - Go to the (hidden) folder containing the generated certificates at `\[your_path]\.microchip-iot`
 
     - Copy all `*.crt` files and rename them each to `*.pem`
 
 3. In the [Microsoft Azure Portal](https://portal.azure.com/#home), navigate to your DPS resource and then use the left-hand navigation pane to select `Settings` > `Certificates`.
 
-4. Click the `+ Add` button. Give the certificate any meaningful name and then browse to the `signer-ca.pem` file. Check the box for "Set certificate status to verified on upload". Click the `Save` button.
+4. Click the `+ Add` button. Give the certificate any meaningful name and then browse to the `signer-ca.pem` file. **Check** the box for `Set certificate status to verified on upload`. Click the `Save` button.
 
     <img src=".//media/image18a.png" width=350/>
 
@@ -83,15 +88,15 @@ IoT Hub's capabilities help you build scalable, full-featured IoT solutions such
 ### **Add a New Enrollment Group using the Signer Certificate**
 
 1. In the Azure portal, navigate to your DPS &gt; `Manage enrollments` &gt;
-Select `Enrollment Groups` tab:
-
-    <img src=".//media/image19.png" width=600/>
+Select `Enrollment Groups` tab.
 
 2. Click the `+ Add Enrollment group` icon.
 
+    <img src=".//media/image19.png" width=600/>
+
 3. Click on the `Registration + provisioning` tab and configure the following:
     - Attestation mechanism = X.509 certificates uploaded to this Device Provisioning Service instance
-    - Primary certificate = name of the signer certificate (e.g. signer.pem)
+    - Primary certificate = name of the signer certificate which was created earlier
     - Group name = any meaningful name
 
         <img src=".//media/image18c.png" width=500/>
@@ -184,13 +189,13 @@ A successful PIC-IoT to Azure DPS connection can be verified two ways:
 
 Procedure:
 
-1. In the [Azure Portal](https://portal.azure.com/#home), go to your DPS &gt; click `Manage enrollments` &gt; under Enrollment Group, click `your group name` &gt; click `Registration Records` &gt; device should show up with the IoT Hub info that it got assigned to
+1. In the [Azure Portal](https://portal.azure.com/#home), go to your DPS &gt; click `Manage enrollments` &gt; under Enrollment Group, click `your group name` &gt; click Registration status `Details` &gt; device should show up with the IoT Hub info that it got assigned to (Assigned Hub)
 
-    <img src=".//media/image28.png"/>
+    <img src=".//media/image28a.png"/>
+    <img src=".//media/image28b.png"/>
+    <img src=".//media/image28c.png"/>
 
-2. In the [Azure Portal](https://portal.azure.com/#home), go to your IoT Hub &gt; click `IoT
-    Devices` &gt; click `Refresh` &gt; device should show up with the
-    Status “Enabled” and Authentication Type of “SelfSigned”
+2. In the [Azure Portal](https://portal.azure.com/#home), go to your IoT Hub &gt; click `Devices` &gt; device should show up with Status `Enabled` and Authentication type `Self-signed X509 Certificate`
 
     <img src=".//media/image29.png"/>
 
